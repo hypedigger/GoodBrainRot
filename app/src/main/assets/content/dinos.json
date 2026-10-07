@@ -1,0 +1,186 @@
+[
+    {
+        "key":  "trex",
+        "drawable":  "dino_trex",
+        "names":  {
+                      "en":  "T. rex",
+                      "fr":  "T-Rex",
+                      "it":  "T-Rex",
+                      "es":  "T-Rex",
+                      "ru":  "Тираннозавр"
+                  },
+        "rank":  16
+    },
+    {
+        "key":  "triceratops",
+        "drawable":  "dino_triceratops",
+        "names":  {
+                      "en":  "Triceratops",
+                      "fr":  "Tricératops",
+                      "it":  "Triceratopo",
+                      "es":  "Triceratops",
+                      "ru":  "Трицератопс"
+                  },
+        "rank":  3
+    },
+    {
+        "key":  "stegosaurus",
+        "drawable":  "dino_stegosaurus",
+        "names":  {
+                      "en":  "Stegosaurus",
+                      "fr":  "Stégosaure",
+                      "it":  "Stegosauro",
+                      "es":  "Estegosaurio",
+                      "ru":  "Стегозавр"
+                  },
+        "rank":  4
+    },
+    {
+        "key":  "brachiosaurus",
+        "drawable":  "dino_brachiosaurus",
+        "names":  {
+                      "en":  "Brachiosaurus",
+                      "fr":  "Brachiosaure",
+                      "it":  "Brachiosauro",
+                      "es":  "Braquiosaurio",
+                      "ru":  "Брахиозавр"
+                  },
+        "rank":  6
+    },
+    {
+        "key":  "velociraptor",
+        "drawable":  "dino_velociraptor",
+        "names":  {
+                      "en":  "Velociraptor",
+                      "fr":  "Vélociraptor",
+                      "it":  "Velociraptor",
+                      "es":  "Velociraptor",
+                      "ru":  "Велоцираптор"
+                  },
+        "rank":  2
+    },
+    {
+        "key":  "pteranodon",
+        "drawable":  "dino_pteranodon",
+        "names":  {
+                      "en":  "Pteranodon",
+                      "fr":  "Ptéranodon",
+                      "it":  "Pteranodonte",
+                      "es":  "Pteranodón",
+                      "ru":  "Птеранодон"
+                  },
+        "rank":  13
+    },
+    {
+        "key":  "ankylosaurus",
+        "drawable":  "dino_ankylosaurus",
+        "names":  {
+                      "en":  "Ankylosaurus",
+                      "fr":  "Ankylosaure",
+                      "it":  "Anchilosauro",
+                      "es":  "Anquilosaurio",
+                      "ru":  "Анкилозавр"
+                  },
+        "rank":  7
+    },
+    {
+        "key":  "parasaurolophus",
+        "drawable":  "dino_parasaurolophus",
+        "names":  {
+                      "en":  "Parasaurolophus",
+                      "fr":  "Parasaurolophus",
+                      "it":  "Parasaurolofo",
+                      "es":  "Parasaurolofo",
+                      "ru":  "Паразауролоф"
+                  },
+        "rank":  9
+    },
+    {
+        "key":  "spinosaurus",
+        "names":  {
+                      "es":  "Spinosaurus",
+                      "ru":  "Спинозавр",
+                      "en":  "Spinosaurus",
+                      "fr":  "Spinosaurus",
+                      "it":  "Spinosaurus"
+                  },
+        "rank":  1
+    },
+    {
+        "key":  "diplodocus",
+        "names":  {
+                      "es":  "Diplodocus",
+                      "ru":  "Диплодок",
+                      "en":  "Diplodocus",
+                      "fr":  "Diplodocus",
+                      "it":  "Diplodocus"
+                  },
+        "rank":  11
+    },
+    {
+        "key":  "allosaurus",
+        "names":  {
+                      "es":  "Allosaurus",
+                      "ru":  "Аллозавры",
+                      "en":  "Allosaurus",
+                      "fr":  "Allosaurus",
+                      "it":  "Allosaurus"
+                  },
+        "rank":  5
+    },
+    {
+        "key":  "iguanodon",
+        "names":  {
+                      "es":  "Iguanodon",
+                      "ru":  "Игуанодон",
+                      "en":  "Iguanodon",
+                      "fr":  "Iguanodon",
+                      "it":  "Iguanodon"
+                  },
+        "rank":  14
+    },
+    {
+        "key":  "brontosaurus",
+        "names":  {
+                      "es":  "Brontosaurus",
+                      "ru":  "Brontosaurus",
+                      "en":  "Brontosaurus",
+                      "fr":  "Brontosaurus",
+                      "it":  "Brontosaurus"
+                  },
+        "rank":  10
+    },
+    {
+        "key":  "dimetrodon",
+        "names":  {
+                      "es":  "Dimetrodon",
+                      "ru":  "диметродоны",
+                      "en":  "Dimetrodon",
+                      "fr":  "Dimetrodon",
+                      "it":  "Dimetrodon"
+                  },
+        "rank":  8
+    },
+    {
+        "key":  "pachycephalosaurus",
+        "names":  {
+                      "es":  "Pachycephalosaurus",
+                      "ru":  "Пахицефалозавр",
+                      "en":  "Pachycephalosaurus",
+                      "fr":  "Pachycephalosaurus",
+                      "it":  "Pachycephalosaurus"
+                  },
+        "rank":  12
+    },
+    {
+        "key":  "compsognathus",
+        "names":  {
+                      "es":  "Compsognathus",
+                      "ru":  "Компсогнат",
+                      "en":  "Compsognathus",
+                      "fr":  "Compsognathus",
+                      "it":  "Compsognathus longipes"
+                  },
+        "rank":  15
+    }
+]

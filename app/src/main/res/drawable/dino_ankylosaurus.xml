@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp" android:height="120dp"
+    android:viewportWidth="120" android:viewportHeight="120">
+    <!-- Ankylosaure : corps bas et large, massue au bout de la queue -->
+    <path android:fillColor="#A98B5B"
+        android:pathData="M28,72 C28,58 46,52 64,52 C82,52 96,60 96,72 C96,82 82,86 64,86 C46,86 28,82 28,72 Z" />
+    <!-- pics du dos -->
+    <path android:fillColor="#8A6F45" android:pathData="M44,54 L48,46 L52,54 Z" />
+    <path android:fillColor="#8A6F45" android:pathData="M60,52 L64,44 L68,52 Z" />
+    <path android:fillColor="#8A6F45" android:pathData="M76,54 L80,46 L84,54 Z" />
+    <!-- tête -->
+    <path android:fillColor="#A98B5B"
+        android:pathData="M96,66 L112,62 C116,66 116,72 112,76 L96,74 Z" />
+    <!-- queue + massue -->
+    <path android:fillColor="#A98B5B" android:pathData="M28,72 L8,68 L8,76 Z" />
+    <path android:fillColor="#8A6F45"
+        android:pathData="M10,72 m-8,0 a8,8 0 1 0 16,0 a8,8 0 1 0 -16,0 Z" />
+    <!-- pattes -->
+    <path android:fillColor="#A98B5B" android:pathData="M40,84 h9 v16 h-9 Z" />
+    <path android:fillColor="#A98B5B" android:pathData="M70,84 h9 v16 h-9 Z" />
+    <path android:fillColor="#2B2B2B"
+        android:pathData="M106,68 m-1.6,0 a1.6,1.6 0 1 0 3.2,0 a1.6,1.6 0 1 0 -3.2,0 Z" />
+</vector>

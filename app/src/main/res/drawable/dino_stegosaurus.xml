@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp" android:height="120dp"
+    android:viewportWidth="120" android:viewportHeight="120">
+    <!-- Stégosaure : dos arqué avec plaques, petite tête -->
+    <path android:fillColor="#5C9CE0"
+        android:pathData="M10,78 C18,60 40,52 60,54 C80,56 96,64 108,72 L104,80 C92,74 80,70 60,68 C42,66 26,72 20,82 Z" />
+    <path android:fillColor="#5C9CE0"
+        android:pathData="M10,76 L4,84 C2,88 6,92 10,90 L16,84 Z" />
+    <!-- plaques -->
+    <path android:fillColor="#3F7CC0" android:pathData="M30,56 L36,42 L44,55 Z" />
+    <path android:fillColor="#3F7CC0" android:pathData="M46,53 L54,38 L62,53 Z" />
+    <path android:fillColor="#3F7CC0" android:pathData="M64,54 L72,40 L80,56 Z" />
+    <!-- pattes -->
+    <path android:fillColor="#5C9CE0" android:pathData="M30,76 h9 v20 h-9 Z" />
+    <path android:fillColor="#5C9CE0" android:pathData="M80,72 h9 v22 h-9 Z" />
+    <path android:fillColor="#2B2B2B"
+        android:pathData="M104,74 m-1.8,0 a1.8,1.8 0 1 0 3.6,0 a1.8,1.8 0 1 0 -3.6,0 Z" />
+</vector>

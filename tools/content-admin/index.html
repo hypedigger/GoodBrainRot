@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>GoodBrainRot — Admin contenu</title>
+<style>
+  :root { --pink:#E8A0C0; --ink:#5D4E6D; --bg:#F8F4FB; --miss:#E0524B; --ok:#3FA45B; }
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, sans-serif; margin:0; background:var(--bg); color:var(--ink); }
+  header { position:sticky; top:0; background:#fff; padding:12px 16px; box-shadow:0 2px 8px #0001; z-index:10; }
+  h1 { font-size:18px; margin:0 0 8px; }
+  .tabs button, .filters button { border:none; padding:8px 14px; margin-right:6px; border-radius:18px;
+    background:#EDE3F2; color:var(--ink); cursor:pointer; font-size:14px; }
+  .tabs button.active { background:var(--pink); color:#fff; }
+  .filters { margin-top:8px; }
+  .filters button.active { background:#B3D9FF; }
+  .bar { margin-top:8px; font-size:13px; }
+  .bar button.export { background:var(--ok); color:#fff; font-weight:bold; }
+  main { padding:12px 16px; display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; }
+  .card { background:#fff; border-radius:12px; padding:10px; box-shadow:0 1px 4px #0002; }
+  .top { display:flex; gap:10px; }
+  .thumb { width:84px; height:84px; border-radius:10px; object-fit:cover; background:#eee; flex:none; }
+  .thumb.missing { display:flex; align-items:center; justify-content:center; color:var(--miss);
+    font-size:11px; text-align:center; border:2px dashed var(--miss); }
+  .meta { flex:1; min-width:0; }
+  .key { font-weight:bold; font-size:14px; }
+  .sub { font-size:12px; opacity:.7; }
+  .snd-yes { color:var(--ok); } .snd-no { color:var(--miss); }
+  .names { margin-top:8px; display:grid; grid-template-columns:26px 1fr; gap:4px 6px; align-items:center; }
+  .names label { font-size:12px; opacity:.7; }
+  .names input { width:100%; padding:4px 6px; border:1px solid #ddd; border-radius:6px; font-size:13px; }
+  .names input.empty { border-color:var(--miss); background:#fff3f2; }
+  .count { font-size:13px; opacity:.8; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🧠 GoodBrainRot — Admin contenu</h1>
+  <div class="tabs">
+    <button data-cat="animals" class="active">Animaux</button>
+    <button data-cat="vehicles">Véhicules</button>
+    <button data-cat="dinos">Dinosaures</button>
+  </div>
+  <div class="filters">
+    <button data-filter="all" class="active">Tous</button>
+    <button data-filter="noimg">Sans image</button>
+    <button data-filter="noname">Nom incomplet</button>
+    <button data-filter="nosound">Sans son</button>
+  </div>
+  <div class="bar">
+    <span class="count"></span>
+    &nbsp; <button class="export">⬇️ Exporter le JSON corrigé</button>
+    <span class="sub">(remplace ensuite app/src/main/assets/content/&lt;cat&gt;.json)</span>
+  </div>
+</header>
+<main></main>
+
+<script>
+const LANGS = ["en","fr","it","es","ru"];
+const FOLDER = { animals:"animals", vehicles:"vehicles", dinos:"dinos" };
+const IMG_EXTS = ["jpg","jpeg","png","webp"];
+const SND_EXTS = ["mp3","ogg","wav"];
+let cat = "animals", filter = "all";
+let data = {};       // cat -> array
+let nameStrings = {}; // nameKey -> {lang:value} loaded from strings (optional)
+
+function assetUrl(folder, key, ext) { return `/app/src/main/assets/${folder}/${key}.${ext}`; }
+
+async function exists(url) {
+  try { const r = await fetch(url, {method:"HEAD"}); return r.ok; } catch { return false; }
+}
+
+async function firstExisting(folder, key, exts) {
+  for (const e of exts) { if (await exists(assetUrl(folder,key,e))) return assetUrl(folder,key,e); }
+  return null;
+}
+
+async function loadCat(c) {
+  if (data[c]) return data[c];
+  const r = await fetch(`/app/src/main/assets/content/${c}.json`);
+  data[c] = await r.json();
+  return data[c];
+}
+
+const STRINGS_DIRS = { en:"values", fr:"values-fr", it:"values-it", es:"values-es", ru:"values-ru" };
+async function loadStrings() {
+  for (const [lang, dir] of Object.entries(STRINGS_DIRS)) {
+    try {
+      const r = await fetch(`/app/src/main/res/${dir}/strings.xml`);
+      const txt = await r.text();
+      const doc = new DOMParser().parseFromString(txt, "application/xml");
+      doc.querySelectorAll("string").forEach(s => {
+        const n = s.getAttribute("name");
+        if (!nameStrings[n]) nameStrings[n] = {};
+        nameStrings[n][lang] = (s.textContent || "").replace(/\\'/g, "'");
+      });
+    } catch (e) { /* langue absente : ignore */ }
+  }
+}
+
+function namesOf(item) {
+  // names inline, ou via nameKey -> strings (si chargees), sinon vide
+  if (item.names) return item.names;
+  if (item.nameKey && nameStrings[item.nameKey]) return nameStrings[item.nameKey];
+  return {};
+}
+
+function effectiveNames(item) {
+  // garantit un objet editable
+  if (!item.names) item.names = Object.assign({}, namesOf(item));
+  return item.names;
+}
+
+async function render() {
+  const main = document.querySelector("main");
+  main.innerHTML = "Chargement…";
+  const arr = await loadCat(cat);
+  main.innerHTML = "";
+  let shown = 0;
+  for (const item of arr) {
+    const folder = FOLDER[cat];
+    const imgUrl = await firstExisting(folder, item.key, IMG_EXTS);
+    const sndUrl = cat==="animals" ? await firstExisting("sounds", item.key, SND_EXTS) : null;
+    const names = namesOf(item);
+    const nameMissing = LANGS.some(l => !names[l]);
+
+    if (filter==="noimg" && imgUrl) continue;
+    if (filter==="noname" && !nameMissing) continue;
+    if (filter==="nosound" && (cat!=="animals" || sndUrl)) continue;
+    shown++;
+
+    const card = document.createElement("div");
+    card.className = "card";
+    const thumb = imgUrl
+      ? `<img class="thumb" src="${imgUrl}">`
+      : (item.drawable ? `<div class="thumb missing">dessin:<br>${item.drawable}</div>`
+                       : `<div class="thumb missing">image<br>manquante</div>`);
+    const snd = cat==="animals"
+      ? (sndUrl ? `<span class="snd-yes">🔊 son</span>` : `<span class="snd-no">🔇 pas de son</span>`)
+      : "";
+    card.innerHTML = `
+      <div class="top">
+        ${thumb}
+        <div class="meta">
+          <div class="key">${item.key} ${item.rank?`<span class="sub">#${item.rank}</span>`:""}</div>
+          <div class="sub">${snd}</div>
+        </div>
+      </div>
+      <div class="names"></div>`;
+    const nb = card.querySelector(".names");
+    for (const l of LANGS) {
+      const lab = document.createElement("label"); lab.textContent = l;
+      const inp = document.createElement("input");
+      inp.value = names[l] || "";
+      if (!inp.value) inp.classList.add("empty");
+      inp.oninput = () => {
+        effectiveNames(item)[l] = inp.value;
+        inp.classList.toggle("empty", !inp.value);
+      };
+      nb.appendChild(lab); nb.appendChild(inp);
+    }
+    main.appendChild(card);
+  }
+  document.querySelector(".count").textContent =
+    `${shown} affichés / ${arr.length} (${cat})`;
+}
+
+function exportJson() {
+  const arr = data[cat];
+  const blob = new Blob([JSON.stringify(arr, null, 2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `${cat}.json`;
+  a.click();
+}
+
+document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => {
+  document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active"); cat = b.dataset.cat; render();
+});
+document.querySelectorAll(".filters button").forEach(b => b.onclick = () => {
+  document.querySelectorAll(".filters button").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active"); filter = b.dataset.filter; render();
+});
+document.querySelector(".export").onclick = exportJson;
+loadStrings().then(render);
+</script>
+</body>
+</html>

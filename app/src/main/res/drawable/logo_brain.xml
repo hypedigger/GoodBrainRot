@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cerveau cartoon pastel souriant — logo GoodBrainRot -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Blob du cerveau : cercle à bosses -->
+    <path
+        android:fillColor="#F8C8DC"
+        android:strokeColor="#E8A0C0"
+        android:strokeWidth="2.5"
+        android:pathData="M54,20
+            A13,13 0 0 1 75.2,28.8
+            A13,13 0 0 1 84,50
+            A13,13 0 0 1 75.2,71.2
+            A13,13 0 0 1 54,80
+            A13,13 0 0 1 32.8,71.2
+            A13,13 0 0 1 24,50
+            A13,13 0 0 1 32.8,28.8
+            A13,13 0 0 1 54,20 Z" />
+
+    <!-- Sillon central -->
+    <path
+        android:strokeColor="#E8A0C0"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M54,21 C51,28 57,34 54,41" />
+
+    <!-- Circonvolutions gauche -->
+    <path
+        android:strokeColor="#E8A0C0"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M33,35 C39,32 44,36 42,41" />
+    <path
+        android:strokeColor="#E8A0C0"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M29,52 C35,49 39,53 37,58" />
+
+    <!-- Circonvolutions droite -->
+    <path
+        android:strokeColor="#E8A0C0"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M75,35 C69,32 64,36 66,41" />
+    <path
+        android:strokeColor="#E8A0C0"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M79,52 C73,49 69,53 71,58" />
+
+    <!-- Yeux -->
+    <path
+        android:fillColor="#5D4E6D"
+        android:pathData="M44,55 m-3.2,0 a3.2,3.2 0 1 1 6.4,0 a3.2,3.2 0 1 1 -6.4,0" />
+    <path
+        android:fillColor="#5D4E6D"
+        android:pathData="M64,55 m-3.2,0 a3.2,3.2 0 1 1 6.4,0 a3.2,3.2 0 1 1 -6.4,0" />
+
+    <!-- Joues roses -->
+    <path
+        android:fillColor="#F4AFC9"
+        android:pathData="M36,62 m-3.5,0 a3.5,3.5 0 1 1 7,0 a3.5,3.5 0 1 1 -7,0" />
+    <path
+        android:fillColor="#F4AFC9"
+        android:pathData="M72,62 m-3.5,0 a3.5,3.5 0 1 1 7,0 a3.5,3.5 0 1 1 -7,0" />
+
+    <!-- Sourire -->
+    <path
+        android:strokeColor="#5D4E6D"
+        android:strokeWidth="2.8"
+        android:strokeLineCap="round"
+        android:pathData="M46,64 Q54,72 62,64" />
+</vector>

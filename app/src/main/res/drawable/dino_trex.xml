@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp" android:height="120dp"
+    android:viewportWidth="120" android:viewportHeight="120">
+    <!-- T-Rex : grosse tête, petits bras, debout -->
+    <path android:fillColor="#7CB342"
+        android:pathData="M6,86 L40,66 L46,80 Z" />
+    <path android:fillColor="#7CB342"
+        android:pathData="M38,58 m-20,0 a20,20 0 1 0 40,0 a20,20 0 1 0 -40,0 Z" />
+    <path android:fillColor="#7CB342"
+        android:pathData="M70,40 m-16,0 a16,16 0 1 0 32,0 a16,16 0 1 0 -32,0 Z" />
+    <path android:fillColor="#7CB342"
+        android:pathData="M82,34 L102,38 L98,48 L82,46 Z" />
+    <path android:fillColor="#7CB342"
+        android:pathData="M50,46 L58,52 L52,58 Z" />
+    <path android:fillColor="#7CB342" android:pathData="M30,74 h10 v24 h-10 Z" />
+    <path android:fillColor="#7CB342" android:pathData="M46,74 h10 v24 h-10 Z" />
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M76,36 m-3,0 a3,3 0 1 0 6,0 a3,3 0 1 0 -6,0 Z" />
+    <path android:fillColor="#2B2B2B"
+        android:pathData="M77,36 m-1.4,0 a1.4,1.4 0 1 0 2.8,0 a1.4,1.4 0 1 0 -2.8,0 Z" />
+</vector>

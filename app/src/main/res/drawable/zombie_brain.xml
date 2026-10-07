@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cerveau zombie : vert blafard, yeux en croix, sourire cousu, gouttes -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Blob du cerveau -->
+    <path
+        android:fillColor="#8FB36B"
+        android:strokeColor="#5C7A3A"
+        android:strokeWidth="2.5"
+        android:pathData="M54,20
+            A13,13 0 0 1 75.2,28.8
+            A13,13 0 0 1 84,50
+            A13,13 0 0 1 75.2,71.2
+            A13,13 0 0 1 54,80
+            A13,13 0 0 1 32.8,71.2
+            A13,13 0 0 1 24,50
+            A13,13 0 0 1 32.8,28.8
+            A13,13 0 0 1 54,20 Z" />
+
+    <!-- Sillons -->
+    <path android:strokeColor="#5C7A3A" android:strokeWidth="2.5" android:strokeLineCap="round"
+        android:pathData="M54,21 C51,28 57,34 54,41" />
+    <path android:strokeColor="#5C7A3A" android:strokeWidth="2.5" android:strokeLineCap="round"
+        android:pathData="M33,35 C39,32 44,36 42,41" />
+    <path android:strokeColor="#5C7A3A" android:strokeWidth="2.5" android:strokeLineCap="round"
+        android:pathData="M29,52 C35,49 39,53 37,58" />
+    <path android:strokeColor="#5C7A3A" android:strokeWidth="2.5" android:strokeLineCap="round"
+        android:pathData="M75,35 C69,32 64,36 66,41" />
+    <path android:strokeColor="#5C7A3A" android:strokeWidth="2.5" android:strokeLineCap="round"
+        android:pathData="M79,52 C73,49 69,53 71,58" />
+
+    <!-- Yeux en croix -->
+    <path android:strokeColor="#2B2B2B" android:strokeWidth="2.6" android:strokeLineCap="round"
+        android:pathData="M40,51 L48,59 M48,51 L40,59" />
+    <path android:strokeColor="#2B2B2B" android:strokeWidth="2.6" android:strokeLineCap="round"
+        android:pathData="M60,51 L68,59 M68,51 L60,59" />
+
+    <!-- Bouche cousue -->
+    <path android:strokeColor="#2B2B2B" android:strokeWidth="2.6" android:strokeLineCap="round"
+        android:pathData="M44,67 L64,67" />
+    <path android:strokeColor="#2B2B2B" android:strokeWidth="2" android:strokeLineCap="round"
+        android:pathData="M48,63 L48,71 M54,63 L54,71 M60,63 L60,71" />
+
+    <!-- Gouttes vertes -->
+    <path android:fillColor="#6E9247" android:pathData="M34,78 q2,6 4,0 q-2,-4 -4,0 Z" />
+    <path android:fillColor="#6E9247" android:pathData="M72,80 q2,7 4,0 q-2,-4 -4,0 Z" />
+</vector>

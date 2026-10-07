@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp" android:height="120dp"
+    android:viewportWidth="120" android:viewportHeight="120">
+    <!-- Vélociraptor : svelte, penché en avant, longue queue -->
+    <path android:fillColor="#E0524B"
+        android:pathData="M40,60 m-16,0 a16,12 0 1 0 32,0 a16,12 0 1 0 -32,0 Z" />
+    <!-- queue relevée -->
+    <path android:fillColor="#E0524B"
+        android:pathData="M28,56 C14,50 6,40 4,30 L12,28 C16,40 26,48 36,54 Z" />
+    <!-- cou + tête vers l'avant -->
+    <path android:fillColor="#E0524B"
+        android:pathData="M52,54 C62,48 72,46 82,50 L96,56 L82,60 C72,58 64,60 56,66 Z" />
+    <path android:fillColor="#E0524B" android:pathData="M82,50 L98,54 L92,60 L82,58 Z" />
+    <!-- pattes -->
+    <path android:fillColor="#E0524B" android:pathData="M36,70 l6,0 l2,26 l-8,0 Z" />
+    <path android:fillColor="#E0524B" android:pathData="M50,70 l6,0 l4,26 l-8,0 Z" />
+    <path android:fillColor="#2B2B2B"
+        android:pathData="M86,54 m-1.6,0 a1.6,1.6 0 1 0 3.2,0 a1.6,1.6 0 1 0 -3.2,0 Z" />
+</vector>

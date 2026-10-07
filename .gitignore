@@ -1,0 +1,34 @@
+.gradle/
+build/
+local.properties
+.idea/
+*.iml
+.DS_Store
+captures/
+.externalNativeBuild/
+.cxx/
+.tmp/
+
+# Page QR generee par le lanceur
+_Lauch/qr.html
+
+# caches & outils locaux
+.kotlin/
+.claude/
+.vscode/
+.git-backup-ancien-historique/
+
+# infra perso (lanceur reseau local, serveur d'APK, acces distant) et docs de travail
+_Lauch/
+scripts/apk_server.ps1
+scripts/setup_remote.ps1
+docs/VIBE_CODING_MOBILE.md
+TUTORIEL.md
+
+# sons non redistribuables (LaSonotheque : libres d'usage mais pas de redistribution)
+# -> voir CREDITS.md ; l'app se rabat sur le TTS quand le cri manque
+app/src/main/assets/sounds/*.mp3
+
+# kits de batterie : provenance mixte -> non redistribues ; scripts/fetch_samples.ps1
+# retelecharge les samples Sonic Pi (CC0), sinon l'app synthetise les sons
+app/src/main/assets/kits/

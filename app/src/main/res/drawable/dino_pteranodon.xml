@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp" android:height="120dp"
+    android:viewportWidth="120" android:viewportHeight="120">
+    <!-- Ptéranodon : ailes déployées + crête -->
+    <path android:fillColor="#3FB6C9"
+        android:pathData="M60,56 L10,34 C24,52 40,58 56,60 Z" />
+    <path android:fillColor="#3FB6C9"
+        android:pathData="M60,56 L110,34 C96,52 80,58 64,60 Z" />
+    <!-- corps -->
+    <path android:fillColor="#2E97A8"
+        android:pathData="M60,52 m-9,0 a9,11 0 1 0 18,0 a9,11 0 1 0 -18,0 Z" />
+    <!-- tête + bec + crête -->
+    <path android:fillColor="#2E97A8" android:pathData="M58,44 L74,40 L60,36 Z" />
+    <path android:fillColor="#2E97A8" android:pathData="M58,40 L44,34 L60,36 Z" />
+    <path android:fillColor="#2B2B2B"
+        android:pathData="M60,42 m-1.6,0 a1.6,1.6 0 1 0 3.2,0 a1.6,1.6 0 1 0 -3.2,0 Z" />
+</vector>

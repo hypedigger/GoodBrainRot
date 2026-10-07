@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp" android:height="120dp"
+    android:viewportWidth="120" android:viewportHeight="120">
+    <!-- Tricératops : collerette + 3 cornes, 4 pattes -->
+    <path android:fillColor="#EF8A4B"
+        android:pathData="M30,60 m-22,0 a22,16 0 1 0 44,0 a22,16 0 1 0 -44,0 Z" />
+    <path android:fillColor="#EF8A4B"
+        android:pathData="M48,52 L70,40 C84,36 96,46 92,58 C90,68 78,72 66,70 L50,66 Z" />
+    <!-- collerette -->
+    <path android:fillColor="#E0703A"
+        android:pathData="M66,34 C84,28 100,40 96,60 L86,58 C90,46 80,40 70,44 Z" />
+    <!-- cornes -->
+    <path android:fillColor="#FBE7C6" android:pathData="M80,44 L88,28 L92,46 Z" />
+    <path android:fillColor="#FBE7C6" android:pathData="M70,46 L74,32 L80,48 Z" />
+    <path android:fillColor="#FBE7C6" android:pathData="M92,58 L104,56 L94,64 Z" />
+    <!-- pattes -->
+    <path android:fillColor="#EF8A4B" android:pathData="M18,70 h9 v22 h-9 Z" />
+    <path android:fillColor="#EF8A4B" android:pathData="M40,70 h9 v22 h-9 Z" />
+    <path android:fillColor="#2B2B2B"
+        android:pathData="M74,52 m-2,0 a2,2 0 1 0 4,0 a2,2 0 1 0 -4,0 Z" />
+</vector>

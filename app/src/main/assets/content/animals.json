@@ -1,0 +1,2454 @@
+[
+    {
+        "key":  "cat",
+        "nameKey":  "animal_cat",
+        "emoji":  "🐱",
+        "rank":  1
+    },
+    {
+        "key":  "dog",
+        "nameKey":  "animal_dog",
+        "emoji":  "🐶",
+        "rank":  2
+    },
+    {
+        "key":  "cow",
+        "nameKey":  "animal_cow",
+        "emoji":  "🐮",
+        "rank":  52
+    },
+    {
+        "key":  "horse",
+        "nameKey":  "animal_horse",
+        "emoji":  "🐴",
+        "rank":  11
+    },
+    {
+        "key":  "sheep",
+        "nameKey":  "animal_sheep",
+        "emoji":  "🐑",
+        "rank":  19
+    },
+    {
+        "key":  "goat",
+        "nameKey":  "animal_goat",
+        "emoji":  "🐐",
+        "rank":  18
+    },
+    {
+        "key":  "pig",
+        "nameKey":  "animal_pig",
+        "emoji":  "🐷",
+        "rank":  20
+    },
+    {
+        "key":  "hen",
+        "nameKey":  "animal_hen",
+        "emoji":  "🐔",
+        "rank":  62
+    },
+    {
+        "key":  "rooster",
+        "nameKey":  "animal_rooster",
+        "emoji":  "🐓",
+        "rank":  47
+    },
+    {
+        "key":  "duck",
+        "nameKey":  "animal_duck",
+        "emoji":  "🦆",
+        "rank":  30
+    },
+    {
+        "key":  "bird",
+        "nameKey":  "animal_bird",
+        "emoji":  "🐦",
+        "rank":  5
+    },
+    {
+        "key":  "owl",
+        "nameKey":  "animal_owl",
+        "emoji":  "🦉",
+        "rank":  25
+    },
+    {
+        "key":  "lion",
+        "nameKey":  "animal_lion",
+        "emoji":  "🦁",
+        "rank":  4
+    },
+    {
+        "key":  "tiger",
+        "nameKey":  "animal_tiger",
+        "emoji":  "🐯",
+        "rank":  7
+    },
+    {
+        "key":  "elephant",
+        "nameKey":  "animal_elephant",
+        "emoji":  "🐘",
+        "rank":  10
+    },
+    {
+        "key":  "monkey",
+        "nameKey":  "animal_monkey",
+        "emoji":  "🐵",
+        "rank":  21
+    },
+    {
+        "key":  "bear",
+        "nameKey":  "animal_bear",
+        "emoji":  "🐻",
+        "rank":  15
+    },
+    {
+        "key":  "wolf",
+        "nameKey":  "animal_wolf",
+        "emoji":  "🐺",
+        "rank":  8
+    },
+    {
+        "key":  "frog",
+        "nameKey":  "animal_frog",
+        "emoji":  "🐸",
+        "rank":  23
+    },
+    {
+        "key":  "rabbit",
+        "nameKey":  "animal_rabbit",
+        "emoji":  "🐰",
+        "rank":  14
+    },
+    {
+        "key":  "mouse",
+        "nameKey":  "animal_mouse",
+        "emoji":  "🐭",
+        "rank":  37
+    },
+    {
+        "key":  "snake",
+        "nameKey":  "animal_snake",
+        "emoji":  "🐍",
+        "rank":  12
+    },
+    {
+        "key":  "bee",
+        "nameKey":  "animal_bee",
+        "emoji":  "🐝",
+        "rank":  26
+    },
+    {
+        "key":  "dolphin",
+        "nameKey":  "animal_dolphin",
+        "emoji":  "🐬",
+        "rank":  24
+    },
+    {
+        "key":  "cattle",
+        "names":  {
+                      "es":  "Bos primigenius taurus",
+                      "ru":  "домашний бык",
+                      "en":  "cattle",
+                      "fr":  "Bos taurus",
+                      "it":  "Bos taurus taurus"
+                  },
+        "rank":  197
+    },
+    {
+        "key":  "chicken",
+        "names":  {
+                      "es":  "pollo",
+                      "ru":  "курица",
+                      "en":  "chicken",
+                      "fr":  "poulet",
+                      "it":  "pollo"
+                  },
+        "rank":  131
+    },
+    {
+        "key":  "goose",
+        "names":  {
+                      "es":  "ganso",
+                      "ru":  "гусь",
+                      "en":  "goose",
+                      "fr":  "oie",
+                      "it":  "oca"
+                  },
+        "rank":  209
+    },
+    {
+        "key":  "turkey_bird",
+        "names":  {
+                      "es":  "Meleagris",
+                      "ru":  "Meleagris",
+                      "en":  "Meleagris",
+                      "fr":  "Meleagris",
+                      "it":  "Meleagris"
+                  },
+        "rank":  87
+    },
+    {
+        "key":  "rat",
+        "names":  {
+                      "es":  "rat",
+                      "ru":  "крыса",
+                      "en":  "rat",
+                      "fr":  "rat",
+                      "it":  "ratto"
+                  },
+        "rank":  129
+    },
+    {
+        "key":  "hamster",
+        "names":  {
+                      "es":  "Cricetinae",
+                      "ru":  "Хомяки",
+                      "en":  "Hamster",
+                      "fr":  "Hamster",
+                      "it":  "Cricetinae"
+                  },
+        "rank":  17
+    },
+    {
+        "key":  "guinea_pig",
+        "names":  {
+                      "es":  "Cavia porcellus",
+                      "ru":  "морская свинка",
+                      "en":  "guinea pig",
+                      "fr":  "Cavia porcellus",
+                      "it":  "Cavia porcellus"
+                  },
+        "rank":  211
+    },
+    {
+        "key":  "ferret",
+        "names":  {
+                      "es":  "Mustela putorius furo",
+                      "ru":  "фретка",
+                      "en":  "Mustela putorius furo",
+                      "fr":  "furet",
+                      "it":  "Mustela putorius furo"
+                  },
+        "rank":  125
+    },
+    {
+        "key":  "leopard",
+        "names":  {
+                      "es":  "leopardo",
+                      "ru":  "леопард",
+                      "en":  "leopard",
+                      "fr":  "léopard",
+                      "it":  "leopardo"
+                  },
+        "rank":  205
+    },
+    {
+        "key":  "cheetah",
+        "names":  {
+                      "ru":  "гепард",
+                      "en":  "cheetah",
+                      "fr":  "guépard",
+                      "es":  "guepardo"
+                  },
+        "rank":  155
+    },
+    {
+        "key":  "jaguar",
+        "names":  {
+                      "es":  "Panthera onca",
+                      "ru":  "ягуар",
+                      "en":  "jaguar",
+                      "fr":  "Jaguar",
+                      "it":  "giaguaro"
+                  },
+        "rank":  191
+    },
+    {
+        "key":  "cougar",
+        "names":  {
+                      "es":  "Puma concolor",
+                      "ru":  "пума",
+                      "en":  "cougar",
+                      "fr":  "Puma",
+                      "it":  "Puma concolor"
+                  },
+        "rank":  196
+    },
+    {
+        "key":  "panther",
+        "names":  {
+                      "es":  "Panther",
+                      "en":  "Panther",
+                      "fr":  "Panther",
+                      "it":  "Panther"
+                  },
+        "rank":  51
+    },
+    {
+        "key":  "giraffe",
+        "names":  {
+                      "es":  "giraffa",
+                      "ru":  "жирафы",
+                      "en":  "giraffe",
+                      "fr":  "Giraffa",
+                      "it":  "Giraffa"
+                  },
+        "rank":  206
+    },
+    {
+        "key":  "zebra",
+        "names":  {
+                      "es":  "cebra",
+                      "ru":  "зебра",
+                      "en":  "zebra",
+                      "fr":  "zèbre",
+                      "it":  "zebra"
+                  },
+        "rank":  180
+    },
+    {
+        "key":  "hippopotamus",
+        "names":  {
+                      "es":  "Hippopotamus amphibius",
+                      "ru":  "обыкновенный бегемот",
+                      "en":  "Nile hippopotamus",
+                      "fr":  "Hippopotamus amphibius",
+                      "it":  "Hippopotamus amphibius"
+                  },
+        "rank":  124
+    },
+    {
+        "key":  "rhinoceros",
+        "names":  {
+                      "es":  "Rhinocerotidae",
+                      "ru":  "носороговые",
+                      "en":  "rhinoceros",
+                      "fr":  "rhinocéros",
+                      "it":  "Rhinocerotidae"
+                  },
+        "rank":  178
+    },
+    {
+        "key":  "gorilla",
+        "names":  {
+                      "es":  "gorila",
+                      "ru":  "гориллы",
+                      "en":  "Gorilla",
+                      "fr":  "gorille",
+                      "it":  "Gorilla"
+                  },
+        "rank":  13
+    },
+    {
+        "key":  "chimpanzee",
+        "names":  {
+                      "es":  "Chimpancé común",
+                      "ru":  "обыкновенный шимпанзе",
+                      "en":  "chimpanzee",
+                      "fr":  "Pan troglodytes",
+                      "it":  "Pan troglodytes"
+                  },
+        "rank":  187
+    },
+    {
+        "key":  "orangutan",
+        "names":  {
+                      "es":  "Pongo",
+                      "ru":  "орангутаны",
+                      "en":  "orangutan",
+                      "fr":  "Pongo",
+                      "it":  "Pongo"
+                  },
+        "rank":  152
+    },
+    {
+        "key":  "baboon",
+        "names":  {
+                      "es":  "Papio",
+                      "ru":  "павианы",
+                      "en":  "Papio",
+                      "fr":  "babouin",
+                      "it":  "Papio"
+                  },
+        "rank":  83
+    },
+    {
+        "key":  "lemur",
+        "names":  {
+                      "es":  "Lemuroidea",
+                      "ru":  "Lemuroidea",
+                      "en":  "Lemuroidea",
+                      "fr":  "Lemuroidea",
+                      "it":  "Lemuroidea"
+                  },
+        "rank":  118
+    },
+    {
+        "key":  "sloth",
+        "names":  {
+                      "es":  "Folivora",
+                      "ru":  "ленивцы",
+                      "en":  "sloth",
+                      "fr":  "paresseux",
+                      "it":  "Folivora"
+                  },
+        "rank":  186
+    },
+    {
+        "key":  "koala",
+        "names":  {
+                      "es":  "koala",
+                      "ru":  "коала",
+                      "en":  "koala",
+                      "fr":  "koala",
+                      "it":  "Phascolarctos cinereus"
+                  },
+        "rank":  150
+    },
+    {
+        "key":  "kangaroo",
+        "names":  {
+                      "es":  "canguro",
+                      "ru":  "кенгуру",
+                      "en":  "kangaroo",
+                      "fr":  "kangourou",
+                      "it":  "canguro"
+                  },
+        "rank":  135
+    },
+    {
+        "key":  "wombat",
+        "names":  {
+                      "es":  "Vombatidae",
+                      "ru":  "вомбатовые",
+                      "en":  "Vombatidae",
+                      "fr":  "wombat",
+                      "it":  "Vombatidae"
+                  },
+        "rank":  90
+    },
+    {
+        "key":  "panda",
+        "names":  {
+                      "es":  "Ailuropoda melanoleuca",
+                      "ru":  "большая панда",
+                      "en":  "Giant panda",
+                      "fr":  "panda géant",
+                      "it":  "Ailuropoda melanoleuca"
+                  },
+        "rank":  6
+    },
+    {
+        "key":  "brown_bear",
+        "names":  {
+                      "es":  "Ursus arctos",
+                      "ru":  "бурый медведь",
+                      "en":  "Ursus arctos",
+                      "fr":  "ours brun",
+                      "it":  "Ursus arctos"
+                  },
+        "rank":  79
+    },
+    {
+        "key":  "polar_bear",
+        "names":  {
+                      "es":  "Ursus maritimus",
+                      "ru":  "белый медведь",
+                      "en":  "Ursus maritimus",
+                      "fr":  "ours blanc",
+                      "it":  "Ursus maritimus"
+                  },
+        "rank":  107
+    },
+    {
+        "key":  "fox",
+        "names":  {
+                      "es":  "zorro",
+                      "ru":  "лисица",
+                      "en":  "fox",
+                      "fr":  "renard",
+                      "it":  "volpe"
+                  },
+        "rank":  147
+    },
+    {
+        "key":  "coyote",
+        "names":  {
+                      "es":  "Coyote",
+                      "ru":  "койот",
+                      "en":  "coyote",
+                      "fr":  "coyote",
+                      "it":  "coyote"
+                  },
+        "rank":  199
+    },
+    {
+        "key":  "raccoon",
+        "names":  {
+                      "ru":  "енот-полоскун",
+                      "en":  "raccoon",
+                      "fr":  "raton laveur"
+                  },
+        "rank":  141
+    },
+    {
+        "key":  "badger",
+        "names":  {
+                      "es":  "tejón",
+                      "ru":  "барсук",
+                      "en":  "badger",
+                      "fr":  "blaireau",
+                      "it":  "Taxidiinae"
+                  },
+        "rank":  198
+    },
+    {
+        "key":  "otter",
+        "names":  {
+                      "es":  "nutrias",
+                      "ru":  "выдровые",
+                      "en":  "otter",
+                      "fr":  "loutre",
+                      "it":  "Lutrinae"
+                  },
+        "rank":  183
+    },
+    {
+        "key":  "beaver",
+        "names":  {
+                      "es":  "Castor",
+                      "ru":  "бобры",
+                      "en":  "beaver",
+                      "fr":  "castor",
+                      "it":  "Castor"
+                  },
+        "rank":  184
+    },
+    {
+        "key":  "squirrel",
+        "names":  {
+                      "es":  "Sciuridae",
+                      "ru":  "беличьи",
+                      "en":  "squirrel",
+                      "fr":  "écureuil",
+                      "it":  "Sciuridae"
+                  },
+        "rank":  144
+    },
+    {
+        "key":  "chipmunk",
+        "names":  {
+                      "ru":  "Бурундуки",
+                      "en":  "chipmunk",
+                      "fr":  "tamia",
+                      "es":  "tamia"
+                  },
+        "rank":  127
+    },
+    {
+        "key":  "hedgehog",
+        "names":  {
+                      "es":  "erizos",
+                      "ru":  "настоящие ежи",
+                      "en":  "hedgehog",
+                      "fr":  "Erinaceinae",
+                      "it":  "riccio"
+                  },
+        "rank":  203
+    },
+    {
+        "key":  "mole_animal",
+        "names":  {
+                      "es":  "topo",
+                      "en":  "mole",
+                      "fr":  "taupe",
+                      "it":  "talpa"
+                  },
+        "rank":  138
+    },
+    {
+        "key":  "bat",
+        "names":  {
+                      "es":  "Chiroptera",
+                      "ru":  "рукокрылые",
+                      "en":  "Chiroptera",
+                      "fr":  "Chiroptera",
+                      "it":  "Chiroptera"
+                  },
+        "rank":  53
+    },
+    {
+        "key":  "deer",
+        "names":  {
+                      "es":  "cérvidos",
+                      "ru":  "оленевые",
+                      "en":  "Cervidae",
+                      "fr":  "cervidés",
+                      "it":  "Cervidae"
+                  },
+        "rank":  57
+    },
+    {
+        "key":  "moose",
+        "names":  {
+                      "es":  "Alces alces",
+                      "ru":  "Европейский лось",
+                      "en":  "Alces alces",
+                      "fr":  "élan",
+                      "it":  "Alces alces"
+                  },
+        "rank":  105
+    },
+    {
+        "key":  "elk",
+        "names":  {
+                      "es":  "Cervus canadensis",
+                      "ru":  "Вапити",
+                      "en":  "Cervus canadensis",
+                      "fr":  "wapiti",
+                      "it":  "Cervus canadensis"
+                  },
+        "rank":  84
+    },
+    {
+        "key":  "reindeer",
+        "names":  {
+                      "es":  "reno",
+                      "ru":  "северный олень",
+                      "en":  "Rangifer tarandus",
+                      "fr":  "Rangifer tarandus",
+                      "it":  "Rangifer tarandus"
+                  },
+        "rank":  112
+    },
+    {
+        "key":  "antelope",
+        "names":  {
+                      "es":  "antílope",
+                      "ru":  "антилопы",
+                      "en":  "antelope",
+                      "fr":  "antilopes",
+                      "it":  "antilope"
+                  },
+        "rank":  126
+    },
+    {
+        "key":  "gazelle",
+        "names":  {
+                      "es":  "Gazzella",
+                      "ru":  "газели",
+                      "en":  "gazelle",
+                      "fr":  "Gazelle",
+                      "it":  "Gazzella"
+                  },
+        "rank":  213
+    },
+    {
+        "key":  "bison",
+        "names":  {
+                      "es":  "Bison",
+                      "ru":  "бизоны",
+                      "en":  "Bison",
+                      "fr":  "bison",
+                      "it":  "Bison"
+                  },
+        "rank":  28
+    },
+    {
+        "key":  "buffalo",
+        "names":  {
+                      "es":  "Buffalo",
+                      "ru":  "Буффало",
+                      "en":  "Buffalo",
+                      "fr":  "Buffalo",
+                      "it":  "Buffalo"
+                  },
+        "rank":  46
+    },
+    {
+        "key":  "yak",
+        "names":  {
+                      "es":  "Bos grunniens",
+                      "ru":  "як",
+                      "en":  "Bos grunniens",
+                      "fr":  "yack",
+                      "it":  "Bos grunniens"
+                  },
+        "rank":  106
+    },
+    {
+        "key":  "camel",
+        "names":  {
+                      "es":  "Camelus",
+                      "ru":  "верблюды",
+                      "en":  "Camelus",
+                      "fr":  "chameau",
+                      "it":  "Camelus"
+                  },
+        "rank":  77
+    },
+    {
+        "key":  "llama",
+        "names":  {
+                      "es":  "llama",
+                      "ru":  "лама",
+                      "en":  "llama",
+                      "fr":  "lama",
+                      "it":  "Lama glama"
+                  },
+        "rank":  179
+    },
+    {
+        "key":  "alpaca",
+        "names":  {
+                      "es":  "Lama pacos",
+                      "en":  "Lama pacos",
+                      "fr":  "Lama pacos",
+                      "it":  "Lama pacos"
+                  },
+        "rank":  119
+    },
+    {
+        "key":  "donkey",
+        "names":  {
+                      "es":  "Equus africanus asinus",
+                      "ru":  "домашний осёл",
+                      "en":  "donkey",
+                      "fr":  "âne commun",
+                      "it":  "Equus asinus"
+                  },
+        "rank":  185
+    },
+    {
+        "key":  "mule",
+        "names":  {
+                      "es":  "mula",
+                      "ru":  "мул",
+                      "en":  "mule",
+                      "fr":  "mulet",
+                      "it":  "mulo"
+                  },
+        "rank":  230
+    },
+    {
+        "key":  "boar",
+        "names":  {
+                      "es":  "Sus scrofa",
+                      "ru":  "кабан",
+                      "en":  "Sus scrofa",
+                      "fr":  "sanglier",
+                      "it":  "cinghiale"
+                  },
+        "rank":  69
+    },
+    {
+        "key":  "hyena",
+        "names":  {
+                      "es":  "Hyaenidae",
+                      "ru":  "гиены",
+                      "en":  "Hyaenidae",
+                      "fr":  "Hyenidae",
+                      "it":  "Hyaenidae"
+                  },
+        "rank":  65
+    },
+    {
+        "key":  "meerkat",
+        "names":  {
+                      "es":  "Suricata suricatta",
+                      "ru":  "сурикат",
+                      "en":  "meerkat",
+                      "fr":  "Suricate",
+                      "it":  "Suricata suricatta"
+                  },
+        "rank":  123
+    },
+    {
+        "key":  "mongoose",
+        "names":  {
+                      "es":  "Herpestidae",
+                      "ru":  "мангустовые",
+                      "en":  "Herpestidae",
+                      "fr":  "Herpestidae",
+                      "it":  "Herpestidae"
+                  },
+        "rank":  66
+    },
+    {
+        "key":  "armadillo",
+        "names":  {
+                      "ru":  "Броненосец",
+                      "en":  "armadillo",
+                      "fr":  "Tatou",
+                      "es":  "Armadillo"
+                  },
+        "rank":  158
+    },
+    {
+        "key":  "anteater",
+        "names":  {
+                      "es":  "Vermilingua",
+                      "ru":  "Муравьеды",
+                      "en":  "Vermilingua",
+                      "fr":  "fourmilier",
+                      "it":  "Vermilingua"
+                  },
+        "rank":  91
+    },
+    {
+        "key":  "porcupine",
+        "names":  {
+                      "es":  "puercoespín",
+                      "ru":  "дикобраз",
+                      "en":  "porcupine",
+                      "fr":  "porc-épic",
+                      "it":  "porcospino"
+                  },
+        "rank":  226
+    },
+    {
+        "key":  "skunk",
+        "names":  {
+                      "es":  "mofeta",
+                      "ru":  "скунс",
+                      "en":  "skunk",
+                      "fr":  "mouffette",
+                      "it":  "moffetta"
+                  },
+        "rank":  142
+    },
+    {
+        "key":  "opossum",
+        "names":  {
+                      "es":  "Didelphidae",
+                      "ru":  "Опоссумовые",
+                      "en":  "Didelphidae",
+                      "fr":  "opossum",
+                      "it":  "Didelphidae"
+                  },
+        "rank":  95
+    },
+    {
+        "key":  "platypus",
+        "names":  {
+                      "es":  "ornitorrinco",
+                      "ru":  "утконос",
+                      "en":  "platypus",
+                      "fr":  "ornithorynque",
+                      "it":  "ornitorinco"
+                  },
+        "rank":  130
+    },
+    {
+        "key":  "echidna",
+        "names":  {
+                      "es":  "Tachyglossidae",
+                      "ru":  "ехидновые",
+                      "en":  "Nuckles",
+                      "fr":  "Échidné",
+                      "it":  "Tachyglossidae"
+                  },
+        "rank":  121
+    },
+    {
+        "key":  "whale",
+        "names":  {
+                      "es":  "ballena",
+                      "ru":  "киты",
+                      "en":  "whale",
+                      "fr":  "baleine",
+                      "it":  "balena"
+                  },
+        "rank":  227
+    },
+    {
+        "key":  "orca",
+        "names":  {
+                      "es":  "Orcinus orca",
+                      "ru":  "косатка",
+                      "en":  "Orcinus orca",
+                      "fr":  "orque",
+                      "it":  "Orcinus orca"
+                  },
+        "rank":  71
+    },
+    {
+        "key":  "shark",
+        "names":  {
+                      "es":  "Selachii",
+                      "ru":  "акулы",
+                      "en":  "shark",
+                      "fr":  "requins",
+                      "it":  "squali"
+                  },
+        "rank":  149
+    },
+    {
+        "key":  "seal",
+        "names":  {
+                      "es":  "Seal",
+                      "ru":  "Сил",
+                      "en":  "Seal",
+                      "fr":  "Seal",
+                      "it":  "Seal"
+                  },
+        "rank":  54
+    },
+    {
+        "key":  "sea_lion",
+        "names":  {
+                      "es":  "Otariinae",
+                      "ru":  "Морские львы",
+                      "en":  "sea lion",
+                      "fr":  "Lion de mer",
+                      "it":  "Otariinae"
+                  },
+        "rank":  159
+    },
+    {
+        "key":  "walrus",
+        "names":  {
+                      "es":  "morsa",
+                      "ru":  "морж",
+                      "en":  "walrus",
+                      "fr":  "morse",
+                      "it":  "tricheco"
+                  },
+        "rank":  164
+    },
+    {
+        "key":  "manatee",
+        "names":  {
+                      "es":  "Trichechus",
+                      "ru":  "Ламантины",
+                      "en":  "Trichechus",
+                      "fr":  "Trichechus",
+                      "it":  "Trichechus"
+                  },
+        "rank":  108
+    },
+    {
+        "key":  "octopus",
+        "names":  {
+                      "es":  "Octopoda",
+                      "ru":  "осьминоги",
+                      "en":  "Octopoda",
+                      "fr":  "Octopoda",
+                      "it":  "Octopoda"
+                  },
+        "rank":  86
+    },
+    {
+        "key":  "squid",
+        "names":  {
+                      "es":  "Teuthida",
+                      "ru":  "кальмары",
+                      "en":  "Teuthida",
+                      "fr":  "Teuthida",
+                      "it":  "Teuthida"
+                  },
+        "rank":  115
+    },
+    {
+        "key":  "jellyfish",
+        "names":  {
+                      "es":  "medusa",
+                      "ru":  "медуза",
+                      "en":  "jellyfish",
+                      "fr":  "méduse",
+                      "it":  "medusa"
+                  },
+        "rank":  137
+    },
+    {
+        "key":  "crab",
+        "names":  {
+                      "es":  "cangrejo",
+                      "ru":  "краб",
+                      "en":  "crab",
+                      "fr":  "crabe",
+                      "it":  "granchio"
+                  },
+        "rank":  148
+    },
+    {
+        "key":  "lobster",
+        "names":  {
+                      "es":  "langosta",
+                      "ru":  "омары",
+                      "en":  "Nephropidae",
+                      "fr":  "homard",
+                      "it":  "Nephropidae"
+                  },
+        "rank":  102
+    },
+    {
+        "key":  "shrimp",
+        "names":  {
+                      "es":  "gamba",
+                      "ru":  "креветки",
+                      "en":  "shrimp",
+                      "fr":  "crevette",
+                      "it":  "gamberetto"
+                  },
+        "rank":  235
+    },
+    {
+        "key":  "starfish",
+        "names":  {
+                      "es":  "estella de mar",
+                      "ru":  "морские звёзды",
+                      "en":  "starfish",
+                      "fr":  "étoile de mer",
+                      "it":  "stella di mare"
+                  },
+        "rank":  189
+    },
+    {
+        "key":  "seahorse",
+        "names":  {
+                      "es":  "Hippocampus",
+                      "ru":  "морские коньки",
+                      "en":  "Hippocampus",
+                      "fr":  "hippocampe",
+                      "it":  "Hippocampus"
+                  },
+        "rank":  42
+    },
+    {
+        "key":  "clownfish",
+        "names":  {
+                      "es":  "Pez payaso",
+                      "ru":  "Рыбы-клоуны",
+                      "en":  "Clownfish",
+                      "fr":  "poisson-clown",
+                      "it":  "Pesce pagliaccio"
+                  },
+        "rank":  41
+    },
+    {
+        "key":  "goldfish",
+        "names":  {
+                      "es":  "Carassius auratus",
+                      "ru":  "золотая рыбка",
+                      "en":  "goldfish",
+                      "fr":  "poisson rouge",
+                      "it":  "Carassius auratus"
+                  },
+        "rank":  188
+    },
+    {
+        "key":  "salmon",
+        "names":  {
+                      "es":  "salmón",
+                      "ru":  "лососёвые",
+                      "en":  "salmon",
+                      "fr":  "saumon",
+                      "it":  "salmone"
+                  },
+        "rank":  160
+    },
+    {
+        "key":  "tuna",
+        "names":  {
+                      "es":  "Thunnini",
+                      "ru":  "тунцы",
+                      "en":  "Thunnini",
+                      "fr":  "thunnini",
+                      "it":  "Thunnini"
+                  },
+        "rank":  110
+    },
+    {
+        "key":  "pufferfish",
+        "names":  {
+                      "es":  "Tetraodontidae",
+                      "ru":  "иглобрюхие",
+                      "en":  "Tetraodontidae",
+                      "fr":  "Tetraodontidae",
+                      "it":  "Tetraodontidae"
+                  },
+        "rank":  43
+    },
+    {
+        "key":  "eel",
+        "names":  {
+                      "es":  "Anguilliformes",
+                      "ru":  "угреобразные",
+                      "en":  "Anguilliformes",
+                      "fr":  "Anguilliformes",
+                      "it":  "Anguilliformes"
+                  },
+        "rank":  70
+    },
+    {
+        "key":  "stingray",
+        "names":  {
+                      "es":  "Myliobatoidei",
+                      "ru":  "орляковидные",
+                      "en":  "Myliobatoidei",
+                      "fr":  "Myliobatoidei",
+                      "it":  "Myliobatoidei"
+                  },
+        "rank":  109
+    },
+    {
+        "key":  "eagle",
+        "names":  {
+                      "es":  "águila",
+                      "ru":  "орлы",
+                      "en":  "eagle",
+                      "fr":  "aigle",
+                      "it":  "aquila"
+                  },
+        "rank":  232
+    },
+    {
+        "key":  "hawk",
+        "names":  {
+                      "ru":  "ястреб",
+                      "en":  "hawk",
+                      "it":  "falco"
+                  },
+        "rank":  177
+    },
+    {
+        "key":  "falcon",
+        "names":  {
+                      "es":  "halcón",
+                      "ru":  "соколы",
+                      "en":  "falcon",
+                      "fr":  "faucon",
+                      "it":  "falcone"
+                  },
+        "rank":  176
+    },
+    {
+        "key":  "vulture",
+        "names":  {
+                      "es":  "buitre",
+                      "ru":  "Падальщики",
+                      "en":  "vulture",
+                      "fr":  "Vautour",
+                      "it":  "avvoltoio"
+                  },
+        "rank":  192
+    },
+    {
+        "key":  "parrot",
+        "names":  {
+                      "es":  "Psittaciformes",
+                      "ru":  "попугаеобразные",
+                      "en":  "parrot",
+                      "fr":  "Psittaciformes",
+                      "it":  "Psittaciformes"
+                  },
+        "rank":  161
+    },
+    {
+        "key":  "macaw",
+        "names":  {
+                      "es":  "Guacamayo",
+                      "ru":  "ара",
+                      "en":  "macaw",
+                      "fr":  "ara",
+                      "it":  "Ara"
+                  },
+        "rank":  182
+    },
+    {
+        "key":  "cockatoo",
+        "names":  {
+                      "es":  "Cacatúas",
+                      "ru":  "Какаду",
+                      "en":  "Cockatoos",
+                      "fr":  "kakatoès",
+                      "it":  "Cacatuidi"
+                  },
+        "rank":  116
+    },
+    {
+        "key":  "penguin",
+        "names":  {
+                      "es":  "pingüino",
+                      "ru":  "пингвиновые",
+                      "en":  "penguin",
+                      "fr":  "manchot",
+                      "it":  "pinguino"
+                  },
+        "rank":  181
+    },
+    {
+        "key":  "flamingo",
+        "names":  {
+                      "es":  "Phoenicopteridae",
+                      "ru":  "Фламинговые",
+                      "en":  "Flamingos",
+                      "fr":  "Phoenicopteridae",
+                      "it":  "Phoenicopteridae"
+                  },
+        "rank":  100
+    },
+    {
+        "key":  "peacock",
+        "names":  {
+                      "es":  "pavos reales",
+                      "ru":  "Павлины",
+                      "en":  "peafowl",
+                      "fr":  "paon",
+                      "it":  "pavone"
+                  },
+        "rank":  140
+    },
+    {
+        "key":  "swan",
+        "names":  {
+                      "es":  "Cygnus",
+                      "ru":  "лебеди",
+                      "en":  "Cygnus",
+                      "fr":  "Cygne",
+                      "it":  "Cygnus"
+                  },
+        "rank":  97
+    },
+    {
+        "key":  "pelican",
+        "names":  {
+                      "es":  "Pelecanus",
+                      "ru":  "Пеликаны",
+                      "en":  "pelican",
+                      "fr":  "pélican",
+                      "it":  "Pelecanus"
+                  },
+        "rank":  162
+    },
+    {
+        "key":  "seagull",
+        "names":  {
+                      "es":  "Larinae",
+                      "ru":  "Larinae",
+                      "en":  "Larinae",
+                      "fr":  "Larinae",
+                      "it":  "Larinae"
+                  },
+        "rank":  104
+    },
+    {
+        "key":  "stork",
+        "names":  {
+                      "es":  "Ciconiidae",
+                      "ru":  "аистовые",
+                      "en":  "stork",
+                      "fr":  "Ciconiidae",
+                      "it":  "Ciconiidae"
+                  },
+        "rank":  217
+    },
+    {
+        "key":  "crane_bird",
+        "names":  {
+                      "es":  "Gruidae",
+                      "ru":  "Настоящие журавли",
+                      "en":  "Gruidae",
+                      "fr":  "Gruidae",
+                      "it":  "Gruidae"
+                  },
+        "rank":  99
+    },
+    {
+        "key":  "heron",
+        "names":  {
+                      "es":  "Ardeidae",
+                      "ru":  "цаплевые",
+                      "en":  "heron",
+                      "fr":  "Ardeidae",
+                      "it":  "Ardeidae"
+                  },
+        "rank":  165
+    },
+    {
+        "key":  "woodpecker",
+        "names":  {
+                      "ru":  "дятловые"
+                  },
+        "rank":  31
+    },
+    {
+        "key":  "robin",
+        "names":  {
+                      "es":  "Robin",
+                      "ru":  "Робин",
+                      "en":  "Robin",
+                      "fr":  "Robin",
+                      "it":  "Robin"
+                  },
+        "rank":  55
+    },
+    {
+        "key":  "sparrow",
+        "names":  {
+                      "es":  "Sparrow",
+                      "en":  "Sparrow",
+                      "fr":  "Sparrow",
+                      "it":  "Sparrow"
+                  },
+        "rank":  58
+    },
+    {
+        "key":  "pigeon",
+        "names":  {
+                      "es":  "Columbidae",
+                      "ru":  "голубиные",
+                      "en":  "Columbidae",
+                      "fr":  "Columbidae",
+                      "it":  "Columbidae"
+                  },
+        "rank":  27
+    },
+    {
+        "key":  "crow",
+        "names":  {
+                      "es":  "cuervo",
+                      "ru":  "ворона",
+                      "en":  "crow",
+                      "fr":  "corneille",
+                      "it":  "corvus"
+                  },
+        "rank":  157
+    },
+    {
+        "key":  "raven",
+        "names":  {
+                      "es":  "cuervo",
+                      "ru":  "ворон",
+                      "en":  "raven",
+                      "fr":  "corbeau",
+                      "it":  "corvo"
+                  },
+        "rank":  190
+    },
+    {
+        "key":  "magpie",
+        "names":  {
+                      "ru":  "сорока",
+                      "en":  "magpie",
+                      "fr":  "pie",
+                      "es":  "Urraca"
+                  },
+        "rank":  218
+    },
+    {
+        "key":  "hummingbird",
+        "names":  {
+                      "es":  "Trochilidae",
+                      "ru":  "колибри",
+                      "en":  "Trochilidae",
+                      "fr":  "Trochilidae",
+                      "it":  "Trochilidae"
+                  },
+        "rank":  89
+    },
+    {
+        "key":  "kingfisher",
+        "names":  {
+                      "es":  "Alcedinidae",
+                      "ru":  "зимородковые",
+                      "en":  "Alcedinidae",
+                      "fr":  "Alcedinidae",
+                      "it":  "Alcedinidae"
+                  },
+        "rank":  96
+    },
+    {
+        "key":  "toucan",
+        "names":  {
+                      "es":  "Tucanes",
+                      "ru":  "Тукановые",
+                      "en":  "toucan",
+                      "fr":  "toucan",
+                      "it":  "Ramphastidae"
+                  },
+        "rank":  195
+    },
+    {
+        "key":  "ostrich",
+        "names":  {
+                      "es":  "Struthio",
+                      "ru":  "страусы",
+                      "en":  "Struthio",
+                      "fr":  "autruche",
+                      "it":  "Struthio"
+                  },
+        "rank":  82
+    },
+    {
+        "key":  "emu",
+        "names":  {
+                      "es":  "Dromaius novaehollandiae",
+                      "ru":  "эму",
+                      "en":  "Emu",
+                      "fr":  "émeu d\u0027Australie",
+                      "it":  "Dromaius novaehollandiae"
+                  },
+        "rank":  29
+    },
+    {
+        "key":  "kiwi_bird",
+        "names":  {
+                      "es":  "Apteryx",
+                      "ru":  "киви",
+                      "en":  "Apteryx",
+                      "fr":  "Apteryx",
+                      "it":  "Apteryx"
+                  },
+        "rank":  120
+    },
+    {
+        "key":  "toad",
+        "names":  {
+                      "es":  "sapo",
+                      "ru":  "жаба",
+                      "en":  "toad",
+                      "fr":  "crapaud",
+                      "it":  "rospo"
+                  },
+        "rank":  219
+    },
+    {
+        "key":  "salamander",
+        "names":  {
+                      "es":  "Urodela",
+                      "ru":  "хвостатые земноводные",
+                      "en":  "Caudata",
+                      "fr":  "Caudata",
+                      "it":  "Caudata"
+                  },
+        "rank":  60
+    },
+    {
+        "key":  "newt",
+        "names":  {
+                      "es":  "tritón",
+                      "ru":  "тритоны",
+                      "en":  "newt",
+                      "fr":  "triton",
+                      "it":  "Pleurodelinae"
+                  },
+        "rank":  214
+    },
+    {
+        "key":  "turtle",
+        "names":  {
+                      "es":  "Testudines",
+                      "ru":  "черепахи",
+                      "en":  "Testudines",
+                      "fr":  "tortue",
+                      "it":  "tartaruga"
+                  },
+        "rank":  59
+    },
+    {
+        "key":  "tortoise",
+        "names":  {
+                      "es":  "Testudinidae",
+                      "ru":  "сухопутные черепахи",
+                      "en":  "Testudinidae",
+                      "fr":  "Testudinidae",
+                      "it":  "Testudinidae"
+                  },
+        "rank":  85
+    },
+    {
+        "key":  "crocodile",
+        "names":  {
+                      "es":  "Crocodylidae",
+                      "ru":  "Настоящие крокодилы",
+                      "en":  "Crocodile",
+                      "fr":  "Crocodylidae",
+                      "it":  "Coccodrillo"
+                  },
+        "rank":  22
+    },
+    {
+        "key":  "alligator",
+        "names":  {
+                      "es":  "Alligator",
+                      "ru":  "аллигаторы",
+                      "en":  "Alligator",
+                      "fr":  "Alligator",
+                      "it":  "Alligator"
+                  },
+        "rank":  34
+    },
+    {
+        "key":  "lizard",
+        "names":  {
+                      "es":  "Lacertilia",
+                      "ru":  "ящерицы",
+                      "en":  "Lacertilia",
+                      "fr":  "Lacertilia",
+                      "it":  "Lacertilia"
+                  },
+        "rank":  101
+    },
+    {
+        "key":  "iguana",
+        "names":  {
+                      "es":  "Iguana",
+                      "ru":  "Настоящие игуаны",
+                      "en":  "Iguana",
+                      "fr":  "Iguana",
+                      "it":  "Iguana"
+                  },
+        "rank":  40
+    },
+    {
+        "key":  "chameleon",
+        "names":  {
+                      "es":  "Chamaeleonidae",
+                      "ru":  "хамелеоны",
+                      "en":  "chameleon",
+                      "fr":  "Chamaeleonidae",
+                      "it":  "Chamaeleonidae"
+                  },
+        "rank":  215
+    },
+    {
+        "key":  "gecko",
+        "names":  {
+                      "en":  "gecko",
+                      "fr":  "gecko"
+                  },
+        "rank":  194
+    },
+    {
+        "key":  "komodo_dragon",
+        "names":  {
+                      "es":  "Varanus komodoensis",
+                      "ru":  "комодский варан",
+                      "en":  "Komodo dragon",
+                      "fr":  "dragon de Komodo",
+                      "it":  "Varanus komodoensis"
+                  },
+        "rank":  9
+    },
+    {
+        "key":  "cobra",
+        "names":  {
+                      "es":  "cobra",
+                      "ru":  "Кобра",
+                      "en":  "cobra",
+                      "fr":  "cobra",
+                      "it":  "cobra"
+                  },
+        "rank":  216
+    },
+    {
+        "key":  "python_genus",
+        "names":  {
+                      "es":  "Python",
+                      "ru":  "Настоящие питоны",
+                      "en":  "Python",
+                      "fr":  "Python",
+                      "it":  "Python"
+                  },
+        "rank":  48
+    },
+    {
+        "key":  "rattlesnake",
+        "names":  {
+                      "es":  "Serpiente Cascabel",
+                      "ru":  "гремучая змея",
+                      "en":  "rattlesnake",
+                      "fr":  "serpent à sonnette",
+                      "it":  "Serpente a sonagli"
+                  },
+        "rank":  223
+    },
+    {
+        "key":  "boa_genus",
+        "names":  {
+                      "es":  "Boa",
+                      "ru":  "Обыкновенные удавы",
+                      "en":  "Boa",
+                      "fr":  "Boa",
+                      "it":  "Boa"
+                  },
+        "rank":  64
+    },
+    {
+        "key":  "anaconda",
+        "names":  {
+                      "es":  "Eunectes",
+                      "ru":  "Анаконды",
+                      "en":  "Anaconda",
+                      "fr":  "Eunectes",
+                      "it":  "Eunectes"
+                  },
+        "rank":  36
+    },
+    {
+        "key":  "wasp",
+        "names":  {
+                      "es":  "Avispa",
+                      "ru":  "осы",
+                      "en":  "wasps",
+                      "fr":  "guêpe",
+                      "it":  "vespa"
+                  },
+        "rank":  224
+    },
+    {
+        "key":  "hornet",
+        "names":  {
+                      "es":  "Vespa",
+                      "ru":  "Шершень",
+                      "en":  "Vespa",
+                      "fr":  "Vespa",
+                      "it":  "Vespa"
+                  },
+        "rank":  45
+    },
+    {
+        "key":  "ant",
+        "names":  {
+                      "es":  "hormiga",
+                      "ru":  "муравьи",
+                      "en":  "Formicidae",
+                      "fr":  "Formicidae",
+                      "it":  "Formicidae"
+                  },
+        "rank":  67
+    },
+    {
+        "key":  "butterfly",
+        "names":  {
+                      "es":  "Rhopalocera",
+                      "ru":  "бабочки",
+                      "en":  "butterfly",
+                      "fr":  "Rhopalocères",
+                      "it":  "farfalla"
+                  },
+        "rank":  225
+    },
+    {
+        "key":  "moth",
+        "names":  {
+                      "es":  "Heterocera",
+                      "ru":  "моль",
+                      "en":  "Heterocera",
+                      "fr":  "Hétérocères",
+                      "it":  "falena"
+                  },
+        "rank":  113
+    },
+    {
+        "key":  "dragonfly",
+        "names":  {
+                      "es":  "Anisoptera",
+                      "ru":  "Разнокрылые стрекозы",
+                      "en":  "Anisoptera",
+                      "fr":  "Anisoptera",
+                      "it":  "Anisoptera"
+                  },
+        "rank":  94
+    },
+    {
+        "key":  "ladybird",
+        "names":  {
+                      "es":  "Coccinellidae",
+                      "ru":  "божьи коровки",
+                      "en":  "Coccinellidae",
+                      "fr":  "Coccinellidae",
+                      "it":  "Coccinellidae"
+                  },
+        "rank":  32
+    },
+    {
+        "key":  "grasshopper",
+        "names":  {
+                      "ru":  "кузнечик",
+                      "en":  "grasshopper",
+                      "fr":  "sauteriau",
+                      "it":  "cavalletta"
+                  },
+        "rank":  220
+    },
+    {
+        "key":  "cricket_insect",
+        "names":  {
+                      "ru":  "сверчок",
+                      "en":  "cricket",
+                      "fr":  "grillon",
+                      "it":  "Grilli"
+                  },
+        "rank":  153
+    },
+    {
+        "key":  "beetle",
+        "names":  {
+                      "ru":  "жесткокрылые",
+                      "en":  "beetle",
+                      "es":  "coleópteros"
+                  },
+        "rank":  221
+    },
+    {
+        "key":  "caterpillar",
+        "names":  {
+                      "es":  "oruga",
+                      "ru":  "гусеница",
+                      "en":  "caterpillar",
+                      "fr":  "chenille",
+                      "it":  "bruco"
+                  },
+        "rank":  193
+    },
+    {
+        "key":  "spider",
+        "names":  {
+                      "es":  "araña",
+                      "ru":  "пауки",
+                      "en":  "Araneae",
+                      "fr":  "araignée",
+                      "it":  "ragno"
+                  },
+        "rank":  74
+    },
+    {
+        "key":  "tarantula",
+        "names":  {
+                      "es":  "tarántula",
+                      "ru":  "Пауки-птицееды",
+                      "en":  "Theraphosidae",
+                      "fr":  "Theraphosidae",
+                      "it":  "Theraphosidae"
+                  },
+        "rank":  73
+    },
+    {
+        "key":  "scorpion",
+        "names":  {
+                      "es":  "escorpión",
+                      "ru":  "скорпионы",
+                      "en":  "scorpion",
+                      "fr":  "scorpions",
+                      "it":  "Scorpiones"
+                  },
+        "rank":  132
+    },
+    {
+        "key":  "snail",
+        "names":  {
+                      "es":  "caracol",
+                      "ru":  "улитка",
+                      "en":  "snail",
+                      "fr":  "escargot",
+                      "it":  "chiocciola"
+                  },
+        "rank":  136
+    },
+    {
+        "key":  "slug",
+        "names":  {
+                      "es":  "babosa",
+                      "ru":  "Слизень",
+                      "en":  "slug",
+                      "fr":  "limace",
+                      "it":  "lumaca"
+                  },
+        "rank":  151
+    },
+    {
+        "key":  "worm",
+        "names":  {
+                      "es":  "gusano",
+                      "ru":  "черви",
+                      "en":  "worm",
+                      "fr":  "ver",
+                      "it":  "verme"
+                  },
+        "rank":  222
+    },
+    {
+        "key":  "centipede",
+        "names":  {
+                      "es":  "Chilopoda",
+                      "ru":  "губоногие",
+                      "en":  "centipede",
+                      "fr":  "Chilopoda",
+                      "it":  "Chilopoda"
+                  },
+        "rank":  163
+    },
+    {
+        "key":  "mosquito",
+        "names":  {
+                      "es":  "Culicidae",
+                      "ru":  "кровососущие комары",
+                      "en":  "mosquito",
+                      "fr":  "Culicidae",
+                      "it":  "Culicidae"
+                  },
+        "rank":  166
+    },
+    {
+        "key":  "fly",
+        "names":  {
+                      "it":  "Ditteri",
+                      "ru":  "двукрылые"
+                  },
+        "rank":  39
+    },
+    {
+        "key":  "firefly",
+        "names":  {
+                      "es":  "Lampyridae",
+                      "ru":  "Светляки",
+                      "en":  "Lampyridae",
+                      "fr":  "Lampyridae",
+                      "it":  "Lampyridae"
+                  },
+        "rank":  81
+    },
+    {
+        "key":  "hare",
+        "names":  {
+                      "es":  "liebre",
+                      "ru":  "зайцы",
+                      "en":  "hare",
+                      "fr":  "lièvres",
+                      "it":  "lepre"
+                  },
+        "rank":  156
+    },
+    {
+        "key":  "weasel",
+        "names":  {
+                      "es":  "Mustela",
+                      "ru":  "хорьки",
+                      "en":  "weasel",
+                      "fr":  "Mustela",
+                      "it":  "Mustela"
+                  },
+        "rank":  169
+    },
+    {
+        "key":  "stoat",
+        "names":  {
+                      "es":  "armiño",
+                      "ru":  "горностай",
+                      "en":  "Mustela erminea",
+                      "fr":  "Mustela erminea",
+                      "it":  "ermellino"
+                  },
+        "rank":  114
+    },
+    {
+        "key":  "wildebeest",
+        "names":  {
+                      "es":  "Connochaetes",
+                      "ru":  "Гну",
+                      "en":  "wildebeest",
+                      "fr":  "gnou",
+                      "it":  "Connochaetes"
+                  },
+        "rank":  174
+    },
+    {
+        "key":  "warthog",
+        "names":  {
+                      "es":  "Phacochoerus",
+                      "ru":  "бородавочник",
+                      "en":  "Phacochoerus",
+                      "fr":  "Phacochoerus",
+                      "it":  "Facocero"
+                  },
+        "rank":  88
+    },
+    {
+        "key":  "tapir",
+        "names":  {
+                      "es":  "Tapiridae",
+                      "ru":  "Тапировые",
+                      "en":  "tapir",
+                      "fr":  "Tapiridae",
+                      "it":  "Tapiridae"
+                  },
+        "rank":  133
+    },
+    {
+        "key":  "okapi",
+        "names":  {
+                      "es":  "Okapia johnstoni",
+                      "ru":  "Окапи",
+                      "en":  "Okapia johnstoni",
+                      "fr":  "okapi",
+                      "it":  "Okapia johnstoni"
+                  },
+        "rank":  122
+    },
+    {
+        "key":  "lemming",
+        "names":  {
+                      "es":  "Lemmini",
+                      "ru":  "Лемминг",
+                      "en":  "lemming",
+                      "fr":  "lemming",
+                      "it":  "Lemmini"
+                  },
+        "rank":  175
+    },
+    {
+        "key":  "puffin",
+        "names":  {
+                      "es":  "Fratercula",
+                      "ru":  "тупики",
+                      "en":  "Puffin",
+                      "fr":  "Fratercula",
+                      "it":  "Fratercula"
+                  },
+        "rank":  35
+    },
+    {
+        "key":  "albatross",
+        "names":  {
+                      "es":  "Diomedeidae",
+                      "ru":  "Альбатросовые",
+                      "en":  "albatross",
+                      "fr":  "albatros",
+                      "it":  "Diomedeidae"
+                  },
+        "rank":  143
+    },
+    {
+        "key":  "cassowary",
+        "names":  {
+                      "es":  "Casuarius",
+                      "ru":  "казуары",
+                      "en":  "Casuarius",
+                      "fr":  "Casuarius",
+                      "it":  "Casuarius"
+                  },
+        "rank":  103
+    },
+    {
+        "key":  "cardinal_bird",
+        "names":  {
+                      "es":  "Cardinalis",
+                      "ru":  "Кардиналы",
+                      "en":  "Cardinalis",
+                      "fr":  "Cardinalis",
+                      "it":  "Cardinalis"
+                  },
+        "rank":  56
+    },
+    {
+        "key":  "goldcrest",
+        "names":  {
+                      "es":  "Regulus regulus",
+                      "ru":  "желтоголовый королёк",
+                      "en":  "Goldcrest",
+                      "fr":  "Roitelet huppé",
+                      "it":  "Regulus regulus"
+                  },
+        "rank":  50
+    },
+    {
+        "key":  "nightingale",
+        "names":  {
+                      "es":  "Luscinia megarhynchos",
+                      "ru":  "западный соловей",
+                      "en":  "Common Nightingale",
+                      "fr":  "Rossignol philomèle",
+                      "it":  "Luscinia megarhynchos"
+                  },
+        "rank":  117
+    },
+    {
+        "key":  "seal_animal",
+        "names":  {
+                      "es":  "Pinnipedia",
+                      "ru":  "ластоногие",
+                      "en":  "Pinnipedia",
+                      "fr":  "Pinnipède",
+                      "it":  "Pinnipedia"
+                  },
+        "rank":  72
+    },
+    {
+        "key":  "narwhal",
+        "names":  {
+                      "es":  "narval",
+                      "ru":  "нарвал",
+                      "en":  "narwhal",
+                      "fr":  "narval",
+                      "it":  "narvalo"
+                  },
+        "rank":  146
+    },
+    {
+        "key":  "beluga_whale",
+        "names":  {
+                      "es":  "Delphinapterus leucas",
+                      "ru":  "белуха",
+                      "en":  "beluga whale",
+                      "fr":  "Béluga",
+                      "it":  "Delphinapterus leucas"
+                  },
+        "rank":  234
+    },
+    {
+        "key":  "manta_ray",
+        "names":  {
+                      "es":  "Manta",
+                      "ru":  "Манты",
+                      "en":  "Manta",
+                      "fr":  "Manta",
+                      "it":  "manta"
+                  },
+        "rank":  92
+    },
+    {
+        "key":  "catfish",
+        "names":  {
+                      "es":  "Siluriformes",
+                      "ru":  "сомообразные",
+                      "en":  "Siluriformes",
+                      "fr":  "Siluriformes",
+                      "it":  "Siluriformes"
+                  },
+        "rank":  76
+    },
+    {
+        "key":  "carp",
+        "names":  {
+                      "es":  "Carpa",
+                      "en":  "carp",
+                      "fr":  "carpe",
+                      "it":  "carpa"
+                  },
+        "rank":  233
+    },
+    {
+        "key":  "axolotl",
+        "names":  {
+                      "es":  "Ambystoma mexicanum",
+                      "ru":  "Мексиканская амбистома",
+                      "en":  "axolotl",
+                      "fr":  "Axolotl",
+                      "it":  "Ambystoma mexicanum"
+                  },
+        "rank":  134
+    },
+    {
+        "key":  "tree_frog",
+        "names":  {
+                      "ru":  "древесная лягушка",
+                      "en":  "tree frog",
+                      "fr":  "Grenouille arboricole",
+                      "es":  "Rana de árbol"
+                  },
+        "rank":  237
+    },
+    {
+        "key":  "bullfrog",
+        "names":  {
+                      "en":  "bullfrog"
+                  },
+        "rank":  236
+    },
+    {
+        "key":  "monitor_lizard",
+        "names":  {
+                      "es":  "Varanus",
+                      "ru":  "Вараны",
+                      "en":  "Varanus",
+                      "fr":  "Varanus",
+                      "it":  "Varanus"
+                  },
+        "rank":  78
+    },
+    {
+        "key":  "gila_monster",
+        "names":  {
+                      "es":  "Heloderma suspectum",
+                      "ru":  "Аризонский ядозуб",
+                      "en":  "Gila monster",
+                      "fr":  "Monstre de Gila",
+                      "it":  "Heloderma suspectum"
+                  },
+        "rank":  33
+    },
+    {
+        "key":  "praying_mantis",
+        "names":  {
+                      "es":  "Mantodea",
+                      "ru":  "богомоловые",
+                      "en":  "Mantodea",
+                      "fr":  "Mantodea",
+                      "it":  "Mantodea"
+                  },
+        "rank":  63
+    },
+    {
+        "key":  "cockroach",
+        "names":  {
+                      "es":  "cucaracha",
+                      "ru":  "таракан",
+                      "en":  "cockroach",
+                      "fr":  "blatte",
+                      "it":  "blatta"
+                  },
+        "rank":  228
+    },
+    {
+        "key":  "termite",
+        "names":  {
+                      "es":  "Isoptera",
+                      "ru":  "термиты",
+                      "en":  "termite",
+                      "fr":  "Isoptera",
+                      "it":  "Isoptera"
+                  },
+        "rank":  145
+    },
+    {
+        "key":  "earwig",
+        "names":  {
+                      "es":  "Dermaptera",
+                      "ru":  "кожистокрылые",
+                      "en":  "Dermaptera",
+                      "fr":  "Dermaptera",
+                      "it":  "Dermaptera"
+                  },
+        "rank":  80
+    },
+    {
+        "key":  "aphid",
+        "names":  {
+                      "es":  "Aphidoidea",
+                      "ru":  "тли",
+                      "en":  "aphid",
+                      "fr":  "Aphidoidea",
+                      "it":  "Aphidoidea"
+                  },
+        "rank":  231
+    },
+    {
+        "key":  "tick",
+        "names":  {
+                      "es":  "Ixodida",
+                      "ru":  "Ixodida",
+                      "en":  "Ixodida",
+                      "fr":  "tique",
+                      "it":  "Ixodida"
+                  },
+        "rank":  98
+    },
+    {
+        "key":  "flea",
+        "names":  {
+                      "es":  "Siphonaptera",
+                      "ru":  "Блохи",
+                      "en":  "flea",
+                      "fr":  "Siphonaptera",
+                      "it":  "Siphonaptera"
+                  },
+        "rank":  229
+    },
+    {
+        "key":  "capybara",
+        "names":  {
+                      "es":  "Hydrochoerus hydrochaeris",
+                      "ru":  "капибара",
+                      "en":  "Capybara",
+                      "fr":  "Hydrochoerus hydrochaeris",
+                      "it":  "Hydrochoeris hydrochaeris"
+                  },
+        "rank":  3
+    },
+    {
+        "key":  "chinchilla",
+        "names":  {
+                      "es":  "Chinchilla",
+                      "ru":  "шиншиллы",
+                      "en":  "Chinchilla",
+                      "fr":  "Chinchilla",
+                      "it":  "Chinchilla"
+                  },
+        "rank":  38
+    },
+    {
+        "key":  "gerbil",
+        "names":  {
+                      "es":  "Meriones unguiculatus",
+                      "ru":  "Когтистая песчанка",
+                      "en":  "Mongolian gerbil",
+                      "fr":  "Gerbille de Mongolie",
+                      "it":  "Meriones unguiculatus"
+                  },
+        "rank":  49
+    },
+    {
+        "key":  "vole",
+        "names":  {
+                      "es":  "campañol",
+                      "ru":  "полёвка",
+                      "en":  "vole",
+                      "fr":  "campagnol",
+                      "it":  "arvicolinae"
+                  },
+        "rank":  201
+    },
+    {
+        "key":  "shrew",
+        "names":  {
+                      "es":  "Soricidae",
+                      "ru":  "землеройковые",
+                      "en":  "Soricidae",
+                      "fr":  "musaraigne",
+                      "it":  "Soricidae"
+                  },
+        "rank":  75
+    },
+    {
+        "key":  "pangolin",
+        "names":  {
+                      "es":  "Pholidota",
+                      "ru":  "панголины",
+                      "en":  "Pholidota",
+                      "fr":  "Pholidota",
+                      "it":  "Pholidota"
+                  },
+        "rank":  61
+    },
+    {
+        "key":  "aardvark",
+        "names":  {
+                      "es":  "Orycteropus afer",
+                      "ru":  "трубкозуб",
+                      "en":  "aardvark",
+                      "fr":  "oryctérope",
+                      "it":  "Orycteropus afer"
+                  },
+        "rank":  167
+    },
+    {
+        "key":  "bushbaby",
+        "names":  {
+                      "es":  "Galagidae",
+                      "ru":  "галаговые",
+                      "en":  "Galagidae",
+                      "fr":  "Galagidae",
+                      "it":  "Galagidae"
+                  },
+        "rank":  93
+    },
+    {
+        "key":  "tarsier",
+        "names":  {
+                      "es":  "Tarsiidae",
+                      "ru":  "долгопятовые",
+                      "en":  "Tarsier",
+                      "fr":  "tarsier",
+                      "it":  "Tarsiidae"
+                  },
+        "rank":  44
+    },
+    {
+        "key":  "marmoset",
+        "names":  {
+                      "en":  "marmoset",
+                      "fr":  "ouistiti",
+                      "es":  "Tití"
+                  },
+        "rank":  171
+    },
+    {
+        "key":  "gibbon",
+        "names":  {
+                      "es":  "hilobátido",
+                      "ru":  "гиббоновые",
+                      "en":  "gibbon",
+                      "fr":  "gibbons",
+                      "it":  "Hylobatidae"
+                  },
+        "rank":  212
+    },
+    {
+        "key":  "mandrill",
+        "names":  {
+                      "es":  "Mandrillus sphinx",
+                      "ru":  "Мандрил",
+                      "en":  "mandrill",
+                      "fr":  "mandrill",
+                      "it":  "Mandrillus sphinx"
+                  },
+        "rank":  128
+    },
+    {
+        "key":  "wallaby",
+        "names":  {
+                      "es":  "Ualabí",
+                      "ru":  "валлаби",
+                      "en":  "wallaby",
+                      "fr":  "wallaby",
+                      "it":  "wallaby"
+                  },
+        "rank":  208
+    },
+    {
+        "key":  "tasmanian_devil",
+        "names":  {
+                      "es":  "Sarcophilus harrisii",
+                      "ru":  "Тасманийский дьявол",
+                      "en":  "Tasmanian devil",
+                      "fr":  "diable de Tasmanie",
+                      "it":  "Sarcophilus harrisii"
+                  },
+        "rank":  16
+    },
+    {
+        "key":  "dingo",
+        "names":  {
+                      "es":  "dingo",
+                      "ru":  "Динго",
+                      "en":  "dingo",
+                      "fr":  "dingo",
+                      "it":  "Canis lupus dingo"
+                  },
+        "rank":  207
+    },
+    {
+        "key":  "jackal",
+        "names":  {
+                      "es":  "chacal",
+                      "ru":  "шакал",
+                      "en":  "jackal",
+                      "fr":  "chacal",
+                      "it":  "sciacallo"
+                  },
+        "rank":  170
+    },
+    {
+        "key":  "wild_boar",
+        "names":  {
+                      "es":  "Sus scrofa",
+                      "ru":  "кабан",
+                      "en":  "Sus scrofa",
+                      "fr":  "sanglier",
+                      "it":  "cinghiale"
+                  },
+        "rank":  68
+    },
+    {
+        "key":  "ibex",
+        "names":  {
+                      "es":  "íbice",
+                      "en":  "ibex",
+                      "fr":  "ibex",
+                      "it":  "stambecco"
+                  },
+        "rank":  172
+    },
+    {
+        "key":  "chamois",
+        "names":  {
+                      "es":  "rebeco de los Alpes",
+                      "ru":  "Серна",
+                      "en":  "chamois",
+                      "fr":  "chamois",
+                      "it":  "camoscio alpino"
+                  },
+        "rank":  139
+    },
+    {
+        "key":  "pronghorn",
+        "names":  {
+                      "es":  "Antilocapra americana",
+                      "ru":  "Вилорог",
+                      "en":  "pronghorn",
+                      "fr":  "Antilocapra americana",
+                      "it":  "Antilocapra americana"
+                  },
+        "rank":  204
+    },
+    {
+        "key":  "caribou",
+        "names":  {
+                      "es":  "reno",
+                      "ru":  "северный олень",
+                      "en":  "Rangifer tarandus",
+                      "fr":  "Rangifer tarandus",
+                      "it":  "Rangifer tarandus"
+                  },
+        "rank":  111
+    },
+    {
+        "key":  "snow_leopard",
+        "names":  {
+                      "es":  "leopardo de las nieves",
+                      "ru":  "ирбис",
+                      "en":  "snow leopard",
+                      "fr":  "panthère des neiges",
+                      "it":  "leopardo delle nevi"
+                  },
+        "rank":  173
+    },
+    {
+        "key":  "clouded_leopard",
+        "names":  {
+                      "es":  "pantera nebulosa",
+                      "ru":  "Дымчатый леопард",
+                      "en":  "clouded leopard",
+                      "fr":  "panthère nébuleuse",
+                      "it":  "Neofelis nebulosa"
+                  },
+        "rank":  154
+    },
+    {
+        "key":  "serval",
+        "names":  {
+                      "es":  "Leptailurus serval",
+                      "ru":  "сервал",
+                      "en":  "serval",
+                      "fr":  "serval",
+                      "it":  "Leptailurus serval"
+                  },
+        "rank":  210
+    },
+    {
+        "key":  "caracal",
+        "names":  {
+                      "es":  "Caracal caracal",
+                      "ru":  "каракал",
+                      "en":  "caracal",
+                      "fr":  "Caracal",
+                      "it":  "Caracal caracal"
+                  },
+        "rank":  168
+    },
+    {
+        "key":  "ocelot",
+        "names":  {
+                      "es":  "Leopardus pardalis",
+                      "ru":  "оцелот",
+                      "en":  "ocelot",
+                      "fr":  "ocelot",
+                      "it":  "Leopardus pardalis"
+                  },
+        "rank":  200
+    },
+    {
+        "key":  "bobcat",
+        "names":  {
+                      "es":  "lince rojo",
+                      "ru":  "рыжая рысь",
+                      "en":  "bobcat",
+                      "fr":  "Lynx roux",
+                      "it":  "Lynx rufus"
+                  },
+        "rank":  202
+    }
+]

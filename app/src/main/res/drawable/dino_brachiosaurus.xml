@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp" android:height="120dp"
+    android:viewportWidth="120" android:viewportHeight="120">
+    <!-- Brachiosaure : long cou dressé, gros corps, 4 pattes -->
+    <path android:fillColor="#9B6FD0"
+        android:pathData="M30,80 m-22,0 a22,18 0 1 0 44,0 a22,18 0 1 0 -44,0 Z" />
+    <!-- queue -->
+    <path android:fillColor="#9B6FD0" android:pathData="M8,78 L40,72 L40,86 Z" />
+    <!-- cou + tête -->
+    <path android:fillColor="#9B6FD0"
+        android:pathData="M44,70 C50,40 58,24 70,16 C78,11 88,14 86,22 C78,30 66,44 60,72 Z" />
+    <path android:fillColor="#9B6FD0"
+        android:pathData="M70,12 m-9,0 a9,8 0 1 0 18,0 a9,8 0 1 0 -18,0 Z" />
+    <!-- pattes -->
+    <path android:fillColor="#9B6FD0" android:pathData="M18,92 h9 v18 h-9 Z" />
+    <path android:fillColor="#9B6FD0" android:pathData="M38,92 h9 v18 h-9 Z" />
+    <path android:fillColor="#2B2B2B"
+        android:pathData="M74,10 m-1.8,0 a1.8,1.8 0 1 0 3.6,0 a1.8,1.8 0 1 0 -3.6,0 Z" />
+</vector>

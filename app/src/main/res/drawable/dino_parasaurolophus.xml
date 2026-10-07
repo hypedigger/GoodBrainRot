@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp" android:height="120dp"
+    android:viewportWidth="120" android:viewportHeight="120">
+    <!-- Parasaurolophus : longue crête vers l'arrière, bec de canard -->
+    <path android:fillColor="#E26FA8"
+        android:pathData="M34,66 m-20,0 a20,16 0 1 0 40,0 a20,16 0 1 0 -40,0 Z" />
+    <!-- queue -->
+    <path android:fillColor="#E26FA8" android:pathData="M10,64 L36,60 L34,74 Z" />
+    <!-- cou + tête -->
+    <path android:fillColor="#E26FA8"
+        android:pathData="M48,56 C58,44 70,36 82,34 L86,40 C76,46 68,54 62,66 Z" />
+    <!-- crête vers l'arrière -->
+    <path android:fillColor="#C9558F"
+        android:pathData="M78,36 C68,28 56,28 50,34 C60,32 70,34 80,42 Z" />
+    <!-- bec -->
+    <path android:fillColor="#E26FA8" android:pathData="M82,34 L96,36 L86,42 Z" />
+    <!-- pattes -->
+    <path android:fillColor="#E26FA8" android:pathData="M24,80 h9 v22 h-9 Z" />
+    <path android:fillColor="#E26FA8" android:pathData="M42,80 h9 v22 h-9 Z" />
+    <path android:fillColor="#2B2B2B"
+        android:pathData="M82,38 m-1.6,0 a1.6,1.6 0 1 0 3.2,0 a1.6,1.6 0 1 0 -3.2,0 Z" />
+</vector>

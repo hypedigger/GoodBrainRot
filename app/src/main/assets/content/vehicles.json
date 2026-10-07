@@ -1,0 +1,139 @@
+[
+    {
+        "key":  "car",
+        "nameKey":  "vehicle_car",
+        "emoji":  "🚗",
+        "rank":  1
+    },
+    {
+        "key":  "fire_truck",
+        "nameKey":  "vehicle_fire_truck",
+        "emoji":  "🚒",
+        "rank":  12
+    },
+    {
+        "key":  "police",
+        "nameKey":  "vehicle_police",
+        "emoji":  "🚓",
+        "rank":  4
+    },
+    {
+        "key":  "ambulance",
+        "nameKey":  "vehicle_ambulance",
+        "emoji":  "🚑",
+        "rank":  9
+    },
+    {
+        "key":  "train",
+        "nameKey":  "vehicle_train",
+        "emoji":  "🚂",
+        "rank":  3
+    },
+    {
+        "key":  "plane",
+        "nameKey":  "vehicle_plane",
+        "emoji":  "✈️",
+        "rank":  10
+    },
+    {
+        "key":  "helicopter",
+        "nameKey":  "vehicle_helicopter",
+        "emoji":  "🚁",
+        "rank":  2
+    },
+    {
+        "key":  "bike",
+        "nameKey":  "vehicle_bike",
+        "emoji":  "🚲",
+        "rank":  11
+    },
+    {
+        "key":  "bus",
+        "nameKey":  "vehicle_bus",
+        "emoji":  "🚌",
+        "rank":  6
+    },
+    {
+        "key":  "tractor",
+        "nameKey":  "vehicle_tractor",
+        "emoji":  "🚜",
+        "rank":  7
+    },
+    {
+        "key":  "boat",
+        "nameKey":  "vehicle_boat",
+        "emoji":  "🚢",
+        "rank":  8
+    },
+    {
+        "key":  "rocket",
+        "nameKey":  "vehicle_rocket",
+        "emoji":  "🚀",
+        "rank":  5
+    },
+    {
+        "key":  "motorcycle",
+        "names":  {
+                      "es":  "motocicleta",
+                      "ru":  "мотоцикл",
+                      "en":  "motorcycle",
+                      "fr":  "moto",
+                      "it":  "motocicletta"
+                  },
+        "rank":  16
+    },
+    {
+        "key":  "truck",
+        "names":  {
+                      "es":  "camión",
+                      "ru":  "грузовой автомобиль",
+                      "en":  "truck",
+                      "fr":  "camion",
+                      "it":  "autocarro"
+                  },
+        "rank":  17
+    },
+    {
+        "key":  "submarine",
+        "names":  {
+                      "es":  "submarino",
+                      "ru":  "подводная лодка",
+                      "en":  "submarine",
+                      "fr":  "sous-marin",
+                      "it":  "sottomarino"
+                  },
+        "rank":  15
+    },
+    {
+        "key":  "excavator",
+        "names":  {
+                      "es":  "pala excavadora",
+                      "ru":  "экскаватор",
+                      "en":  "excavator",
+                      "fr":  "excavateur",
+                      "it":  "escavatore"
+                  },
+        "rank":  13
+    },
+    {
+        "key":  "crane_vehicle",
+        "names":  {
+                      "ru":  "автомобильный кран",
+                      "en":  "mobile crane",
+                      "fr":  "grue mobile",
+                      "it":  "gru mobile"
+                  },
+        "rank":  18
+    },
+    {
+        "key":  "ship",
+        "names":  {
+                      "es":  "barco",
+                      "ru":  "корабль",
+                      "en":  "ship",
+                      "fr":  "navire",
+                      "it":  "nave"
+                  },
+        "rank":  14
+    }
+]
