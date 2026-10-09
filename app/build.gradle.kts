@@ -1,5 +1,6 @@
 ﻿import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Properties
 import java.util.TimeZone
 
 plugins {
@@ -26,13 +27,34 @@ android {
         buildConfigField("String", "BUILD_TIME", "\"$buildTime\"")
     }
 
+    // Signature release : keystore locale HORS dépôt (E:\Divers\Dev\Vibecoding\GoodBrainRot-keys\).
+    // Si le fichier keystore.properties est absent, le build release reste possible mais non signé.
+    val ksProps = Properties().apply {
+        val f = file("E:/Divers/Dev/Vibecoding/GoodBrainRot-keys/keystore.properties")
+        if (f.exists()) f.inputStream().use { load(it) }
+    }
+    if (ksProps.getProperty("storeFile") != null) {
+        signingConfigs {
+            create("release") {
+                storeFile = file(ksProps.getProperty("storeFile"))
+                storePassword = ksProps.getProperty("storePassword")
+                keyAlias = ksProps.getProperty("keyAlias")
+                keyPassword = ksProps.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // R8 sur le code uniquement. PAS de shrinkResources : beaucoup de drawables sont
+            // chargés par nom via getIdentifier() et seraient supprimés à tort.
+            isMinifyEnabled = true
+            isShrinkResources = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfigs.findByName("release")?.let { signingConfig = it }
         }
     }
     compileOptions {

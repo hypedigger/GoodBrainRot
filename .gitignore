@@ -32,3 +32,6 @@ app/src/main/assets/sounds/*.mp3
 # kits de batterie : provenance mixte -> non redistribues ; scripts/fetch_samples.ps1
 # retelecharge les samples Sonic Pi (CC0), sinon l'app synthetise les sons
 app/src/main/assets/kits/
+
+# cle de signature locale (hors depot)
+/GoodBrainRot-keys/

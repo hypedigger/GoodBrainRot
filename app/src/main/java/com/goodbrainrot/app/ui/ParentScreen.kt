@@ -19,7 +19,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -115,6 +118,28 @@ fun ParentScreen(onBack: () -> Unit, onOpenActivity: (String) -> Unit) {
                 .verticalScroll(rememberScrollState())
                 .padding(20.dp)
         ) {
+            // Rapport de plantage local (s'il y en a eu un) : visible seulement ici, partageable.
+            var crash by remember { mutableStateOf(com.goodbrainrot.app.CrashLog.read(context)) }
+            crash?.let { report ->
+                Column(
+                    Modifier.fillMaxWidth().padding(bottom = 14.dp)
+                        .clip(RoundedCornerShape(16.dp)).background(Color(0xFFFBE7E7)).padding(14.dp)
+                ) {
+                    Text("⚠️ " + stringResource(R.string.crash_title), fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFFB03030))
+                    Text(report.lineSequence().firstOrNull() ?: "", fontSize = 12.sp, color = InkColor, modifier = Modifier.padding(top = 4.dp))
+                    Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Box(Modifier.clip(RoundedCornerShape(12.dp)).background(Color(0xFFB03030)).clickableNoRipple {
+                            val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                type = "text/plain"; putExtra(android.content.Intent.EXTRA_TEXT, report)
+                            }
+                            context.startActivity(android.content.Intent.createChooser(send, null))
+                        }.padding(horizontal = 14.dp, vertical = 7.dp)) { Text(stringResource(R.string.crash_share), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp) }
+                        Box(Modifier.clip(RoundedCornerShape(12.dp)).background(Color(0x22000000)).clickableNoRipple {
+                            com.goodbrainrot.app.CrashLog.clear(context); crash = null
+                        }.padding(horizontal = 14.dp, vertical = 7.dp)) { Text(stringResource(R.string.crash_clear), color = InkColor, fontWeight = FontWeight.Bold, fontSize = 13.sp) }
+                    }
+                }
+            }
             val pv = Profiles.version.value
             @Suppress("UNUSED_EXPRESSION") pv
             val child = remember(pv) { Profiles.current() }

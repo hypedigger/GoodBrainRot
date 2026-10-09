@@ -83,7 +83,7 @@ object Sfx {
         if (pool != null) return
         val p = try {
             SoundPool.Builder()
-                .setMaxStreams(12)
+                .setMaxStreams(20)   // les combos de Tranche + moteur + musique peuvent dépasser 12 flux
                 .setAudioAttributes(
                     AudioAttributes.Builder()
                         .setUsage(AudioAttributes.USAGE_GAME)

@@ -285,4 +285,7 @@
     <string name="vroum_v_bear">Ours</string>
     <string name="vroum_jumped">Sauté !</string>
     <string name="gz_rotate_hint">↔️ Glisse en bas de l\'écran pour tourner la plante</string>
+    <string name="crash_title">Rapport de plantage</string>
+    <string name="crash_share">Partager</string>
+    <string name="crash_clear">Effacer</string>
 </resources>

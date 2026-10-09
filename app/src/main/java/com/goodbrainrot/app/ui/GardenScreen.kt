@@ -129,6 +129,19 @@ fun GardenScreen(onBack: () -> Unit) {
 
     DisposableEffect(Unit) { onDispose { GameMusic.stop() } }
     DisposableEffect(glView) { onDispose { glView?.onPause() } }
+    // économie de batterie : met le thread GL en pause quand l'app passe en arrière-plan
+    val lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current
+    DisposableEffect(glView, lifecycleOwner) {
+        val obs = androidx.lifecycle.LifecycleEventObserver { _, e ->
+            when (e) {
+                androidx.lifecycle.Lifecycle.Event.ON_PAUSE -> glView?.onPause()
+                androidx.lifecycle.Lifecycle.Event.ON_RESUME -> glView?.onResume()
+                else -> {}
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(obs)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(obs) }
+    }
     LaunchedEffect(Unit) { if (lofiRes != 0) GameMusic.playRes(ctx, lofiRes) }
 
     LaunchedEffect(game) {

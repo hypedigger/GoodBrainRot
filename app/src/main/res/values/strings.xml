@@ -294,4 +294,7 @@
     <string name="vroum_v_bear">Bear</string>
     <string name="vroum_jumped">Jumped!</string>
     <string name="gz_rotate_hint">↔️ Slide at the bottom to turn the plant</string>
+    <string name="crash_title">Crash report</string>
+    <string name="crash_share">Share</string>
+    <string name="crash_clear">Dismiss</string>
 </resources>

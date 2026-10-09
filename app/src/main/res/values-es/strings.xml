@@ -285,4 +285,7 @@
     <string name="vroum_v_bear">Oso</string>
     <string name="vroum_jumped">¡Saltado!</string>
     <string name="gz_rotate_hint">↔️ Desliza abajo para girar la planta</string>
+    <string name="crash_title">Informe de fallo</string>
+    <string name="crash_share">Compartir</string>
+    <string name="crash_clear">Borrar</string>
 </resources>
