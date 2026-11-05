@@ -317,5 +317,7 @@ object Settings {
 enum class QuizType {
     ANIMAL, NUMBER, LETTER, COLOR, SHAPE, COUNT, SOUND, MAMA,
     // Quiz « devine » à base d'images de contenu
-    IMG_ANIMAL, IMG_VEHICLE, IMG_DINO, IMG_MIXED
+    IMG_ANIMAL, IMG_VEHICLE, IMG_DINO, IMG_MIXED,
+    // drapeaux dessinés, métiers (images IA), instruments reconnus à l'oreille
+    FLAG, JOB, INSTRUMENT
 }

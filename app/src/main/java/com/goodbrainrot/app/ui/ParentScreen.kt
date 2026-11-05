@@ -63,7 +63,10 @@ private val PARENT_CATS = listOf(
     },
     ParentCat(R.string.activity_color, "color", Routes.QUIZ_COLOR) { 8 },
     ParentCat(R.string.activity_shape, "shape", Routes.QUIZ_SHAPE) { 6 },
-    ParentCat(R.string.activity_count, "count", Routes.QUIZ_COUNT) { 6 }
+    ParentCat(R.string.activity_count, "count", Routes.QUIZ_COUNT) { 6 },
+    ParentCat(R.string.activity_flags, "flag", Routes.QUIZ_FLAG) { FLAGS.size },
+    ParentCat(R.string.activity_jobs, "job", Routes.QUIZ_JOB) { JOBS.size },
+    ParentCat(R.string.activity_instruments, "instrument", Routes.QUIZ_INSTRUMENT) { EAR_INSTRUMENTS.size }
 )
 
 private fun fmtDuration(seconds: Long): String {
@@ -237,6 +240,24 @@ fun ParentScreen(onBack: () -> Unit, onOpenActivity: (String) -> Unit) {
                     Text(text = " ▶", fontSize = 13.sp, color = InkColor)
                 }
             }
+
+            // ---- Jeux : étoiles des circuits, précision moyenne de Topiaire, records datés ----
+            Spacer(modifier = Modifier.height(16.dp))
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(stringResource(R.string.parents_games), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            val starsMap by com.goodbrainrot.app.Settings.vroumStars
+            val precMap by com.goodbrainrot.app.Settings.gardenPrecision
+            Text(
+                text = "Vroum ★ ${starsMap.values.sum()} / ${THEMES.size * 18}" +
+                    (if (precMap.isNotEmpty()) "   ·   " + stringResource(R.string.gz_precision) + " ${precMap.values.sum() / precMap.size} %" else ""),
+                fontSize = 14.sp, color = InkColor, modifier = Modifier.padding(top = 4.dp, bottom = 6.dp)
+            )
+            GameRecords(compact = true)
+            Box(
+                modifier = Modifier.padding(top = 8.dp).clip(RoundedCornerShape(14.dp)).background(Color(0xFFFFE08A))
+                    .clickable { onOpenActivity(Routes.TROPHIES) }.padding(horizontal = 16.dp, vertical = 8.dp)
+            ) { Text("🏆 " + stringResource(R.string.trophies_title) + "  ▶", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = InkColor) }
 
             Spacer(modifier = Modifier.height(20.dp))
             Box(

@@ -167,6 +167,13 @@ object Stats {
         return boxMap[cacheKey(category, item)] ?: 0
     }
 
+    /** Items déjà rencontrés mais encore fragiles (boîte < 3) : ce qu'il faut réviser. */
+    fun reviewKeys(category: String): Set<String> {
+        ensureLoaded()
+        val prefix = "$category|"
+        return boxMap.filter { (k, box) -> k.startsWith(prefix) && box < 3 }.keys.map { it.removePrefix(prefix) }.toSet()
+    }
+
     fun learnedKeys(category: String): Set<String> {
         ensureLoaded()
         return learnedMap[category] ?: emptySet()

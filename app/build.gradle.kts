@@ -1,4 +1,4 @@
-﻿import java.text.SimpleDateFormat
+import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Properties
 import java.util.TimeZone
@@ -17,8 +17,8 @@ android {
         applicationId = "com.goodbrainrot.app"
         minSdk = 29
         targetSdk = 35
-        versionCode = 108
-        versionName = "3.88"
+        versionCode = 109
+        versionName = "3.89"
 
         // Date de build injectee dans l'app (visible dans les Options).
         val buildTime = SimpleDateFormat("dd/MM/yyyy HH:mm").apply {

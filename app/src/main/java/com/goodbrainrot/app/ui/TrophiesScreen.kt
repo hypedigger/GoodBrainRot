@@ -101,6 +101,28 @@ fun TrophiesScreen(onBack: () -> Unit) {
         }
 
         SectionTitle(stringResource(R.string.trophies_records))
+        GameRecords()
+
+        SectionTitle(stringResource(R.string.trophies_topiary))
+        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(T_CARD).padding(vertical = 10.dp, horizontal = 6.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+            SHAPE_GLYPHS.forEachIndexed { i, g ->
+                val p = prec[i] ?: 0
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(44.dp)) {
+                    Text(g, fontSize = 24.sp)
+                    Text(if (p > 0) "$p%" else "—", color = if (p >= 95) T_GOLD else InkColor.copy(alpha = if (p > 0) 0.85f else 0.35f), fontWeight = FontWeight.ExtraBold, fontSize = 13.sp, maxLines = 1)
+                    Text(when { p >= 95 -> "🥇"; p >= 80 -> "🥈"; p > 0 -> "🥉"; else -> " " }, fontSize = 14.sp)
+                }
+            }
+        }
+        Spacer(Modifier.height(24.dp))
+    }
+}
+
+/** Records datés de chaque jeu et mode (meilleur score + date). [compact] : version espace parents. */
+@Composable
+internal fun GameRecords(compact: Boolean = false) {
+    @Suppress("UNUSED_EXPRESSION") HighScores.version.value
+    Column {
         val vroum = stringResource(R.string.activity_vroum); val garden = stringResource(R.string.activity_garden); val sky = stringResource(R.string.activity_shmup)
         val records = listOf(
             Triple(HighScores.Games.SHMUP, sky, R.drawable.ic_shmup),
@@ -116,28 +138,16 @@ fun TrophiesScreen(onBack: () -> Unit) {
         ).mapNotNull { (key, name, icon) -> HighScores.top(key).firstOrNull()?.takeIf { it.score > 0 }?.let { Triple(name, icon, it) } }
         if (records.isEmpty()) Text(stringResource(R.string.trophies_none), color = InkColor.copy(alpha = 0.7f), fontSize = 15.sp, modifier = Modifier.padding(8.dp))
         for ((name, icon, best) in records) {
-            Row(Modifier.fillMaxWidth().padding(vertical = 4.dp).clip(RoundedCornerShape(18.dp)).background(T_CARD).padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Image(painterResource(icon), contentDescription = null, modifier = Modifier.size(36.dp))
+            Row(Modifier.fillMaxWidth().padding(vertical = if (compact) 2.dp else 4.dp).clip(RoundedCornerShape(18.dp)).background(T_CARD)
+                .padding(horizontal = 12.dp, vertical = if (compact) 5.dp else 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Image(painterResource(icon), contentDescription = null, modifier = Modifier.size(if (compact) 26.dp else 36.dp))
                 Column(Modifier.weight(1f).padding(start = 10.dp)) {
-                    Text(name, color = InkColor, fontWeight = FontWeight.Bold, fontSize = 15.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(name, color = InkColor, fontWeight = FontWeight.Bold, fontSize = if (compact) 13.sp else 15.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text("🥇 " + best.name, color = InkColor.copy(alpha = 0.6f), fontSize = 12.sp, maxLines = 1)
                 }
-                Text("${best.score}", color = T_GOLD, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
+                Text("${best.score}", color = T_GOLD, fontWeight = FontWeight.ExtraBold, fontSize = if (compact) 16.sp else 20.sp)
             }
         }
-
-        SectionTitle(stringResource(R.string.trophies_topiary))
-        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(T_CARD).padding(vertical = 10.dp, horizontal = 6.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-            SHAPE_GLYPHS.forEachIndexed { i, g ->
-                val p = prec[i] ?: 0
-                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(44.dp)) {
-                    Text(g, fontSize = 24.sp)
-                    Text(if (p > 0) "$p%" else "—", color = if (p >= 95) T_GOLD else InkColor.copy(alpha = if (p > 0) 0.85f else 0.35f), fontWeight = FontWeight.ExtraBold, fontSize = 13.sp, maxLines = 1)
-                    Text(when { p >= 95 -> "🥇"; p >= 80 -> "🥈"; p > 0 -> "🥉"; else -> " " }, fontSize = 14.sp)
-                }
-            }
-        }
-        Spacer(Modifier.height(24.dp))
     }
 }
 

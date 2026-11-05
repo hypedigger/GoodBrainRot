@@ -1,5 +1,12 @@
 # Nouveautés — GoodBrainRot
 
+## 3.89 — 2026-11-05
+- **Quiz Drapeaux** (hub Reconnais) : **24 pays**, drapeaux **dessinés par l'app** (couleurs et proportions officielles simplifiées, États-Unis à 50 étoiles, Union Jack, Chine, Turquie, Inde avec sa roue…), noms dans les 5 langues.
+- **Quiz Métiers** (hub Reconnais) : **18 métiers** illustrés (pompier, docteur, astronaute, boulanger, maîtresse…).
+- **Quiz Instruments à l'oreille** (hub Écoute) : une petite mélodie est jouée — piano, xylophone, guitare ou batterie ? (bouton 🔊 pour réécouter ; nouvelle icône de xylophone).
+- **Mode Révision** dans les quiz : bouton « 🔁 Révision (n) » dès que des éléments déjà vus restent fragiles — la série ne porte plus que sur eux.
+- **Espace parents** : les 3 nouveaux quiz dans la progression et la synthèse, et nouvelle section **Jeux** (étoiles Vroum, précision moyenne de Topiaire, records datés, lien vers les Trophées).
+
 ## 3.88 — 2026-11-05
 - **Crimson Sky — BOSS RUSH** : nouveau mode (5ᵉ bouton du menu) — les **6 boss d'affilée** (les 5 boss + le boss final caché), sans vagues ni écran de récap entre deux combats, on part armé (puissance 6) ; **chrono total** en bas de l'écran (« BOSS 3/6 1:42 »), **bonus de vitesse** à la fin (50 points par seconde sous les 10 minutes) et **tableau des scores dédié**. Les continues reprennent au boss en cours (le chrono continue).
 - **Écran Trophées** (nouvelle tuile 🏆 dans le hub Jeux, icône IA) : compteur géant d'étoiles (« ★ 23 / 90 »), **étoiles de chaque circuit Vroum** pour la Course et l'Arcade dans les 3 difficultés, **records datés** de chaque jeu et mode (Crimson Sky normal / Score Attack / Boss Rush, Vroum Course / Arcade, Jardinier Topiaire / Rush / Tranche, Bulles, Pluie d'étoiles), et **plus belles tailles** : meilleure précision de Topiaire pour chacune des 7 formes avec médaille 🥇🥈🥉.

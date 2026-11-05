@@ -46,6 +46,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -93,6 +94,8 @@ private sealed class QuizDisplay {
     data class ColorTile(val color: Color) : QuizDisplay()
     data class ShapeIcon(val kind: ShapeKind, val color: Color) : QuizDisplay()
     data class Content(val item: ContentItem) : QuizDisplay()
+    data class Flag(val code: String) : QuizDisplay()
+    data class AssetImage(val path: String) : QuizDisplay()   // image d'assets (métiers)
 }
 
 private fun drawableId(context: android.content.Context, name: String): Int =
@@ -223,6 +226,9 @@ private fun buildPool(context: android.content.Context, type: QuizType): List<Qu
                 QuizItem(item.key, item.displayName(context), QuizDisplay.Content(item))
             }
         }
+        QuizType.FLAG -> FLAGS.map { (code, nameRes) -> QuizItem("fl_$code", context.getString(nameRes), QuizDisplay.Flag(code)) }
+        QuizType.JOB -> JOBS.map { (key, nameRes) -> QuizItem("job_$key", context.getString(nameRes), QuizDisplay.AssetImage("jobs/$key.jpg")) }
+        QuizType.INSTRUMENT -> EAR_INSTRUMENTS.map { QuizItem("in_${it.key}", context.getString(it.nameRes), QuizDisplay.IconImage(it.iconRes)) }
     }
 
 private fun isImageType(type: QuizType) = type in listOf(
@@ -243,13 +249,15 @@ private fun buildRound(
     pool: List<QuizItem>,
     choiceCount: Int,
     usedIds: Set<String>,
-    catKey: String
+    catKey: String,
+    focus: Set<String> = emptySet()   // mode révision : cibles prises parmi ces items
 ): Round {
     // Cible jamais répétée dans la série, pondérée par la répétition espacée
     // (boîtes de Leitner) : un item mal maîtrisé (boîte basse) a beaucoup plus
     // de chances de ressortir qu'un item déjà acquis (boîte haute).
     fun pickTarget(): QuizItem {
-        val candidates = pool.filter { it.id !in usedIds }.ifEmpty { pool }
+        val base = if (focus.isEmpty()) pool else pool.filter { it.id in focus }.ifEmpty { pool }
+        val candidates = base.filter { it.id !in usedIds }.ifEmpty { base }
         val weights = candidates.map { (Stats.MAX_BOX + 1 - Stats.box(catKey, it.id)).coerceAtLeast(1) }
         val total = weights.sum()
         var r = (0 until total).random()
@@ -299,6 +307,8 @@ private fun speakTarget(context: android.content.Context, type: QuizType, round:
         QuizType.SOUND -> round.target.animal?.let {
             AnimalSoundPlayer.play(context, it, sayNameAfter = false)
         }
+        // instrument à l'oreille : on joue une petite phrase, sans dire le nom (c'est la réponse)
+        QuizType.INSTRUMENT -> EarInstrumentPlayer.play(context, round.target.id.removePrefix("in_"))
         QuizType.COUNT -> {
             val phrase = if (round.promptPhraseRes != 0) round.promptPhraseRes else R.string.count_q1
             Tts.speak(context.getString(phrase, context.getString(round.promptSubjectNameRes)))
@@ -345,23 +355,29 @@ fun QuizScreen(type: QuizType, onBack: () -> Unit) {
     var sessionToken by remember { mutableIntStateOf(0) }
 
     val catKey = remember(type) { categoryKey(type) }
+    // Mode révision : la série ne porte que sur les items déjà vus mais encore fragiles
+    var review by remember { mutableStateOf(false) }
+    val reviewIds = remember(sessionToken) { Stats.reviewKeys(catKey).filter { id -> pool.any { it.id == id } }.toSet() }
     // Items déjà demandés dans la série en cours (remis à zéro à chaque nouvelle série)
     val usedTargets = remember(sessionToken) { mutableStateListOf<String>() }
     val round = remember(roundId) {
         // Pour les jeux d'images : fenêtre qui s'élargit du classique vers l'exotique
-        // à mesure que l'enfant maîtrise des items.
-        val effectivePool = if (isImageType(type) && pool.isNotEmpty()) {
+        // à mesure que l'enfant maîtrise des items (en révision : tout le contenu).
+        val effectivePool = if (isImageType(type) && pool.isNotEmpty() && !review) {
             val n = (8 + 2 * Stats.learnedCount(catKey)).coerceIn(choiceCount, pool.size)
             pool.take(n)
         } else pool
-        val r = buildRound(type, effectivePool, choiceCount, usedTargets.toSet(), catKey)
+        val r = buildRound(type, effectivePool, choiceCount, usedTargets.toSet(), catKey, if (review) reviewIds else emptySet())
         usedTargets.add(r.target.id)
         r
     }
     val hiddenIds = remember(roundId) { mutableStateListOf<String>() }
     var solved by remember(roundId) { mutableStateOf(false) }
 
-    DisposableEffect(Unit) { onDispose { AnimalSoundPlayer.stop() } }
+    DisposableEffect(Unit) {
+        if (type == QuizType.INSTRUMENT) EarInstrumentPlayer.preload(context)
+        onDispose { AnimalSoundPlayer.stop(); EarInstrumentPlayer.stop() }
+    }
 
     LaunchedEffect(roundId, sessionDone) {
         if (sessionDone) return@LaunchedEffect
@@ -381,6 +397,22 @@ fun QuizScreen(type: QuizType, onBack: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 BackButton(onBack = onBack)
+                // bouton Révision : visible dès qu'il y a au moins 2 items fragiles à retravailler
+                if ((reviewIds.size >= 2 || review) && type != QuizType.MAMA) {
+                    Box(
+                        Modifier.clip(RoundedCornerShape(16.dp))
+                            .background(if (review) Color(0xFFFFC93D) else Color(0x22000000))
+                            .clickable {
+                                review = !review
+                                score = 0; questionNumber = 1; sessionDone = false
+                                sessionToken++; roundId++
+                            }
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Text("🔁 " + stringResource(R.string.quiz_review) + if (review) "" else " (${reviewIds.size})",
+                            fontSize = 14.sp, fontWeight = FontWeight.Bold, color = InkColor, maxLines = 1)
+                    }
+                }
                 Text(
                     text = "⭐ $score    $questionNumber/$totalQuestions",
                     fontSize = 18.sp,
@@ -390,6 +422,8 @@ fun QuizScreen(type: QuizType, onBack: () -> Unit) {
                 )
             }
 
+            if (review) Text(stringResource(R.string.quiz_review_hint), fontSize = 13.sp, color = InkColor.copy(alpha = 0.7f),
+                modifier = Modifier.align(Alignment.CenterHorizontally).padding(bottom = 4.dp))
             QuizPrompt(type, round, modifier = Modifier.fillMaxWidth())
 
             LazyVerticalGrid(
@@ -406,7 +440,7 @@ fun QuizScreen(type: QuizType, onBack: () -> Unit) {
                     val hidden = item.id in hiddenIds
                     val tileColor = when (type) {
                         QuizType.COLOR -> (item.display as QuizDisplay.ColorTile).color
-                        QuizType.SHAPE -> Color.White
+                        QuizType.SHAPE, QuizType.FLAG, QuizType.JOB -> Color.White
                         else -> PastelRainbow[round.choices.indexOf(item) % PastelRainbow.size]
                     }
                     val scale by animateFloatAsState(
@@ -622,7 +656,7 @@ private fun QuizPrompt(type: QuizType, round: Round, modifier: Modifier = Modifi
 @Composable
 private fun QuizBottomBar(type: QuizType, round: Round, onSpeak: () -> Unit) {
     when (type) {
-        QuizType.SOUND -> {
+        QuizType.SOUND, QuizType.INSTRUMENT -> {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -635,7 +669,7 @@ private fun QuizBottomBar(type: QuizType, round: Round, onSpeak: () -> Unit) {
         }
         else -> {
             val label: String? = when (type) {
-                QuizType.ANIMAL, QuizType.COLOR, QuizType.SHAPE,
+                QuizType.ANIMAL, QuizType.COLOR, QuizType.SHAPE, QuizType.FLAG, QuizType.JOB,
                 QuizType.IMG_ANIMAL, QuizType.IMG_VEHICLE, QuizType.IMG_DINO, QuizType.IMG_MIXED ->
                     round.target.spoken
                 QuizType.MAMA -> stringResource(R.string.find_mama_named, stringResource(round.promptBabyNameRes))
@@ -699,6 +733,15 @@ private fun QuizTileContent(type: QuizType, display: QuizDisplay, tileColor: Col
         is QuizDisplay.Content -> ContentVisual(
             item = display.item, modifier = Modifier.fillMaxSize(), emojiSize = 64
         )
+        is QuizDisplay.Flag -> FlagView(display.code, modifier = Modifier.fillMaxSize(0.88f))
+        is QuizDisplay.AssetImage -> {
+            val context = LocalContext.current
+            val bmp = remember(display.path) {
+                try { context.assets.open(display.path).use { android.graphics.BitmapFactory.decodeStream(it) }?.asImageBitmap() } catch (_: Exception) { null }
+            }
+            if (bmp != null) androidx.compose.foundation.Image(bitmap = bmp, contentDescription = null, modifier = Modifier.fillMaxSize(),
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop)
+        }
     }
 }
 

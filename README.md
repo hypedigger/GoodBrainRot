@@ -9,9 +9,9 @@ Instruments, picture quizzes, mini-games and drawing, wrapped in a colorful hub 
 ## Activities
 
 - 🎵 **Music** — piano, xylophone, guitar, and two MPC-style pads (hip-hop / electro, Sonic Pi CC0 drum kits), all playable by tiny fingers.
-- 🖼️ **Recognize** — guess the animal (~200 of them), vehicle or dinosaur from a photo; names in FR/EN/IT/ES/RU from Wikidata, photos from Wikipedia/Commons (fully credited in [`CREDITS-ASSETS.md`](CREDITS-ASSETS.md)).
+- 🖼️ **Recognize** — guess the animal (~200 of them), vehicle or dinosaur from a photo, plus 24 hand-drawn flags and 18 jobs; names in FR/EN/IT/ES/RU from Wikidata, photos from Wikipedia/Commons (fully credited in [`CREDITS-ASSETS.md`](CREDITS-ASSETS.md)).
 - 🔤 **Guess** — letters, numbers, colors, shapes, counting.
-- 👂 **Listen** — animal cries and vehicle sounds quizzes.
+- 👂 **Listen** — animal cries, vehicle sounds and "which instrument is playing?" quizzes; every quiz has a spaced-repetition review mode.
 - 🎮 **Games** — bubble popping, star rain, a cute shmup (with score attack and boss rush), a 3D race (5 tracks with weather, ghost racer, 2-player split screen), a zen gardener — plus a trophy wall gathering stars and dated records.
 - 🎨 **Create** — finger drawing.
 - 👨‍👩‍👧 **Parent corner** (behind a 3-second gate): screen-time view, per-category mastery, "classic → exotic" spaced introduction of new items.

@@ -46,6 +46,9 @@ object Routes {
     const val QUIZ_IMG_DINO = "quiz_img_dino"
     const val QUIZ_IMG_MIXED = "quiz_img_mixed"
     const val QUIZ_MAMA = "quiz_mama"
+    const val QUIZ_FLAG = "quiz_flag"
+    const val QUIZ_JOB = "quiz_job"
+    const val QUIZ_INSTRUMENT = "quiz_instrument"
 
     // Jeux & créer
     const val BUBBLES = "bubbles"
@@ -133,6 +136,9 @@ fun AppNavHost() {
         composable(Routes.QUIZ_IMG_DINO) { QuizScreen(type = QuizType.IMG_DINO, onBack = back) }
         composable(Routes.QUIZ_IMG_MIXED) { QuizScreen(type = QuizType.IMG_MIXED, onBack = back) }
         composable(Routes.QUIZ_MAMA) { QuizScreen(type = QuizType.MAMA, onBack = back) }
+        composable(Routes.QUIZ_FLAG) { QuizScreen(type = QuizType.FLAG, onBack = back) }
+        composable(Routes.QUIZ_JOB) { QuizScreen(type = QuizType.JOB, onBack = back) }
+        composable(Routes.QUIZ_INSTRUMENT) { QuizScreen(type = QuizType.INSTRUMENT, onBack = back) }
 
         // Jeux & créer
         composable(Routes.BUBBLES) { BubblesScreen(onBack = back) }

@@ -55,7 +55,9 @@ fun hubChildren(hubRoute: String): List<MenuEntry> = when (hubRoute) {
         MenuEntry(Routes.QUIZ_IMG_DINO, "🦖", R.string.activity_guess_dino, iconRes = R.drawable.ic_dino),
         MenuEntry(Routes.QUIZ_SOUND, "🔊", R.string.activity_sound_quiz, iconRes = R.drawable.ic_hub_listen),
         MenuEntry(Routes.QUIZ_IMG_MIXED, "🎲", R.string.activity_guess_mixed, iconRes = R.drawable.ic_dice),
-        MenuEntry(Routes.QUIZ_MAMA, "🐥", R.string.activity_mama, iconRes = R.drawable.ic_chick)
+        MenuEntry(Routes.QUIZ_MAMA, "🐥", R.string.activity_mama, iconRes = R.drawable.ic_chick),
+        MenuEntry(Routes.QUIZ_FLAG, "🏳️", R.string.activity_flags, iconRes = R.drawable.ic_flags),
+        MenuEntry(Routes.QUIZ_JOB, "👩‍🚒", R.string.activity_jobs, iconRes = R.drawable.ic_jobs)
     )
     Routes.HUB_DEVINE -> listOf(
         MenuEntry(Routes.QUIZ_LETTER, "🔤", R.string.activity_guess_letter, iconRes = R.drawable.ic_hub_guess),
@@ -66,7 +68,8 @@ fun hubChildren(hubRoute: String): List<MenuEntry> = when (hubRoute) {
     )
     Routes.HUB_LISTEN -> listOf(
         MenuEntry(Routes.ANIMAL_SOUNDS, "🐮", R.string.activity_animal_sounds, iconRes = R.drawable.ic_cow),
-        MenuEntry(Routes.VEHICLES, "🚒", R.string.activity_vehicles, iconRes = R.drawable.ic_firetruck)
+        MenuEntry(Routes.VEHICLES, "🚒", R.string.activity_vehicles, iconRes = R.drawable.ic_firetruck),
+        MenuEntry(Routes.QUIZ_INSTRUMENT, "🥁", R.string.activity_instruments, iconRes = R.drawable.ic_drum)
     )
     Routes.HUB_GAMES -> listOf(
         MenuEntry(Routes.SHMUP, "🚀", R.string.activity_shmup, iconRes = R.drawable.ic_shmup),
