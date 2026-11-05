@@ -76,11 +76,12 @@ object HighScores {
         const val STARS = "stars"
         const val SHMUP = "shmup"
         const val SHMUP_TIMED = "shmup_timed"
+        const val SHMUP_BOSSRUSH = "shmup_bossrush"
         const val VROUM = "vroum"
         const val VROUM_ENDLESS = "vroum_endless"
         const val GARDEN_ZEN = "garden_zen"
         const val GARDEN_RUSH = "garden_rush"
         const val GARDEN_SLICE = "garden_slice"
-        val ALL = listOf(BUBBLES, STARS, SHMUP, SHMUP_TIMED, VROUM, VROUM_ENDLESS, GARDEN_ZEN, GARDEN_RUSH, GARDEN_SLICE)
+        val ALL = listOf(BUBBLES, STARS, SHMUP, SHMUP_TIMED, SHMUP_BOSSRUSH, VROUM, VROUM_ENDLESS, GARDEN_ZEN, GARDEN_RUSH, GARDEN_SLICE)
     }
 }

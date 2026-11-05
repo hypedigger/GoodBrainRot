@@ -305,4 +305,9 @@
     <string name="gz_nuke">ЯДЕРНО!</string>
     <string name="gz_gold">Золотой!</string>
     <string name="gz_again">Ещё!</string>
+    <string name="trophies_title">Трофеи</string>
+    <string name="trophies_stars">Звёзды трасс</string>
+    <string name="trophies_records">Рекорды</string>
+    <string name="trophies_topiary">Лучшие стрижки</string>
+    <string name="trophies_none">Рекордов пока нет — твой ход!</string>
 </resources>

@@ -1,5 +1,9 @@
 # Nouveautés — GoodBrainRot
 
+## 3.88 — 2026-11-05
+- **Crimson Sky — BOSS RUSH** : nouveau mode (5ᵉ bouton du menu) — les **6 boss d'affilée** (les 5 boss + le boss final caché), sans vagues ni écran de récap entre deux combats, on part armé (puissance 6) ; **chrono total** en bas de l'écran (« BOSS 3/6 1:42 »), **bonus de vitesse** à la fin (50 points par seconde sous les 10 minutes) et **tableau des scores dédié**. Les continues reprennent au boss en cours (le chrono continue).
+- **Écran Trophées** (nouvelle tuile 🏆 dans le hub Jeux, icône IA) : compteur géant d'étoiles (« ★ 23 / 90 »), **étoiles de chaque circuit Vroum** pour la Course et l'Arcade dans les 3 difficultés, **records datés** de chaque jeu et mode (Crimson Sky normal / Score Attack / Boss Rush, Vroum Course / Arcade, Jardinier Topiaire / Rush / Tranche, Bulles, Pluie d'étoiles), et **plus belles tailles** : meilleure précision de Topiaire pour chacune des 7 formes avec médaille 🥇🥈🥉.
+
 ## 3.87 — 2026-11-05
 - **Jardinier — hache du titan** : chaque coup fait un **« TCHAK ! »** massif (son dédié, grosse secousse) et tout ce qui pousse autour du point d'impact tombe d'un coup.
 - **Jardinier — tronçonneuse NUCLÉAIRE** : la première coupe déclenche un **laser vert** qui traverse tout l'écran — en Tranche il réduit en miettes tout ce qui vole (en classique il épargne abeilles et nids), en Rush il rase toutes les pousses ; recharge de quelques secondes.

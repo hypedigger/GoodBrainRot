@@ -196,6 +196,7 @@ fun GardenScreen(onBack: () -> Unit) {
                     }
                     earned = coins
                     Settings.setGardenCoins(Settings.gardenCoins.intValue + coins)
+                    for ((shape, prec) in g.plantPrecisions) Settings.setGardenPrecision(shape, prec)
                     controller.score = g.score; controller.finish()
                     phase = GPhase.RESULT
                     break

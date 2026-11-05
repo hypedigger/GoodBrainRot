@@ -305,4 +305,9 @@
     <string name="gz_nuke">¡NUCLEAR!</string>
     <string name="gz_gold">¡Dorado!</string>
     <string name="gz_again">¡Otra vez!</string>
+    <string name="trophies_title">Trofeos</string>
+    <string name="trophies_stars">Estrellas de los circuitos</string>
+    <string name="trophies_records">Récords</string>
+    <string name="trophies_topiary">Mejores podas</string>
+    <string name="trophies_none">Aún no hay récords — ¡te toca jugar!</string>
 </resources>

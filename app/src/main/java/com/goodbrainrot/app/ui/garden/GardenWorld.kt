@@ -95,6 +95,8 @@ internal class GardenGame(val mode: GMode, val tool: GTool, val seedDay: Int, va
     private var wasted = 0          // gestes de coupe qui n'ont rien touché (plante en cours)
     val precision: Int get() = if (totalOutside == 0) 100 else ((cutOutside * 100f / totalOutside) - cutInside * 5f - wasted * 4f).toInt().coerceIn(0, 100)
     private var precSum = 0; private var precN = 0
+    /** (forme, précision) de chaque plante finie pendant la partie — pour le mur des trophées. */
+    val plantPrecisions = ArrayList<Pair<Int, Int>>()
     /** Précision moyenne des plantes finies (écran de fin). */
     val avgPrecision: Int get() = if (precN == 0) precision else precSum / precN
     // arrosoir entre deux plantes : maintenir le doigt -> la plante suivante est toute fleurie
@@ -349,7 +351,7 @@ internal class GardenGame(val mode: GMode, val tool: GTool, val seedDay: Int, va
                 } else if (totalOutside > 0 && cutOutside >= (totalOutside * 0.9f).toInt()) {   // 90 % du mort suffit : on enchaîne
                     // précision de CETTE plante (pousses oubliées et coups dans le vide la font baisser)
                     val prec = precision
-                    precSum += prec; precN++
+                    precSum += prec; precN++; plantPrecisions.add(shapeKind to prec)
                     val bonus = 100 + (timeLeft * 1.5f).toInt() + (prec - 80).coerceAtLeast(0) * 5
                     score += bonus
                     val word = when { prec >= 95 -> label("bushdone", "Parfait !"); prec >= 80 -> label("great", "Très bien !"); else -> label("good", "Bien !") }

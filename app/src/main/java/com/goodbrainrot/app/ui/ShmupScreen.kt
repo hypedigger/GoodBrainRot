@@ -139,8 +139,10 @@ private enum class ShMode(val label: String, val lives: Int, val bulletSpeed: Fl
     EASY("FACILE", 99, 0.30f, 0.55f, 0.8f, false),
     NORMAL("NORMAL", 3, 0.44f, 1.0f, 1.0f, true),
     HARD("DIFFICILE", 3, 0.60f, 1.55f, 1.4f, true),
-    SCORE("SCORE ATTACK", 3, 0.44f, 1.0f, 1.0f, true)   // 2 minutes chrono, vagues continues, pas de boss de fin
+    SCORE("SCORE ATTACK", 3, 0.44f, 1.0f, 1.0f, true),  // 2 minutes chrono, vagues continues, pas de boss de fin
+    BOSSRUSH("BOSS RUSH", 3, 0.44f, 1.0f, 1.0f, true)   // les 6 boss d'affilée, chrono total
 }
+private const val RUSH_BOSSES = 6
 private const val SCORE_ATTACK_S = 120f
 
 /** Les archétypes de vaisseau. BRAINROT = le logo de l'app (tir guidé mais faible). */
@@ -1853,19 +1855,23 @@ fun ShmupScreen(onBack: () -> Unit) {
     var startLevel by remember { mutableIntStateOf(1) } // niveau de départ choisi (gain de temps)
     var scoreTimeLeft by remember { mutableFloatStateOf(SCORE_ATTACK_S) }   // chrono du mode SCORE ATTACK
     // la clé de tableau des scores dépend du mode (le score attack a le sien)
-    val scoreKey = if (mode == ShMode.SCORE) HighScores.Games.SHMUP_TIMED else SHMUP_KEY
+    val scoreKey = when (mode) { ShMode.SCORE -> HighScores.Games.SHMUP_TIMED; ShMode.BOSSRUSH -> HighScores.Games.SHMUP_BOSSRUSH; else -> SHMUP_KEY }
+    // BOSS RUSH : chrono total (temps de jeu effectif, continues compris) et bonus de vitesse final
+    var rushTime by remember { mutableFloatStateOf(0f) }
+    var rushBonus by remember { mutableIntStateOf(-1) }
 
     // Remet l'état de run à zéro. [keepLevel] = on rejoue le niveau courant (continue).
     fun resetRunState(keepLevel: Boolean = false) {
-        if (!keepLevel) level = startLevel
+        if (!keepLevel) level = if (mode == ShMode.BOSSRUSH) 1 else startLevel
         carryLives = if (mode.scored) com.goodbrainrot.app.Settings.shmupLives.intValue else mode.lives
-        carryPower = 1; carryBombs = 3
+        // Boss Rush : on part déjà bien armé (il n'y a pas de vagues pour ramasser des power-ups)
+        carryPower = if (mode == ShMode.BOSSRUSH) 6 else 1; carryBombs = 3
         carryScore = 0; carryCoins = 0            // le score repart TOUJOURS de zéro
         carryPerfect = if (keepLevel) false else true
         runToken++; phase = ShPhase.INTRO
     }
     // Nouvelle partie (depuis le menu) : recharge les 3 crédits, repart au niveau 1.
-    fun startRun() { credits = 3; resetRunState() }
+    fun startRun() { credits = 3; rushTime = 0f; rushBonus = -1; resetRunState() }
     // Continuer après une mort : consomme un crédit, REPREND au niveau où on était.
     fun continueRun() { if (credits > 0) { credits--; pendingMega = true; resetRunState(keepLevel = true) } }
 
@@ -2044,6 +2050,7 @@ fun ShmupScreen(onBack: () -> Unit) {
                             phase = ShPhase.SCORES
                         }
                     }
+                    if (mode == ShMode.BOSSRUSH) rushTime += dt
                     // hit-stop : micro-gel du jeu à l'impact (le rendu continue)
                     if (game.hitStop > 0f) game.hitStop = max(0f, game.hitStop - dt)
                     else game.update(dt)
@@ -2148,7 +2155,15 @@ fun ShmupScreen(onBack: () -> Unit) {
         val small = 16 + lvl * 4                       // 20..36
         val big = (40 + lvl * 8).coerceAtMost(85)      // 48..85
 
-        if (lvl == 6) {
+        if (mode == ShMode.BOSSRUSH) {
+            // BOSS RUSH : pas de vagues, le boss du niveau arrive directement (le 6e = boss final caché)
+            wait(0.8f); if (game.gameOver) return@LaunchedEffect
+            game.dropPowerUp()
+            wait(1.0f); if (game.gameOver) return@LaunchedEffect
+            GameMusic.playBoss(ctx)
+            if (lvl >= RUSH_BOSSES) game.spawnTrueLastBoss() else game.spawnBoss()
+            untilBossDead()
+        } else if (lvl == 6) {
             // Niveau caché : gauntlet dense + mid-boss par PAIRES, puis TRUE LAST BOSS
             if (!waveArc(Kind.INTERCEPTOR, 40, 6f)) return@LaunchedEffect
             tryPup()
@@ -2224,7 +2239,7 @@ fun ShmupScreen(onBack: () -> Unit) {
         if (game.gameOver) return@LaunchedEffect
 
         // Boss battu : mort spectaculaire (il explose et TOMBE), commune à tous les niveaux.
-        val isFinal = (lvl == 6) || (lvl == LAST_LEVEL && !game.perfect)
+        val isFinal = if (mode == ShMode.BOSSRUSH) lvl >= RUSH_BOSSES else (lvl == 6) || (lvl == LAST_LEVEL && !game.perfect)
         game.eBullets.clear(); game.enemies.clear(); game.bullets.clear(); game.obstacles.clear()
         phase = ShPhase.BOSS_DYING
         game.beginBossFall()
@@ -2258,6 +2273,8 @@ fun ShmupScreen(onBack: () -> Unit) {
                 kotlinx.coroutines.delay(1700)  // le temps que le vaisseau sorte de l'écran
             }
             clearBanner = false
+            // Boss Rush : pas de récap entre deux boss, on enchaîne directement sur le suivant
+            if (mode == ShMode.BOSSRUSH) { level = lvl + 1; runToken++; phase = ShPhase.INTRO; return@LaunchedEffect }
             // Récap du stage : le directeur s'arrête ici, le joueur reprend via onContinue.
             pendingLevel = if (lvl == LAST_LEVEL) 6 else lvl + 1
             phase = ShPhase.STAGE_RESULT
@@ -2271,6 +2288,14 @@ fun ShmupScreen(onBack: () -> Unit) {
             SoundEngine.playWhoosh()
             kotlinx.coroutines.delay(1500)
             SoundEngine.playFanfare()
+            if (mode == ShMode.BOSSRUSH) {
+                // bonus de vitesse : 50 points par seconde gagnée sous les 10 minutes, puis tableau des scores
+                rushBonus = ((600f - rushTime).coerceAtLeast(0f) * 50f).toInt()
+                hudScore = game.score + rushBonus
+                HighScores.record(scoreKey, hudScore)
+                phase = ShPhase.SCORES
+                return@LaunchedEffect
+            }
             carryScore = game.score      // score final pour le tableau
             // Récap de tout ce qui a été récupéré, PUIS l'écran de remerciements.
             finalToCongrats = true
@@ -2380,7 +2405,8 @@ fun ShmupScreen(onBack: () -> Unit) {
                 onLevel = { lv -> SoundEngine.playUi(); startLevel = lv },
                 sprites = sprites, logo = logo,
                 onPick = { s -> SoundEngine.playUi(); ship = s; startRun() },
-                onBack = { phase = ShPhase.MODE }
+                onBack = { phase = ShPhase.MODE },
+                showLevels = mode != ShMode.BOSSRUSH
             )
             ShPhase.INTRO -> IntroOverlay(level)
             ShPhase.LEVEL_CLEAR -> CenterBanner(
@@ -2441,6 +2467,8 @@ fun ShmupScreen(onBack: () -> Unit) {
             ShPhase.NAME_ENTRY -> { phase = ShPhase.SCORES }   // (plus de saisie de nom)
             ShPhase.SCORES -> ScoreBoard(
                 score = hudScore, scored = mode.scored, sprites = sprites, logo = logo, gameKey = scoreKey,
+                subtitle = if (mode == ShMode.BOSSRUSH && rushBonus >= 0) "BOSS RUSH  %d:%02d  BONUS +%d".format(rushTime.toInt() / 60, rushTime.toInt() % 60, rushBonus)
+                           else if (mode == ShMode.BOSSRUSH) "BOSS RUSH" else null,
                 onReplay = { phase = ShPhase.SHIP },   // rejouer = re-choisir son vaisseau
                 onBack = onBack
             )
@@ -2451,6 +2479,13 @@ fun ShmupScreen(onBack: () -> Unit) {
                     Text("⏱ %d:%02d".format(s / 60, s % 60), color = if (s <= 10) CRIM else GOLD, fontFamily = PixelHud,
                         fontWeight = FontWeight.ExtraBold, fontSize = 20.sp,
                         modifier = Modifier.align(Alignment.TopCenter).padding(top = 44.dp))
+                }
+                // Boss Rush : numéro du boss + chrono total, en bas au centre (le haut est pris par la barre de vie du boss)
+                if (mode == ShMode.BOSSRUSH) {
+                    val s = rushTime.toInt()
+                    Text("BOSS ${level.coerceAtMost(RUSH_BOSSES)}/$RUSH_BOSSES  %d:%02d".format(s / 60, s % 60), color = GOLD, fontFamily = PixelHud,
+                        fontWeight = FontWeight.ExtraBold, fontSize = 18.sp,
+                        modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 34.dp))
                 }
                 // Retour EN JEU : revient au menu du shmup (choix du mode), ne quitte pas le jeu.
                 ShBackButton(onBack = { GameMusic.stop(); runToken++; phase = ShPhase.MODE })
@@ -4437,7 +4472,7 @@ private fun GameOverOverlay(credits: Int, onContinue: () -> Unit, onQuit: () -> 
 
 @Composable
 private fun ShipSelect(startLevel: Int, onLevel: (Int) -> Unit, sprites: ShSprites, logo: ImageBitmap?,
-                       onPick: (ShShip) -> Unit, onBack: () -> Unit) {
+                       onPick: (ShShip) -> Unit, onBack: () -> Unit, showLevels: Boolean = true) {
     var selected by remember { mutableStateOf<ShShip?>(null) }
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFF07060F))) {
         MenuBackdrop()
@@ -4451,8 +4486,8 @@ private fun ShipSelect(startLevel: Int, onLevel: (Int) -> Unit, sprites: ShSprit
             Text("CHOISIS TON VAISSEAU", color = CRIM, fontFamily = PixelHud,
                 fontWeight = FontWeight.ExtraBold, fontSize = 20.sp, textAlign = TextAlign.Center,
                 modifier = Modifier.padding(bottom = 8.dp))
-            // Sélecteur de niveau de départ (compact, une seule rangée)
-            Row(
+            // Sélecteur de niveau de départ (compact, une seule rangée) — inutile en Boss Rush
+            if (showLevels) Row(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(bottom = 10.dp)
@@ -4723,6 +4758,7 @@ private fun ModeSelect(onPick: (ShMode) -> Unit, onBack: () -> Unit, onOptions: 
             ModeButton("NORMAL", "le vrai jeu", CYAN) { onPick(ShMode.NORMAL) }
             ModeButton("DIFFICILE", "danmaku intense", PINK) { onPick(ShMode.HARD) }
             ModeButton("SCORE ATTACK", "2 minutes chrono", GOLD) { onPick(ShMode.SCORE) }
+            ModeButton("BOSS RUSH", "les 6 boss d'affilée", CRIM) { onPick(ShMode.BOSSRUSH) }
             Text("HI-SCORE  ${"%07d".format(HighScores.best(SHMUP_KEY))}",
                 color = GOLD, fontFamily = PixelHud, fontSize = 16.sp,
                 modifier = Modifier.padding(top = 22.dp, bottom = 14.dp))
@@ -5022,7 +5058,7 @@ private fun NameEntry(score: Int, onDone: (String) -> Unit) {
 
 @Composable
 private fun ScoreBoard(score: Int, scored: Boolean, sprites: ShSprites, logo: ImageBitmap?,
-                       gameKey: String = SHMUP_KEY, onReplay: () -> Unit, onBack: () -> Unit) {
+                       gameKey: String = SHMUP_KEY, subtitle: String? = null, onReplay: () -> Unit, onBack: () -> Unit) {
     @Suppress("UNUSED_EXPRESSION") HighScores.version.value
     val scores = remember(HighScores.version.value, gameKey) { HighScores.top(gameKey) }
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFF07060F)), contentAlignment = Alignment.TopCenter) {
@@ -5035,6 +5071,7 @@ private fun ScoreBoard(score: Int, scored: Boolean, sprites: ShSprites, logo: Im
         ) {
             Text("HI-SCORES", color = CRIM, fontFamily = PixelHud,
                 fontWeight = FontWeight.ExtraBold, fontSize = 30.sp)
+            if (subtitle != null) Text(subtitle, color = GOLD, fontFamily = PixelHud, fontSize = 16.sp, modifier = Modifier.padding(top = 6.dp))
             if (scored) {
                 Text("VOTRE SCORE  ${"%07d".format(score)}", color = CYAN,
                     fontFamily = PixelHud, fontSize = 16.sp, modifier = Modifier.padding(vertical = 10.dp))

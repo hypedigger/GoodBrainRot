@@ -58,6 +58,8 @@ object Settings {
     val vroumStars = mutableStateOf<Map<String, Int>>(emptyMap())
     // Tutoriel Vroum déjà vu (3 bulles à la première partie)
     val vroumTutoSeen = mutableStateOf(false)
+    // Jardinier : meilleure précision Topiaire par forme (0 boule … 6 canard) -> 0..100
+    val gardenPrecision = mutableStateOf<Map<Int, Int>>(emptyMap())
 
     // Jardinier Zen : pièces, paliers d'outils débloqués (manuel / électrique), outil actif, streak
     val gardenCoins = mutableIntStateOf(0)
@@ -112,6 +114,9 @@ object Settings {
         applyShmupVolumes()
         vroumEndlessUnlocked.value = sp.getBoolean("vroum_endless", false)
         vroumTutoSeen.value = sp.getBoolean("vroum_tuto_seen", false)
+        gardenPrecision.value = (sp.getString("garden_prec", "") ?: "").split("|").mapNotNull { e ->
+            val p = e.split(":"); if (p.size == 2) p[0].toIntOrNull()?.let { k -> p[1].toIntOrNull()?.let { k to it } } else null
+        }.toMap()
         vroumStars.value = (sp.getString("vroum_stars", "") ?: "").split("|").mapNotNull { e ->
             val p = e.split(":"); if (p.size == 2) p[1].toIntOrNull()?.let { p[0] to it } else null
         }.toMap()
@@ -228,6 +233,12 @@ object Settings {
         sp.edit().putString("vroum_stars", m.entries.joinToString("|") { "${it.key}:${it.value}" }).apply()
     }
     /** Fantôme du meilleur temps d'une Course : "véhicule;temps;d0:l0,d1:l1,..." (dist en dm, voie, un échantillon / 0,25 s). */
+    fun setGardenPrecision(shape: Int, prec: Int) {
+        if (prec <= (gardenPrecision.value[shape] ?: 0)) return
+        val m = gardenPrecision.value.toMutableMap(); m[shape] = prec; gardenPrecision.value = m
+        sp.edit().putString("garden_prec", m.entries.joinToString("|") { "${it.key}:${it.value}" }).apply()
+    }
+
     fun setVroumTutoSeen(value: Boolean) {
         vroumTutoSeen.value = value
         sp.edit().putBoolean("vroum_tuto_seen", value).apply()

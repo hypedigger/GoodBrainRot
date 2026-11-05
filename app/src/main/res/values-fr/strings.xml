@@ -305,4 +305,9 @@
     <string name="gz_nuke">NUCLÉAIRE !</string>
     <string name="gz_gold">Doré !</string>
     <string name="gz_again">Encore !</string>
+    <string name="trophies_title">Trophées</string>
+    <string name="trophies_stars">Étoiles des circuits</string>
+    <string name="trophies_records">Records</string>
+    <string name="trophies_topiary">Plus belles tailles</string>
+    <string name="trophies_none">Pas encore de record — à toi de jouer !</string>
 </resources>

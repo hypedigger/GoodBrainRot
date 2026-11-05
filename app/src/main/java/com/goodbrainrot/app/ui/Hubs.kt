@@ -73,7 +73,8 @@ fun hubChildren(hubRoute: String): List<MenuEntry> = when (hubRoute) {
         MenuEntry(Routes.VROUM, "🚗", R.string.activity_vroum, iconRes = R.drawable.ic_vroum),
         MenuEntry(Routes.GARDEN, "✂️", R.string.activity_garden, iconRes = R.drawable.ic_garden),
         MenuEntry(Routes.BUBBLES, "💦", R.string.activity_bubbles, iconRes = R.drawable.ic_bubbles),
-        MenuEntry(Routes.STARS, "⭐", R.string.activity_stars, iconRes = R.drawable.ic_star)
+        MenuEntry(Routes.STARS, "⭐", R.string.activity_stars, iconRes = R.drawable.ic_star),
+        MenuEntry(Routes.TROPHIES, "🏆", R.string.trophies_title, iconRes = R.drawable.ic_trophy)
     )
     Routes.HUB_CREATE -> listOf(
         MenuEntry(Routes.DRAWING, "🖍️", R.string.activity_drawing, iconRes = R.drawable.ic_hub_create)

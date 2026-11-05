@@ -314,4 +314,9 @@
     <string name="gz_nuke">NUCLEAR!</string>
     <string name="gz_gold">Golden!</string>
     <string name="gz_again">Again!</string>
+    <string name="trophies_title">Trophies</string>
+    <string name="trophies_stars">Track stars</string>
+    <string name="trophies_records">Records</string>
+    <string name="trophies_topiary">Best topiaries</string>
+    <string name="trophies_none">No record yet — your turn to play!</string>
 </resources>

@@ -305,4 +305,9 @@
     <string name="gz_nuke">NUCLEARE!</string>
     <string name="gz_gold">Dorato!</string>
     <string name="gz_again">Ancora!</string>
+    <string name="trophies_title">Trofei</string>
+    <string name="trophies_stars">Stelle dei circuiti</string>
+    <string name="trophies_records">Record</string>
+    <string name="trophies_topiary">Potature più belle</string>
+    <string name="trophies_none">Ancora nessun record — tocca a te!</string>
 </resources>

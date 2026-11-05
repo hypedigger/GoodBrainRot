@@ -53,6 +53,7 @@ object Routes {
     const val SHMUP = "shmup"
     const val VROUM = "vroum"
     const val GARDEN = "garden"
+    const val TROPHIES = "trophies"
     const val DRAWING = "drawing"
 
     const val PARENTS = "parents"
@@ -139,6 +140,7 @@ fun AppNavHost() {
         composable(Routes.SHMUP) { ShmupScreen(onBack = back) }
         composable(Routes.VROUM) { VroumScreen(onBack = back) }
         composable(Routes.GARDEN) { GardenScreen(onBack = back) }
+        composable(Routes.TROPHIES) { TrophiesScreen(onBack = back) }
         composable(Routes.DRAWING) { DrawingScreen(onBack = back) }
         composable(Routes.PARENTS) { ParentScreen(onBack = back, onOpenActivity = openActivity) }
 
