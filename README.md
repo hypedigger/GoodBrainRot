@@ -33,6 +33,7 @@ Optional content scripts (PowerShell):
 - `scripts/fetch_content.ps1` — refresh Wikidata names and Wikipedia images (`-Rank` orders animals by popularity).
 - `scripts/fetch_samples.ps1` — download the CC0 MPC drum samples.
 - `tools/content-admin/serve.ps1` — local web admin to spot missing images/translations.
+- `scripts/smoke_test.ps1` — installs the debug APK on an emulator/device, opens every hub and every activity, and fails if anything crashed.
 
 A few animal-cry sounds of the author's personal build are not redistributable and are therefore **not** in this repository — the app falls back to text-to-speech; see [`CREDITS.md`](CREDITS.md).
 
