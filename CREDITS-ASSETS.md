@@ -101,7 +101,7 @@ the bundled one; such cases, when detected, are listed under "Unresolved".
 | `gazelle.jpg` | [File:Chinkara - Shreeram M V - Bikaner.jpg](https://commons.wikimedia.org/wiki/File:Chinkara_-_Shreeram_M_V_-_Bikaner.jpg) | Mvshreeram | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) |
 | `gecko.jpg` | [File:Phelsuma l. laticauda.jpg](https://commons.wikimedia.org/wiki/File:Phelsuma_l._laticauda.jpg) | Unknown | [CC BY-SA 3.0](http://creativecommons.org/licenses/by-sa/3.0/) |
 | `gerbil.jpg` | [File:Meriones unguiculatus (wild).jpg](https://commons.wikimedia.org/wiki/File:Meriones_unguiculatus_(wild).jpg) | Alastair Rae from London, United Kingdom | Public domain |
-| `gibbon.jpg` | [File:Hylobates lar - Kaeng Krachan WB.jpg](https://commons.wikimedia.org/wiki/File:Hylobates_lar_-_Kaeng_Krachan_WB.jpg) | JJ Harrison ( jjharrison89@facebook.com ) | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0) |
+| `gibbon.jpg` | [File:Hylobates lar - Kaeng Krachan WB.jpg](https://commons.wikimedia.org/wiki/File:Hylobates_lar_-_Kaeng_Krachan_WB.jpg) | JJ Harrison | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0) |
 | `gila_monster.jpg` | [File:Gila monster2.JPG](https://commons.wikimedia.org/wiki/File:Gila_monster2.JPG) | Blueag9 | [CC BY-SA 3.0](http://creativecommons.org/licenses/by-sa/3.0/) |
 | `giraffe.jpg` | [File:Giraffe Mikumi National Park.jpg](https://commons.wikimedia.org/wiki/File:Giraffe_Mikumi_National_Park.jpg) | Muhammad Mahdi Karim Facebook The making of this document was supported by Wikimedia CH . ( Submit your project! ) For all the files concerned, ple... | [GFDL 1.2](http://www.gnu.org/licenses/old-licenses/fdl-1.2.html) |
 | `goat.jpg` | [File:Hausziege 04.jpg](https://commons.wikimedia.org/wiki/File:Hausziege_04.jpg) | Kuebi = Armin Kübelbeck | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0) |
@@ -248,7 +248,7 @@ the bundled one; such cases, when detected, are listed under "Unresolved".
 | `wild_boar.jpg` | [File:Wildschwein, Nähe Pulverstampftor (cropped).jpg](https://commons.wikimedia.org/wiki/File:Wildschwein,_N%C3%A4he_Pulverstampftor_(cropped).jpg) | Valentin Panzirsch | [CC BY-SA 3.0 at](https://creativecommons.org/licenses/by-sa/3.0/at/deed.en) |
 | `wildebeest.jpg` | [File:Blue Wildebeest, Ngorongoro.jpg](https://commons.wikimedia.org/wiki/File:Blue_Wildebeest,_Ngorongoro.jpg) | Muhammad Mahdi Karim | [GFDL 1.2](http://www.gnu.org/licenses/old-licenses/fdl-1.2.html) |
 | `wolf.jpg` | [File:Eurasian wolf 2.jpg](https://commons.wikimedia.org/wiki/File:Eurasian_wolf_2.jpg) | User:Mas3cf | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) |
-| `wombat.jpg` | [File:Vombatus ursinus -Maria Island National Park.jpg](https://commons.wikimedia.org/wiki/File:Vombatus_ursinus_-Maria_Island_National_Park.jpg) | JJ Harrison ( jjharrison89@facebook.com ) | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0) |
+| `wombat.jpg` | [File:Vombatus ursinus -Maria Island National Park.jpg](https://commons.wikimedia.org/wiki/File:Vombatus_ursinus_-Maria_Island_National_Park.jpg) | JJ Harrison | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0) |
 | `woodpecker.jpg` | [File:PileatedWoodpeckerFeedingonTree, crop.jpg](https://commons.wikimedia.org/wiki/File:PileatedWoodpeckerFeedingonTree,_crop.jpg) | Joshlaymon | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0) |
 | `worm.jpg` | [File:Regenwurm1.jpg](https://commons.wikimedia.org/wiki/File:Regenwurm1.jpg) | Michael Linnenbach | [CC BY-SA 3.0](http://creativecommons.org/licenses/by-sa/3.0/) |
 | `yak.jpg` | [File:Sarlyk Yak2.jpg](https://commons.wikimedia.org/wiki/File:Sarlyk_Yak2.jpg) | Alexandr frolov | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) |
@@ -263,7 +263,7 @@ Modern life restorations (paleoart), white margins trimmed.
 | `allosaurus.jpg` | [File:Allosaurus Life Reconstruction.jpg](https://commons.wikimedia.org/wiki/File:Allosaurus_Life_Reconstruction.jpg) | Fred Wierum | CC BY 3.0 |
 | `ankylosaurus.jpg` | [File:Ankylosaurus magniventris reconstruction nomargin.png](https://commons.wikimedia.org/wiki/File:Ankylosaurus_magniventris_reconstruction_nomargin.png) | Emily Willoughby (https://emilywilloughby.com), modified version | CC BY-SA 3.0 |
 | `brachiosaurus.jpg` | [File:Brachiosaurus NT new.jpg](https://commons.wikimedia.org/wiki/File:Brachiosaurus_NT_new.jpg) | Nobu Tamura | CC BY-SA 4.0 |
-| `brontosaurus.jpg` | [File:Brontosaurus NT small.jpg](https://commons.wikimedia.org/wiki/File:Brontosaurus_NT_small.jpg) | Nobu Tamura email:nobu.tamura@yahoo.com http://spinops.blogspot.com/ | CC BY-SA 4.0 |
+| `brontosaurus.jpg` | [File:Brontosaurus NT small.jpg](https://commons.wikimedia.org/wiki/File:Brontosaurus_NT_small.jpg) | Nobu Tamura email: http://spinops.blogspot.com/ | CC BY-SA 4.0 |
 | `compsognathus.jpg` | [File:Compsognathus Conty.png](https://commons.wikimedia.org/wiki/File:Compsognathus_Conty.png) | Conty | CC BY-SA 4.0 |
 | `dimetrodon.jpg` | [File:Dimetrodon teutonis life restoration by Sebastian Brandt (Reco-Brandt).jpg](https://commons.wikimedia.org/wiki/File:Dimetrodon_teutonis_life_restoration_by_Sebastian_Brandt_(Reco-Brandt).jpg) | TB0815 | CC BY 4.0 |
 | `diplodocus.jpg` | [File:Diplodocus BW.jpg](https://commons.wikimedia.org/wiki/File:Diplodocus_BW.jpg) | Nobu Tamura (http://spinops.blogspot.com) | CC BY 3.0 |
@@ -274,7 +274,7 @@ Modern life restorations (paleoart), white margins trimmed.
 | `spinosaurus.jpg` | [File:Spinosaurus aegyptiacus transparent.tif](https://commons.wikimedia.org/wiki/File:Spinosaurus_aegyptiacus_transparent.tif) | Stegotyranno | CC BY-SA 4.0 |
 | `stegosaurus.jpg` | [File:Stegosaurus stenops Life Reconstruction.png](https://commons.wikimedia.org/wiki/File:Stegosaurus_stenops_Life_Reconstruction.png) | Fred Wierum | CC BY-SA 4.0 |
 | `trex.jpg` | [File:Rjpalmer tyrannosaurusrex (white background)-mirror.jpg](https://commons.wikimedia.org/wiki/File:Rjpalmer_tyrannosaurusrex_(white_background)-mirror.jpg) | RJPalmerArt | CC BY-SA 4.0 |
-| `triceratops.jpg` | [File:Triceratops4 NT small.jpg](https://commons.wikimedia.org/wiki/File:Triceratops4_NT_small.jpg) | Nobu Tamura email:nobu.tamura@yahoo.com http://spinops.blogspot.com/ http://paleoexhibit. | CC BY-SA 4.0 |
+| `triceratops.jpg` | [File:Triceratops4 NT small.jpg](https://commons.wikimedia.org/wiki/File:Triceratops4_NT_small.jpg) | Nobu Tamura email: http://spinops.blogspot.com/ http://paleoexhibit. | CC BY-SA 4.0 |
 | `velociraptor.jpg` | [File:Fred Wierum Velociraptor.png](https://commons.wikimedia.org/wiki/File:Fred_Wierum_Velociraptor.png) | Fred Wierum | CC BY-SA 4.0 |
 
 ## Vehicles (18 images)
