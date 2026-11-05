@@ -75,7 +75,7 @@ fun AnimalVisual(animal: Animal, modifier: Modifier = Modifier, emojiSize: Int =
             bitmap = bitmap,
             contentDescription = stringResource(animal.nameRes),
             modifier = modifier,
-            contentScale = photoScale
+            contentScale = safeScale(photoScale, bitmap.width, bitmap.height)
         )
         iconId != 0 -> Image(
             painter = painterResource(iconId),
@@ -107,7 +107,7 @@ fun ContentVisual(item: ContentItem, modifier: Modifier = Modifier, emojiSize: I
             bitmap = bitmap,
             contentDescription = item.displayName(context),
             modifier = modifier,
-            contentScale = photoScale
+            contentScale = safeScale(photoScale, bitmap.width, bitmap.height)
         )
         drawableId != 0 -> Image(
             painter = painterResource(drawableId),
@@ -161,4 +161,11 @@ fun Stepper(label: String, value: Int, range: IntRange, step: Int = 1, onChange:
             }
         }
     }
+}
+
+/** Recadrage seulement pour les images presque carrées : une image large (dinosaure de profil) serait coupée. */
+private fun safeScale(wanted: ContentScale, w: Int, h: Int): ContentScale {
+    if (wanted != ContentScale.Crop || h <= 0) return wanted
+    val r = w.toFloat() / h
+    return if (r in 0.72f..1.4f) ContentScale.Crop else ContentScale.Fit
 }

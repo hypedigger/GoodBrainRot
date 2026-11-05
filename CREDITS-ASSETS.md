@@ -256,24 +256,26 @@ the bundled one; such cases, when detected, are listed under "Unresolved".
 
 ## Dinosaurs (16 images)
 
+Modern life restorations (paleoart), white margins trimmed.
+
 | Local file | Source | Author | License |
 |---|---|---|---|
-| `allosaurus.jpg` | [File:WLA hmns Allosaurus White Background.jpg](https://commons.wikimedia.org/wiki/File:WLA_hmns_Allosaurus_White_Background.jpg) | The_Wookies | [CC BY 2.5](https://creativecommons.org/licenses/by/2.5) |
-| `ankylosaurus.jpg` | [File:Ankylosaur head - cast - Custer County Montana - Museum of the Rockies - 2013-07-08.jpg](https://commons.wikimedia.org/wiki/File:Ankylosaur_head_-_cast_-_Custer_County_Montana_-_Museum_of_the_Rockies_-_2013-07-08.jpg) | Tim Evanson | [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0) |
-| `brachiosaurus.jpg` | [File:Brachiosaurus mount.jpg](https://commons.wikimedia.org/wiki/File:Brachiosaurus_mount.jpg) | Matt Wedel | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0) |
-| `brontosaurus.jpg` | [File:Brontosaurus excelsus remount in the Peabody Museum.jpg](https://commons.wikimedia.org/wiki/File:Brontosaurus_excelsus_remount_in_the_Peabody_Museum.jpg) | Matthew Bellemare | [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0) |
-| `compsognathus.jpg` | [File:Compy.jpg](https://commons.wikimedia.org/wiki/File:Compy.jpg) | Zach Tirrell from Plymouth, USA | [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0) |
-| `dimetrodon.jpg` | [File:Dimetrodon incisivum 01.jpg](https://commons.wikimedia.org/wiki/File:Dimetrodon_incisivum_01.jpg) | H. Zell | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0) |
-| `diplodocus.jpg` | [File:CM Diplodocus.jpg](https://commons.wikimedia.org/wiki/File:CM_Diplodocus.jpg) | ScottRobertAnselmo | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0) |
-| `iguanodon.jpg` | [File:Iguanodon de Bernissart IRSNB 01.JPG](https://commons.wikimedia.org/wiki/File:Iguanodon_de_Bernissart_IRSNB_01.JPG) | Ben2 | [CC BY-SA 3.0](http://creativecommons.org/licenses/by-sa/3.0/) |
-| `pachycephalosaurus.jpg` | [File:Pachycephalosaurus wyomingensis ROM.jpg](https://commons.wikimedia.org/wiki/File:Pachycephalosaurus_wyomingensis_ROM.jpg) | IJReid | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0) |
-| `parasaurolophus.jpg` | [File:FMNH Parasaurolophus fossil.jpg](https://commons.wikimedia.org/wiki/File:FMNH_Parasaurolophus_fossil.jpg) | Zissoudisctrucker | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) |
-| `pteranodon.jpg` | [File:Pteranodon amnh martyniuk.jpg](https://commons.wikimedia.org/wiki/File:Pteranodon_amnh_martyniuk.jpg) | Matt Martyniuk | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0) |
-| `spinosaurus.jpg` | [File:FSAC-KK-11888.jpg](https://commons.wikimedia.org/wiki/File:FSAC-KK-11888.jpg) | 3blindMies | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) |
-| `stegosaurus.jpg` | [File:Journal.pone.0138352.g001A.jpg](https://commons.wikimedia.org/wiki/File:Journal.pone.0138352.g001A.jpg) | Susannah Maidment et al. & Natural History Museum, London | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0) |
-| `trex.jpg` | [File:Tyrannosaurus Rex Holotype.jpg](https://commons.wikimedia.org/wiki/File:Tyrannosaurus_Rex_Holotype.jpg) | ScottRobertAnselmo | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0) |
-| `triceratops.jpg` | [File:LA-Triceratops mount-2.jpg](https://commons.wikimedia.org/wiki/File:LA-Triceratops_mount-2.jpg) | Source: Allie_Caulfield Derivative: User:MathKnight | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0) |
-| `velociraptor.jpg` | [File:Velociraptor skeleton white background.jpg](https://commons.wikimedia.org/wiki/File:Velociraptor_skeleton_white_background.jpg) | Eduard Solà Vázquez | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0) |
+| `allosaurus.jpg` | [File:Allosaurus Life Reconstruction.jpg](https://commons.wikimedia.org/wiki/File:Allosaurus_Life_Reconstruction.jpg) | Fred Wierum | CC BY 3.0 |
+| `ankylosaurus.jpg` | [File:Ankylosaurus magniventris reconstruction nomargin.png](https://commons.wikimedia.org/wiki/File:Ankylosaurus_magniventris_reconstruction_nomargin.png) | Emily Willoughby (https://emilywilloughby.com), modified version | CC BY-SA 3.0 |
+| `brachiosaurus.jpg` | [File:Brachiosaurus NT new.jpg](https://commons.wikimedia.org/wiki/File:Brachiosaurus_NT_new.jpg) | Nobu Tamura | CC BY-SA 4.0 |
+| `brontosaurus.jpg` | [File:Brontosaurus NT small.jpg](https://commons.wikimedia.org/wiki/File:Brontosaurus_NT_small.jpg) | Nobu Tamura email:nobu.tamura@yahoo.com http://spinops.blogspot.com/ | CC BY-SA 4.0 |
+| `compsognathus.jpg` | [File:Compsognathus Conty.png](https://commons.wikimedia.org/wiki/File:Compsognathus_Conty.png) | Conty | CC BY-SA 4.0 |
+| `dimetrodon.jpg` | [File:Dimetrodon teutonis life restoration by Sebastian Brandt (Reco-Brandt).jpg](https://commons.wikimedia.org/wiki/File:Dimetrodon_teutonis_life_restoration_by_Sebastian_Brandt_(Reco-Brandt).jpg) | TB0815 | CC BY 4.0 |
+| `diplodocus.jpg` | [File:Diplodocus BW.jpg](https://commons.wikimedia.org/wiki/File:Diplodocus_BW.jpg) | Nobu Tamura (http://spinops.blogspot.com) | CC BY 3.0 |
+| `iguanodon.jpg` | [File:Iguanodon paleoart 2025.png](https://commons.wikimedia.org/wiki/File:Iguanodon_paleoart_2025.png) | Sauroarchive | CC BY 4.0 |
+| `pachycephalosaurus.jpg` | [File:Pachycephalosaurus Reconstruction transparent.png](https://commons.wikimedia.org/wiki/File:Pachycephalosaurus_Reconstruction_transparent.png) | Fred Wierum | CC BY-SA 4.0 |
+| `parasaurolophus.jpg` | [File:Life reconstruction of Parasaurolophus walkeri.png](https://commons.wikimedia.org/wiki/File:Life_reconstruction_of_Parasaurolophus_walkeri.png) | Connor Ashbridge | CC BY-SA 4.0 |
+| `pteranodon.jpg` | [File:202009 Pteranodon longiceps.png](https://commons.wikimedia.org/wiki/File:202009_Pteranodon_longiceps.png) | DataBase Center for Life Science (DBCLS) | CC BY 4.0 |
+| `spinosaurus.jpg` | [File:Spinosaurus aegyptiacus transparent.tif](https://commons.wikimedia.org/wiki/File:Spinosaurus_aegyptiacus_transparent.tif) | Stegotyranno | CC BY-SA 4.0 |
+| `stegosaurus.jpg` | [File:Stegosaurus stenops Life Reconstruction.png](https://commons.wikimedia.org/wiki/File:Stegosaurus_stenops_Life_Reconstruction.png) | Fred Wierum | CC BY-SA 4.0 |
+| `trex.jpg` | [File:Rjpalmer tyrannosaurusrex (white background)-mirror.jpg](https://commons.wikimedia.org/wiki/File:Rjpalmer_tyrannosaurusrex_(white_background)-mirror.jpg) | RJPalmerArt | CC BY-SA 4.0 |
+| `triceratops.jpg` | [File:Triceratops4 NT small.jpg](https://commons.wikimedia.org/wiki/File:Triceratops4_NT_small.jpg) | Nobu Tamura email:nobu.tamura@yahoo.com http://spinops.blogspot.com/ http://paleoexhibit. | CC BY-SA 4.0 |
+| `velociraptor.jpg` | [File:Fred Wierum Velociraptor.png](https://commons.wikimedia.org/wiki/File:Fred_Wierum_Velociraptor.png) | Fred Wierum | CC BY-SA 4.0 |
 
 ## Vehicles (18 images)
 
@@ -338,6 +340,7 @@ Trimmed to the clearest ~3 s, normalized and re-encoded (mono Ogg Vorbis).
 |---|---|---|---|
 | `sounds/bear.ogg` | [Yellowstone sound library - Grizzly Bears Roar - 001.mp3](https://commons.wikimedia.org/wiki/File%3AYellowstone_sound_library_-_Grizzly_Bears_Roar_-_001.mp3) | NPS & MSU Acoustic Atlas / Jennifer Jerrett | Public domain |
 | `sounds/bee.ogg` | [Bee buzzing sound (animal noises).opus](https://commons.wikimedia.org/wiki/File%3ABee_buzzing_sound_%28animal_noises%29.opus) | Free Sounds Library User Spanac | CC BY 3.0 |
+| `sounds/bird.ogg` | [Turdus merula male song at dawn(20s).ogg](https://commons.wikimedia.org/wiki/File%3ATurdus_merula_male_song_at_dawn%2820s%29.ogg) | unknown | CC BY-SA 3.0 |
 | `sounds/cricket_insect.ogg` | [Cricket Gryllus bimaculatus Chirps.oga](https://commons.wikimedia.org/wiki/File%3ACricket_Gryllus_bimaculatus_Chirps.oga) | Rickjpelleg | CC BY-SA 4.0 |
 | `sounds/crow.ogg` | [Corvus corone - Carrion Crow XC511982.mp3](https://commons.wikimedia.org/wiki/File%3ACorvus_corone_-_Carrion_Crow_XC511982.mp3) | Marie-Lan Taÿ Pamart | CC BY-SA 4.0 |
 | `sounds/donkey.ogg` | [157763 felix-blume a-donkey-is-braying-in-his-enclosure-in-south-of-france.wav](https://commons.wikimedia.org/wiki/File%3A157763_felix-blume_a-donkey-is-braying-in-his-enclosure-in-south-of-france.wav) | felix-blume | CC0 |
@@ -351,6 +354,6 @@ Trimmed to the clearest ~3 s, normalized and re-encoded (mono Ogg Vorbis).
 | `sounds/pigeon.ogg` | [Columba livia - Rock Dove XC541143.mp3](https://commons.wikimedia.org/wiki/File%3AColumba_livia_-_Rock_Dove_XC541143.mp3) | Marie-Lan Taÿ Pamart | CC BY-SA 4.0 |
 | `sounds/seagull.ogg` | [Larus argentatus - European Herring Gull XC436943.mp3](https://commons.wikimedia.org/wiki/File%3ALarus_argentatus_-_European_Herring_Gull_XC436943.mp3) | Joost van Bruggen | CC BY-SA 4.0 |
 | `sounds/snake.ogg` | [Rattlesnake.ogg](https://commons.wikimedia.org/wiki/File%3ARattlesnake.ogg) | unknown | Public domain |
-| `sounds/turkey_bird.ogg` | [Meleagris gallopavo - Wild Turkey - XC104532.ogg](https://commons.wikimedia.org/wiki/File%3AMeleagris_gallopavo_-_Wild_Turkey_-_XC104532.ogg) | Jonathon Jongsma | CC BY-SA 3.0 |
+| `sounds/turkey_bird.ogg` | [Gobbler.ogg](https://commons.wikimedia.org/wiki/File%3AGobbler.ogg) | bod | Public domain |
 | `sounds/whale.ogg` | [Humpback-Whale-Song-and-Foraging-Behavior-on-an-Antarctic-Feeding-Ground-pone.0051214.s001.oga](https://commons.wikimedia.org/wiki/File%3AHumpback-Whale-Song-and-Foraging-Behavior-on-an-Antarctic-Feeding-Ground-pone.0051214.s001.oga) | Stimpert A, Peavey L, Friedlaender A, Nowacek D | CC BY 2.5 |
 | `sounds/wolf.ogg` | [Wolf howls.ogg](https://commons.wikimedia.org/wiki/File%3AWolf_howls.ogg) | unknown | Public domain |

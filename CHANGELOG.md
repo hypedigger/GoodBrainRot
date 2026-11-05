@@ -1,5 +1,11 @@
 # Nouveautés — GoodBrainRot
 
+## 3.91 — 2026-11-05
+- **Dinosaures : reconstitutions modernes** à la place des squelettes de musée (paléo-art sous licence libre : Vélociraptor à plumes de Fred Wierum, T. rex de RJ Palmer, Brachiosaure et Brontosaure de Nobu Tamura…), marges rognées.
+- **Quiz — cadrage** : seules les images presque carrées sont recadrées pour remplir la case ; les images larges (dinosaures de profil) sont affichées en entier, sur fond blanc pour les dinosaures.
+- **Cris** : l'« oiseau » était un enregistrement de quelqu'un qui dit « bird song » → vrai chant de merle ; la **dinde** (qui ressemblait à un petit oiseau) → vrai glouglou.
+- **Page du serveur** : nouvel onglet **🐾 Animaux** (photo, nom, lecteur et source de chaque cri), onglets resserrés sur mobile, bouton d'arrêt dans le flux de la page, gras du journal des nouveautés.
+
 ## 3.90 — 2026-11-05
 - **Quiz — nombre de propositions** dans les Options : **Auto** (suit le niveau de l'enfant), **Facile 4**, **Moyen 6**, **Difficile 8** (drapeaux : 4 / 9 / 15).
 - **Quiz — présentation refaite** : la grille est **centrée et calculée pour tenir dans l'écran** (jamais de défilement), cases les plus grandes possible, photos qui remplissent la case.

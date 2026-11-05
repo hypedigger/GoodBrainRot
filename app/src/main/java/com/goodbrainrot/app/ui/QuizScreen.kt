@@ -474,7 +474,7 @@ fun QuizScreen(type: QuizType, onBack: () -> Unit) {
                     val hidden = item.id in hiddenIds
                     val tileColor = when (type) {
                         QuizType.COLOR -> (item.display as QuizDisplay.ColorTile).color
-                        QuizType.SHAPE, QuizType.FLAG, QuizType.JOB -> Color.White
+                        QuizType.SHAPE, QuizType.FLAG, QuizType.JOB, QuizType.IMG_DINO -> Color.White
                         else -> PastelRainbow[round.choices.indexOf(item) % PastelRainbow.size]
                     }
                     val scale by animateFloatAsState(
