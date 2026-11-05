@@ -1,5 +1,11 @@
 # Nouveautés — GoodBrainRot
 
+## 3.92 — 2026-11-05
+- **Sons des véhicules refaits entièrement** : les 36 anciens enregistrements (pris au hasard : musique pour la voiture, sifflet de train pour le tracteur…) sont remplacés par **24 enregistrements choisis un par un** et vérifiés (Wikimedia Commons, licences libres) : moteur et klaxon de voiture, sirènes de pompiers / police / ambulance, klaxons de train et de bateau, avion à réaction, hélicoptère, sonnettes de vélo, bus, tracteur, moto.
+- **La fusée** a enfin un vrai son : décollages de la navette Discovery et d'Artemis II (NASA, domaine public) au lieu de la petite musique synthétique.
+- Tous les cris d'animaux ont été revérifiés.
+- Page du serveur : l'onglet **🔊 Sons** liste les animaux **et les véhicules** avec leurs enregistrements et leurs sources.
+
 ## 3.91 — 2026-11-05
 - **Dinosaures : reconstitutions modernes** à la place des squelettes de musée (paléo-art sous licence libre : Vélociraptor à plumes de Fred Wierum, T. rex de RJ Palmer, Brachiosaure et Brontosaure de Nobu Tamura…), marges rognées.
 - **Quiz — cadrage** : seules les images presque carrées sont recadrées pour remplir la case ; les images larges (dinosaures de profil) sont affichées en entier, sur fond blanc pour les dinosaures.

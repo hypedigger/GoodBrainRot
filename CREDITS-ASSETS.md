@@ -318,7 +318,7 @@ All bundled images were resolved.
 
 - `assets/sounds/horse.ogg`: [File:Wiehern.ogg](https://commons.wikimedia.org/wiki/File:Wiehern.ogg) — Wikimedia Commons, public domain (author: Hü).
 - Animal sounds (cat, cow, goat, hen, horse, sheep): recordings from LaSonotheque.fr (Joseph Sardin, free to use). Rooster: personal recording.
-- Vehicle sounds: Wikimedia Commons (free licenses), several sounds per vehicle. Horn: "Car Horn.wav" (15HPanska_Ruttner_Jan, CC0); water splash: "Bathtub water splashes.ogg" (gradha, public domain).
+- Vehicle sounds: see the "Vehicle sounds" table below. Horn: "Car Horn.wav" (15HPanska_Ruttner_Jan, CC0); water splash: "Bathtub water splashes.ogg" (gradha, public domain).
 - Garden minigame sounds: "Chainsaw 10.ogg", "Birds singing in garden.ogg", "Breeze birds and geese.ogg" (public domain), "nail clipper" (Flame, not lame — CC0), all Wikimedia Commons; "WWS Hedgetrimmer.ogg" — Wikimedia Commons, **CC BY 4.0** (WWS).
 - Impact/interface sound effects: Kenney "Impact Sounds" and "Interface Sounds" packs (CC0, https://kenney.nl); "Car Sound Effects Pack (Low Quality)" (CC0, OpenGameArt).
 - MPC drum samples: Sonic Pi (github.com/sonic-pi-net/sonic-pi, CC0) and Dirt-Samples (github.com/tidalcycles/Dirt-Samples, freely reusable).
@@ -331,6 +331,37 @@ All bundled images were resolved.
 Images: `assets/flags/<iso>.webp`, rendered from the flag SVGs of Wikimedia Commons ("Flag of …"): public domain,
 except Oman (Omani Open Government Licence 1.0). Country list, ISO codes and names in the 5 languages: Wikidata (CC0),
 some names shortened for children. The source page of each flag is stored in `assets/content/flags.json`.
+
+## Vehicle sounds (Wikimedia Commons)
+
+Hand-picked recordings, trimmed to the clearest ~3.5 s, normalized, mono Ogg Vorbis.
+
+| Local file | Source | Author | License |
+|---|---|---|---|
+| `vehicle_sounds/car/0.ogg` | [WWS VolkswagenBeetle8211engine.ogg](https://commons.wikimedia.org/wiki/File%3AWWS_VolkswagenBeetle8211engine.ogg) | Work With Sounds / Technical Museum of Slovenia | CC BY 4.0 |
+| `vehicle_sounds/car/1.ogg` | [WWS CarPrinzNSU1200C8211horn.ogg](https://commons.wikimedia.org/wiki/File%3AWWS_CarPrinzNSU1200C8211horn.ogg) | Work With Sounds / Technical Museum of Slovenia | CC BY 4.0 |
+| `vehicle_sounds/fire_truck/0.ogg` | [WWS FiretruckFordF600-19588211sirens.ogg](https://commons.wikimedia.org/wiki/File%3AWWS_FiretruckFordF600-19588211sirens.ogg) | Work With Sounds / Torsten Nilsson | CC BY 4.0 |
+| `vehicle_sounds/fire_truck/1.ogg` | [WWS Firetruck.ogg](https://commons.wikimedia.org/wiki/File%3AWWS_Firetruck.ogg) | Work With Sounds / Werstas | CC BY 4.0 |
+| `vehicle_sounds/police/0.ogg` | [WWS Policecarsiren.ogg](https://commons.wikimedia.org/wiki/File%3AWWS_Policecarsiren.ogg) | Work With Sounds / Konrad Gutkowski | CC BY 4.0 |
+| `vehicle_sounds/police/1.ogg` | [American police siren i.ogg](https://commons.wikimedia.org/wiki/File%3AAmerican_police_siren_i.ogg) | lezer | Public domain |
+| `vehicle_sounds/ambulance/0.ogg` | [Het voorbijrijden van twee ambulances met sirenes - SoundCloud - Beeld en Geluid.ogg](https://commons.wikimedia.org/wiki/File%3AHet_voorbijrijden_van_twee_ambulances_met_sirenes_-_SoundCloud_-_Beeld_en_Geluid.ogg) | Beeld en Geluid | CC BY-SA 3.0 |
+| `vehicle_sounds/train/0.ogg` | [Sound of American Train Horn Nathan Airchime P5.ogg](https://commons.wikimedia.org/wiki/File%3ASound_of_American_Train_Horn_Nathan_Airchime_P5.ogg) | WeenyBeany | CC BY 4.0 |
+| `vehicle_sounds/train/1.ogg` | [Sound of American Train Horn Nathan Airchime K5LA.ogg](https://commons.wikimedia.org/wiki/File%3ASound_of_American_Train_Horn_Nathan_Airchime_K5LA.ogg) | WeenyBeany | CC BY 4.0 |
+| `vehicle_sounds/plane/0.ogg` | [Jet airliner overhead.ogg](https://commons.wikimedia.org/wiki/File%3AJet_airliner_overhead.ogg) | Jud McCranie | CC BY-SA 4.0 |
+| `vehicle_sounds/helicopter/0.ogg` | [Helicopter over a lake.ogg](https://commons.wikimedia.org/wiki/File%3AHelicopter_over_a_lake.ogg) | ezwa | Public domain |
+| `vehicle_sounds/helicopter/1.ogg` | [Chinook helicopter flying over Greenwich in London.ogg](https://commons.wikimedia.org/wiki/File%3AChinook_helicopter_flying_over_Greenwich_in_London.ogg) | JoBrodie | CC0 |
+| `vehicle_sounds/bike/0.ogg` | [Bicycle-bell.wav](https://commons.wikimedia.org/wiki/File%3ABicycle-bell.wav) | Xampi8 | CC BY 3.0 |
+| `vehicle_sounds/bike/1.ogg` | [Ding Dong Bicycle Bell A.ogg](https://commons.wikimedia.org/wiki/File%3ADing_Dong_Bicycle_Bell_A.ogg) | TeWeBs | CC BY-SA 4.0 |
+| `vehicle_sounds/bus/0.ogg` | [WWS CityBusMANSG220engine.ogg](https://commons.wikimedia.org/wiki/File%3AWWS_CityBusMANSG220engine.ogg) | Work With Sounds / Technical Museum of Slovenia | CC BY 4.0 |
+| `vehicle_sounds/bus/1.ogg` | [WWS CityBusMANSG220horn.ogg](https://commons.wikimedia.org/wiki/File%3AWWS_CityBusMANSG220horn.ogg) | Work With Sounds / Technical Museum of Slovenia | CC BY 4.0 |
+| `vehicle_sounds/tractor/0.ogg` | [WWS TractorUrsusC342engine.ogg](https://commons.wikimedia.org/wiki/File%3AWWS_TractorUrsusC342engine.ogg) | Work With Sounds / Museum of Municipal Engineering | CC BY 4.0 |
+| `vehicle_sounds/tractor/1.ogg` | [WWS TractorLanzBuldogHL12engineinoperation.ogg](https://commons.wikimedia.org/wiki/File%3AWWS_TractorLanzBuldogHL12engineinoperation.ogg) | Work With Sounds / Museum of Municipal Engineering | CC BY 4.0 |
+| `vehicle_sounds/boat/0.ogg` | [Cruise ship Albatros ship horn.ogg](https://commons.wikimedia.org/wiki/File%3ACruise_ship_Albatros_ship_horn.ogg) | Tvabutzku1234 | CC0 |
+| `vehicle_sounds/boat/1.ogg` | [WWS ShipSodekshipssiren.ogg](https://commons.wikimedia.org/wiki/File%3AWWS_ShipSodekshipssiren.ogg) | Work With Sounds / Museum of Municipal Engineering | CC BY 4.0 |
+| `vehicle_sounds/motorcycle/0.ogg` | [Motorbike 2.ogg](https://commons.wikimedia.org/wiki/File%3AMotorbike_2.ogg) | ezwa | Public domain |
+| `vehicle_sounds/motorcycle/1.ogg` | [Jawa250 motorbike exhaust sound.ogg](https://commons.wikimedia.org/wiki/File%3AJawa250_motorbike_exhaust_sound.ogg) | Віктор Ходєєв /Viktor Khodyeyev | Public domain |
+| `vehicle_sounds/rocket/0.ogg` | [Discovery STS-131 — Sound of Launch.mp3](https://commons.wikimedia.org/wiki/File%3ADiscovery_STS-131_%E2%80%94_Sound_of_Launch.mp3) | NASA | Public domain |
+| `vehicle_sounds/rocket/1.ogg` | [Artemis II Live Launch Coverage - Pad Camera Site 4 (KSC-20260401-AU-LMM01-0001-Artemis II Live Launch Coverage Pad Camera Site 4).wav](https://commons.wikimedia.org/wiki/File%3AArtemis_II_Live_Launch_Coverage_-_Pad_Camera_Site_4_%28KSC-20260401-AU-LMM01-0001-Artemis_II_Live_Launch_Coverage_Pad_Camera_Site_4%29.wav) | NASA Kennedy Space Center | Public domain |
 
 ## Animal sounds (Wikimedia Commons)
 
