@@ -283,6 +283,13 @@
     <string name="vroum_vehicle">Ride</string>
     <string name="vroum_mode_race_hint">Reach the village before time runs out!</string>
     <string name="vroum_mode_arcade_hint">Drive as far as you can: it ends when the fuel is gone.</string>
+    <string name="vroum_duel">2 players</string>
+    <string name="vroum_duel_hint">Half the screen each: first to reach the village wins!</string>
+    <string name="vroum_player_n">PLAYER %1$d</string>
+    <string name="vroum_duel_wins">Player %1$d wins!</string>
+    <string name="vroum_tuto_lane">Tap left or right to change lane</string>
+    <string name="vroum_tuto_jump">Press the button to jump</string>
+    <string name="vroum_tuto_items">Grab the shiny things, jump over the red ones!</string>
     <string name="gz_slice_easy">Easy</string>
     <string name="gz_slice_classic">Classic · 3 lives</string>
     <string name="gz_no_lives">Stung 3 times!</string>

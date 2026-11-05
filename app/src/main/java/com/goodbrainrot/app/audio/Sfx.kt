@@ -61,6 +61,12 @@ object Sfx {
         "vv_tick" to R.raw.sfx_vv_tick,
         "vv_applause" to R.raw.sfx_vv_applause,
         "vv_fanfare2" to R.raw.sfx_vv_fanfare2,
+        "vv_beep" to R.raw.sfx_vv_beep,
+        "vv_bear" to R.raw.sfx_vv_bear,
+        "gz_tchak" to R.raw.sfx_gz_tchak,
+        "gz_nuke" to R.raw.sfx_gz_nuke,
+        "gz_splat" to R.raw.sfx_gz_splat,
+        "gz_gold" to R.raw.sfx_gz_gold,
         // Jardinier Zen
         "gz_zap" to R.raw.sfx_gz_zap,
         "gz_bamboo" to R.raw.sfx_gz_bamboo,

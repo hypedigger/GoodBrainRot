@@ -274,6 +274,13 @@
     <string name="vroum_vehicle">Bolide</string>
     <string name="vroum_mode_race_hint">Arrive au village avant la fin du temps !</string>
     <string name="vroum_mode_arcade_hint">Roule le plus loin possible : ça s\'arrête quand il n\'y a plus d\'essence.</string>
+    <string name="vroum_duel">2 joueurs</string>
+    <string name="vroum_duel_hint">Chacun sa moitié d\'écran : le premier arrivé au village gagne !</string>
+    <string name="vroum_player_n">JOUEUR %1$d</string>
+    <string name="vroum_duel_wins">Joueur %1$d gagne !</string>
+    <string name="vroum_tuto_lane">Touche à gauche ou à droite pour changer de voie</string>
+    <string name="vroum_tuto_jump">Appuie sur le bouton pour sauter</string>
+    <string name="vroum_tuto_items">Ramasse ce qui brille, saute par-dessus le rouge !</string>
     <string name="gz_slice_easy">Facile</string>
     <string name="gz_slice_classic">Classique · 3 vies</string>
     <string name="gz_no_lives">Piqué 3 fois !</string>

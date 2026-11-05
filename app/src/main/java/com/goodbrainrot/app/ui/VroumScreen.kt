@@ -17,6 +17,7 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -84,6 +85,7 @@ import com.goodbrainrot.app.data.AnimalSoundPlayer
 import com.goodbrainrot.app.data.Animals
 import com.goodbrainrot.app.data.HighScores
 import com.goodbrainrot.app.data.VehicleSounds
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.math.PI
@@ -112,7 +114,7 @@ private val V_RED = Color(0xFFFF5252)
 private val V_INK = Color(0xFF2A2440)
 private val V_CARD = Color(0xF2FFFFFF)
 
-private enum class VPhase { SELECT, LEVEL, PLAYING, CLEAR, END }
+private enum class VPhase { SELECT, LEVEL, PLAYING, DUEL, CLEAR, END }
 internal enum class VItem { FUEL, STAR, ACORN, MUSHROOM, BERRY, TURBO, PUDDLE, PASSENGER, CANNON, SUPERBOOST, HOLE, LOG }
 
 /** Couleur (r,g,b) pour les thèmes. */
@@ -143,7 +145,7 @@ internal val THEMES = listOf(
         C3(0.10f, 0.08f, 0.20f), C3(0.07f, 0.06f, 0.15f), false, C3(0.04f, 0.09f, 0.06f),
         C3(0.07f, 0.19f, 0.10f), C3(0.06f, 0.16f, 0.09f), C3(0.14f, 0.13f, 0.22f), C3(0.16f, 0.15f, 0.25f), C3(0.75f, 0.25f, 0.22f), C3(0.08f, 0.07f, 0.18f),
         listOf("tree1" to 2.6f, "lamp" to 2.4f, "tree3" to 2.5f, "owl_tree" to 2.6f, "tree2" to 2.9f, "bush" to 1.1f, "lamp" to 2.4f, "rock" to 1.0f),
-        listOf("vv_acorn", "vv_mushroom", "vv_berry"), 1),
+        listOf("vv_acorn", "vv_mushroom", "vv_berry"), 5),   // 5 = pluie (plus de flaques aussi)
     VTheme("volcano", R.string.vroum_theme_volcano, "vv_volcano",
         listOf(C3(0.10f, 0.02f, 0.03f), C3(0.30f, 0.06f, 0.05f), C3(0.65f, 0.18f, 0.06f), C3(1.0f, 0.55f, 0.15f)), C3(1f, 0.35f, 0.1f), 0.40f, true, false, false,
         C3(0.16f, 0.06f, 0.05f), C3(0.10f, 0.04f, 0.04f), false, C3(0.12f, 0.05f, 0.04f),
@@ -187,10 +189,14 @@ internal val ENEMY_KEYS = listOf("en_car1", "en_car2", "en_truck", "en_bus", "en
 internal val PASSENGER_KEYS = listOf("pass_rabbit", "pass_owl", "pass_fox")
 internal val CHEER_KEYS = listOf("cheer_rabbit", "cheer_squirrel", "cheer_owl")
 internal class VEnemy(var lane: Int, var z: Float, val kind: Int, val mps: Float) { var crushed = -1f; var bounce = 0f }
-internal class VPick(var lane: Int, var z: Float, val type: VItem, val variant: Int) { var t = 0f }
+internal class VPick(var lane: Int, var z: Float, val type: VItem, val variant: Int) {
+    var t = 0f
+    // obstacle MOBILE (chat de Tokyo, rocher du Volcan) : voie flottante qui traverse la route
+    var fLane = -999f; var fDir = 0
+}
 internal class VShot(var z: Float, val lane: Int)
 internal class VPart(var x: Float, var y: Float, var z: Float, var vx: Float, var vy: Float, var life: Float, val maxLife: Float,
-                     val r: Float, val g: Float, val b: Float, val size: Float, val floaty: Boolean = false)
+                     val r: Float, val g: Float, val b: Float, val size: Float, val floaty: Boolean = false, val streak: Float = 0f)
 internal class VText(var x: Float, var y: Float, val z: Float, val text: String, var life: Float, val color: Color, val big: Boolean = false) {
     @Volatile var sx = -1000f; @Volatile var sy = -1000f
 }
@@ -210,8 +216,8 @@ private class VSprites(private val ctx: android.content.Context) {
 // Modèle de jeu
 // ---------------------------------------------------------------------------
 
-/** [diff] : 0 = Facile (1 min 30 chrono, invincible, pas d'essence), 1 = Moyen (le vrai jeu), 2 = Difficile (rapide, essence qui file, chocs chers). */
-internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, val theme: VTheme, val trickLabel: String, val cannonLabel: String) {
+/** [diff] : 0 = Facile (invincible, pas d'essence), 1 = Moyen, 2 = Difficile. [duel] : course à deux, ni chrono ni fantôme. */
+internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, val theme: VTheme, val trickLabel: String, val cannonLabel: String, val duel: Boolean = false) {
     companion object {
         const val LANE_M = 3.2f
         const val Z_FAR = 300f
@@ -261,7 +267,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
     var passengerT = 0f; var passengerKind = -1
     var fuel = 100f
     // Course (défaut) : au CHRONO — arriver au village (2 000 m) avant la fin du temps ; Arcade (endless) : à l'ESSENCE
-    val timeLimit = if (!endless) (when (diff) { 0 -> 130f; 2 -> 80f; else -> 105f }) else -1f
+    val timeLimit = if (!endless && !duel) (when (diff) { 0 -> 130f; 2 -> 80f; else -> 105f }) else -1f
     var timeLeft = timeLimit
     var timeUp = false
     var score = 0; var combo = 0; var comboTimer = 0f
@@ -317,7 +323,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         widenStart = dist + 40f
         lane += shift
         for (e in enemies) e.lane += shift
-        for (p in picks) p.lane += shift
+        for (p in picks) { p.lane += shift; if (p.fDir != 0) p.fLane += shift }
         shots.clear()
         // les arbres trop proches de la future route sont repoussés
         val half = roadHalfFor(n)
@@ -398,8 +404,8 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         val sp = mps
         val dz = sp * dt
         if (!over && sputter < 0f) dist += dz
-        // trace de la course (fantôme) : un point (dist, voie) toutes les 0,25 s après le départ
-        if (!endless && !inIntro && !over && !cleared) {
+        // trace de la course (fantôme) : un point (dist, voie) toutes les 0,25 s après le départ (Course ET Arcade)
+        if (!duel && !inIntro && !over && !cleared) {
             recAcc += dt
             while (recAcc >= 0.25f) { recAcc -= 0.25f; recD.add((dist * 10f).toInt()); recL.add(lane) }
         }
@@ -455,7 +461,18 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
                 1 -> parts.add(VPart(ax, gy + 0.4f + Random.nextFloat() * 2f, az, (Random.nextFloat() - 0.5f) * 0.6f, (Random.nextFloat() - 0.3f) * 0.5f, 2.5f + Random.nextFloat() * 2f, 4f, 1f, 0.95f, 0.45f, 0.14f, floaty = true))
                 2 -> parts.add(VPart(ax, gy + Random.nextFloat() * 1.5f, az, (Random.nextFloat() - 0.5f) * 0.8f, 1.2f + Random.nextFloat() * 1.5f, 1.8f + Random.nextFloat() * 1.5f, 3f, 1f, 0.55f + 0.3f * Random.nextFloat(), 0.15f, 0.12f, floaty = true))
                 3 -> parts.add(VPart(ax, gy + 5f + Random.nextFloat() * 4f, az, 1.2f + Random.nextFloat(), -0.8f - Random.nextFloat() * 0.6f, 4f, 4f, 1f, 0.72f, 0.82f, 0.22f, floaty = true))
-                4 -> parts.add(VPart(ax, gy + 6f + Random.nextFloat() * 5f, az, (Random.nextFloat() - 0.5f) * 0.8f, -1.2f - Random.nextFloat() * 1.2f, 5f, 5f, 1f, 1f, 1f, 0.16f + Random.nextFloat() * 0.12f, floaty = true))
+                // neige avec RAFALES de vent : dérive latérale qui oscille lentement
+                4 -> parts.add(VPart(ax, gy + 6f + Random.nextFloat() * 5f, az, sin(elapsed * 0.7f) * 2.4f + (Random.nextFloat() - 0.5f) * 0.8f, -1.2f - Random.nextFloat() * 1.2f, 5f, 5f, 1f, 1f, 1f, 0.16f + Random.nextFloat() * 0.12f, floaty = true))
+                // pluie (forêt de nuit) : gouttes fines et rapides
+                5 -> {
+                    // gouttes = traînées étirées, surtout près de la caméra pour qu'on les voie bien
+                    repeat(4) {
+                        val rz = 12f + Random.nextFloat() * 40f
+                        parts.add(VPart((Random.nextFloat() - 0.5f) * 16f, groundY(dist + rz) + 2f + Random.nextFloat() * 6f, rz, 1.2f, -16f, 0.6f, 0.6f, 0.75f, 0.85f, 1f, 0.04f, floaty = true, streak = 16f))
+                    }
+                    // quelques lucioles restent sous la pluie
+                    if (Random.nextFloat() < 0.25f) parts.add(VPart(ax, gy + 0.4f + Random.nextFloat() * 2f, az, (Random.nextFloat() - 0.5f) * 0.6f, (Random.nextFloat() - 0.3f) * 0.5f, 2.5f + Random.nextFloat() * 2f, 4f, 1f, 0.95f, 0.45f, 0.14f, floaty = true))
+                }
             }
         }
         if (passengerT > 0f) { passengerT -= dt; if (passengerT <= 0f) passengerKind = -1 }
@@ -538,6 +555,13 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         while (pit.hasNext()) {
             val p = pit.next()
             p.z -= dz; p.t += dt
+            // obstacle mobile (chat / rocher) : traverse la route, sort par l'autre côté
+            // il attend sur le bas-côté puis traverse quand il arrive à ~75 m, pour croiser le joueur
+            if (p.fDir != 0) {
+                if (p.z < 75f) p.fLane += p.fDir * dt * lanes / 3.2f
+                p.lane = Math.round(p.fLane)
+                if (p.fLane < -0.95f || p.fLane > lanes - 0.05f) { pit.remove(); continue }
+            }
             if (p.z < 0.5f) { pit.remove(); continue }
             if (p.z > PLAYER_Z - 1.4f && p.z < PLAYER_Z + 1.6f && p.lane in coveredLanes()) {
                 val ground = p.type == VItem.PUDDLE || p.type == VItem.TURBO
@@ -600,12 +624,13 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
             passengerKind < 0 && passengerSince > 18f && Random.nextFloat() < 0.4f -> VItem.PASSENGER
             else -> {
                 val r = Random.nextFloat()
+                val puddleCut = if (theme.ambient == 5) 0.80f else 0.88f   // nuit pluvieuse : deux fois plus de flaques
                 when {
                     r < 0.26f -> VItem.ACORN
                     r < 0.42f -> VItem.MUSHROOM
                     r < 0.54f -> VItem.BERRY
                     r < 0.66f && fuelSince > 6f -> VItem.FUEL
-                    r < 0.88f -> VItem.TURBO           // boosts nettement plus fréquents
+                    r < puddleCut -> VItem.TURBO       // boosts nettement plus fréquents
                     else -> VItem.PUDDLE
                 }
             }
@@ -615,7 +640,16 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         if (type == VItem.SUPERBOOST) superSince = 0f
         if (type == VItem.CANNON) cannonSince = 0f
         if (type == VItem.PASSENGER) passengerSince = 0f
-        if (picks.none { it.lane == lane && abs(it.z - z) < 12f }) picks.add(VPick(lane, z, type, Random.nextInt(3)))
+        if (picks.none { it.lane == lane && abs(it.z - z) < 12f }) {
+            val p = VPick(lane, z, type, Random.nextInt(3))
+            // à Tokyo (chat) et au Volcan (rocher), l'obstacle « tronc » TRAVERSE la route
+            if (type == VItem.LOG && (theme.key == "tokyo" || theme.key == "volcano")) {
+                p.fDir = if (Random.nextBoolean()) 1 else -1
+                p.fLane = if (p.fDir > 0) -0.9f else lanes - 0.1f
+                p.lane = Math.round(p.fLane)
+            }
+            picks.add(p)
+        }
     }
 
     private fun addScore(n: Int, x: Float, z: Float, col: Color) {
@@ -708,7 +742,10 @@ fun VroumScreen(onBack: () -> Unit) {
     var phase by remember { mutableStateOf(VPhase.SELECT) }
     var vehicle by remember { mutableIntStateOf(0) }
     var endless by remember { mutableStateOf(false) }
+    var duelMode by remember { mutableStateOf(false) }     // mode 2 joueurs sur écran partagé
     var diff by remember { mutableIntStateOf(1) }          // 0 facile, 1 moyen, 2 difficile
+    // tutoriel de la première partie : 0 changer de voie, 1 sauter, 2 bonus/dangers, -1 fini
+    var tutoStep by remember { mutableIntStateOf(if (Settings.vroumTutoSeen.value) -1 else 0) }
     var themeIdx by remember { mutableIntStateOf(0) }      // circuit : forêt, nuit, volcan, Tokyo, neige
     var runToken by remember { mutableIntStateOf(0) }
     var tick by remember { mutableIntStateOf(0) }
@@ -725,8 +762,8 @@ fun VroumScreen(onBack: () -> Unit) {
         if (phase != VPhase.PLAYING) null
         else VroumGame(endless, vehicle, diff, THEMES[themeIdx], trickLabel, cannonLabel).also { g ->
             g.lanesLabel = lanesLabel; g.superLabel = superLabel; g.jumpedLabel = jumpedLabel
-            // charge le fantôme du meilleur temps pour ce circuit / cette difficulté (Course seulement)
-            if (!endless) Settings.vroumGhost("${THEMES[themeIdx].key}_$diff")?.let { s ->
+            // charge le fantôme pour ce circuit / cette difficulté : meilleur temps en Course, distance max en Arcade
+            Settings.vroumGhost(if (endless) "${THEMES[themeIdx].key}_a$diff" else "${THEMES[themeIdx].key}_$diff")?.let { s ->
                 val p = s.split(";")
                 if (p.size >= 3) {
                     g.ghostVeh = p[0].toIntOrNull() ?: -1
@@ -776,14 +813,21 @@ fun VroumScreen(onBack: () -> Unit) {
         if (g.diff >= 1) HighScores.record(gameKey, g.score)
         // étoiles mémorisées par circuit + mode + difficulté (affichées sur les cartes)
         Settings.setVroumStars("${g.theme.key}_${if (g.endless) "a" else "c"}${g.diff}", vroumStarCount(g.endless, cleared, g.score, g.dist.toInt()))
-        // fantôme : si la course est finie plus vite que le fantôme en place, ma trace le remplace
+        // fantôme : en Course ma trace remplace l'ancienne si je finis plus vite ; en Arcade si je vais plus loin
         if (!g.endless && cleared) {
             val key = "${g.theme.key}_${g.diff}"
             val (d, l, time) = g.ghostRecording()
             val prevTime = Settings.vroumGhost(key)?.split(";")?.getOrNull(1)?.toFloatOrNull()
             if (d.size > 8 && (prevTime == null || time < prevTime))
                 Settings.setVroumGhost(key, "${g.vehicle};${"%.2f".format(java.util.Locale.US, time)};" + d.indices.joinToString(",") { "${d[it]}:${l[it]}" })
+        } else if (g.endless) {
+            val key = "${g.theme.key}_a${g.diff}"
+            val (d, l, _) = g.ghostRecording()
+            val prevDist = Settings.vroumGhost(key)?.split(";")?.getOrNull(1)?.toFloatOrNull()
+            if (d.size > 8 && (prevDist == null || g.dist > prevDist))
+                Settings.setVroumGhost(key, "${g.vehicle};${"%.1f".format(java.util.Locale.US, g.dist)};" + d.indices.joinToString(",") { "${d[it]}:${l[it]}" })
         }
+        if (tutoStep >= 0) { tutoStep = -1; Settings.setVroumTutoSeen(true) }
         phase = VPhase.END
     }
     fun hornFor(v: Int) {
@@ -792,8 +836,9 @@ fun VroumScreen(onBack: () -> Unit) {
             0 -> VehicleSounds.play(ctx, "car", 1500L, fallback)
             2 -> VehicleSounds.play(ctx, "fire_truck", 2200L, fallback)
             3 -> VehicleSounds.play(ctx, "motorcycle", 1600L, fallback)
-            4, 9, 10 -> VehicleSounds.play(ctx, "tractor", 1600L, fallback)
-            11 -> if (!SoundEngine.playRoar()) Animals.byKey("bear")?.let { AnimalSoundPlayer.play(ctx, it, sayNameAfter = false) } ?: fallback()
+            4, 9 -> VehicleSounds.play(ctx, "tractor", 1600L, fallback)
+            10 -> if (!Sfx.play("vv_beep")) VehicleSounds.play(ctx, "tractor", 1600L, fallback)   // pelleteuse : bip-bip de recul
+            11 -> if (!Sfx.play("vv_bear")) Animals.byKey("bear")?.let { AnimalSoundPlayer.play(ctx, it, sayNameAfter = false) } ?: fallback()
             8 -> VehicleSounds.play(ctx, "plane", 1800L, fallback)
             6 -> if (!SoundEngine.playRoar()) fallback()
             5, 7 -> if (!SoundEngine.playRoar()) Animals.byKey("elephant")?.let { AnimalSoundPlayer.play(ctx, it, sayNameAfter = false) } ?: fallback()
@@ -801,6 +846,10 @@ fun VroumScreen(onBack: () -> Unit) {
         }
     }
 
+    // dernière bulle du tutoriel (bonus / dangers) : disparaît toute seule après 4 s
+    LaunchedEffect(tutoStep) {
+        if (tutoStep == 2) { delay(4000); if (tutoStep == 2) { tutoStep = -1; Settings.setVroumTutoSeen(true) } }
+    }
     LaunchedEffect(game) {
         val g = game ?: return@LaunchedEffect
         countdown = 3
@@ -817,9 +866,9 @@ fun VroumScreen(onBack: () -> Unit) {
                         "count" -> { countdown = kotlin.math.ceil(g.introT.toDouble()).toInt().coerceIn(1, 3); SoundEngine.playVvTick(0.8f + (3 - countdown) * 0.15f) }
                         // moteur en boucle seulement pour les engins à moteur (pas pour le dragon, le lion, le T-Rex)
                         "go" -> { countdown = 0; SoundEngine.playVvGo(); if (VEHICLES[g.vehicle].key !in CREATURE_KEYS) engine = SoundEngine.startEngine() }
-                        "lane" -> {}   // plus de « tic » à chaque changement de file (fatigant)
+                        "lane" -> { if (tutoStep == 0) tutoStep = 1 }   // le tutoriel avance quand l'enfant a changé de voie
                         "widen" -> { SoundEngine.playVvSuccess(); Haptics.tap(ctx) }
-                        "jump" -> SoundEngine.playJump()
+                        "jump" -> { SoundEngine.playJump(); if (tutoStep == 1) tutoStep = 2 }
                         "land" -> SoundEngine.playLand()
                         "landBlast" -> { SoundEngine.playBoom(); SoundEngine.playVvYahoo(); Haptics.tap(ctx) }
                         "trick" -> SoundEngine.playVvCoin()
@@ -862,8 +911,10 @@ fun VroumScreen(onBack: () -> Unit) {
         when (phase) {
             VPhase.SELECT -> SelectScreen(spr, vehicle, onBack = onBack, onPick = { vehicle = it; hornFor(it) },
                 onNext = { SoundEngine.playVroumUi(); phase = VPhase.LEVEL })
-            VPhase.LEVEL -> LevelScreen(spr, diff, endless, onDiff = { SoundEngine.playVroumUi(); diff = it }, onEndless = { SoundEngine.playVroumUi(); endless = it }, onBack = { phase = VPhase.SELECT },
-                onPlay = { t -> SoundEngine.playVroumUi(); themeIdx = t; phase = VPhase.PLAYING; runToken++ })
+            VPhase.LEVEL -> LevelScreen(spr, diff, endless, duelMode, onDiff = { SoundEngine.playVroumUi(); diff = it },
+                onEndless = { SoundEngine.playVroumUi(); endless = it }, onDuel = { SoundEngine.playVroumUi(); duelMode = it }, onBack = { phase = VPhase.SELECT },
+                onPlay = { t -> SoundEngine.playVroumUi(); themeIdx = t; phase = if (duelMode) VPhase.DUEL else VPhase.PLAYING; runToken++ })
+            VPhase.DUEL -> DuelScreen(themeIdx, vehicle, onBack = { phase = VPhase.LEVEL })
             VPhase.PLAYING -> {
                 val g = game
                 if (g != null && glView != null) {
@@ -913,6 +964,8 @@ fun VroumScreen(onBack: () -> Unit) {
                     LaneHints(Modifier.align(Alignment.BottomCenter))
                     JumpButton(modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 22.dp), cooldown = (g.jumpCd / g.JUMP_CD).coerceIn(0f, 1f), frame = tick) { glView.queueEvent { g.jump() } }
                     if (countdown >= 0) CountdownOverlay(countdown)
+                    // tutoriel de la toute première partie (3 bulles, avance avec les gestes de l'enfant)
+                    if (tutoStep >= 0 && countdown < 0) VroumTutoOverlay(tutoStep)
                 }
                 BackButton(onBack = { GameMusic.stop(); phase = VPhase.LEVEL }, modifier = Modifier.align(Alignment.TopStart))
             }
@@ -1199,8 +1252,117 @@ private fun SelectScreen(spr: VSprites, vehicle: Int, onBack: () -> Unit, onPick
 }
 
 /** Écran 2 : choix de la route. */
+/** Tutoriel de la toute première partie : 3 bulles qui avancent avec les gestes de l'enfant. */
 @Composable
-private fun LevelScreen(spr: VSprites, diff: Int, endless: Boolean, onDiff: (Int) -> Unit, onEndless: (Boolean) -> Unit, onBack: () -> Unit, onPlay: (Int) -> Unit) {
+private fun VroumTutoOverlay(step: Int) {
+    val txt = when (step) { 0 -> stringResource(R.string.vroum_tuto_lane); 1 -> stringResource(R.string.vroum_tuto_jump); else -> stringResource(R.string.vroum_tuto_items) }
+    val icon = when (step) { 0 -> "👈      👉"; 1 -> "⬇️"; else -> "🍄 ⛽ 💨  ✅      🕳 🪵  ❌" }
+    val pulse by rememberInfiniteTransition(label = "tuto").animateFloat(0.96f, 1.05f, infiniteRepeatable(tween(500), RepeatMode.Reverse), label = "tutoP")
+    Box(Modifier.fillMaxSize()) {
+        Column(
+            Modifier.align(if (step == 1) Alignment.BottomCenter else Alignment.Center).padding(bottom = if (step == 1) 130.dp else 0.dp).scale(pulse),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(Modifier.clip(RoundedCornerShape(22.dp)).background(Color(0xDD241A45)).border(2.dp, V_GOLD, RoundedCornerShape(22.dp)).padding(horizontal = 20.dp, vertical = 12.dp)) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(txt, color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 17.sp, textAlign = TextAlign.Center)
+                    Text(icon, fontSize = 24.sp, modifier = Modifier.padding(top = 4.dp))
+                }
+            }
+            if (step == 1) Text("⬇", color = V_GOLD, fontSize = 30.sp, fontWeight = FontWeight.ExtraBold)
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Mode 2 JOUEURS : écran partagé (gauche|droite en paysage, haut|bas en portrait).
+// Deux parties invincibles, sans chrono ni fantôme : premier arrivé au village !
+// ---------------------------------------------------------------------------
+@Composable
+private fun DuelScreen(themeIdx: Int, vehicle: Int, onBack: () -> Unit) {
+    val ctx = LocalContext.current
+    var runToken by remember { mutableIntStateOf(0) }
+    var winner by remember { mutableIntStateOf(0) }   // 0 = course en cours, sinon 1 ou 2
+    var tick by remember { mutableIntStateOf(0) }
+    val trickLabel = stringResource(R.string.vroum_trick); val cannonLabel = stringResource(R.string.vroum_cannons)
+    // joueur 2 : un bolide différent de celui du joueur 1, au hasard
+    val veh2 = remember(runToken) { (vehicle + 1 + Random.nextInt(VEHICLES.size - 1)) % VEHICLES.size }
+    val g1 = remember(runToken) { VroumGame(false, vehicle, 0, THEMES[themeIdx], trickLabel, cannonLabel, duel = true) }
+    val g2 = remember(runToken) { VroumGame(false, veh2, 0, THEMES[themeIdx], trickLabel, cannonLabel, duel = true) }
+    val v1 = remember(g1) { VroumGlView(ctx, g1) }
+    val v2 = remember(g2) { VroumGlView(ctx, g2) }
+    DisposableEffect(v1, v2) { onDispose { v1.onPause(); v2.onPause() } }
+    LaunchedEffect(g1, g2) {
+        SoundEngine.playVvTick(0.8f)
+        while (winner == 0) {
+            withFrameNanos { }
+            tick++
+            // quelques sons partagés (une seule fois, pas un par moitié) + purge des files d'événements
+            while (true) { val e = g1.events.poll() ?: break; when (e) { "count" -> SoundEngine.playVvTick(1f); "go" -> SoundEngine.playVvGo(); "jump" -> SoundEngine.playJump(); "land" -> SoundEngine.playLand(); "turbo", "superboost" -> SoundEngine.playTurbo() } }
+            while (true) { val e = g2.events.poll() ?: break; when (e) { "jump" -> SoundEngine.playJump(); "turbo", "superboost" -> SoundEngine.playTurbo() } }
+            if (g1.cleared || g2.cleared) {
+                winner = if (g1.cleared) 1 else 2
+                Sfx.play("vv_fanfare2"); Sfx.play("vv_applause")
+            }
+        }
+    }
+    BoxWithConstraints(Modifier.fillMaxSize().background(Color.Black)) {
+        val landscape = maxWidth > maxHeight
+        if (landscape) Row(Modifier.fillMaxSize()) {
+            Box(Modifier.weight(1f).fillMaxHeight()) { DuelHalf(1, g1, v1, tick) }
+            Box(Modifier.width(3.dp).fillMaxHeight().background(Color.White.copy(alpha = 0.6f)))
+            Box(Modifier.weight(1f).fillMaxHeight()) { DuelHalf(2, g2, v2, tick) }
+        } else Column(Modifier.fillMaxSize()) {
+            Box(Modifier.weight(1f).fillMaxWidth()) { DuelHalf(2, g2, v2, tick) }
+            Box(Modifier.fillMaxWidth().height(3.dp).background(Color.White.copy(alpha = 0.6f)))
+            Box(Modifier.weight(1f).fillMaxWidth()) { DuelHalf(1, g1, v1, tick) }
+        }
+        BackButton(onBack = onBack, modifier = Modifier.align(Alignment.TopStart))
+        if (winner != 0) Box(Modifier.fillMaxSize().background(Color(0xB3000000)), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("🏆", fontSize = 60.sp)
+                Text(stringResource(R.string.vroum_duel_wins, winner), color = V_GOLD, fontWeight = FontWeight.ExtraBold, fontSize = 28.sp, textAlign = TextAlign.Center,
+                    style = androidx.compose.ui.text.TextStyle(shadow = androidx.compose.ui.graphics.Shadow(Color(0xAA000000), Offset(0f, 2f), 8f)))
+                Spacer(Modifier.height(18.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    GlassButton("🔁  " + stringResource(R.string.replay)) { SoundEngine.playVroumUi(); winner = 0; runToken++ }
+                    GlassButton("🗺  " + stringResource(R.string.vroum_route)) { SoundEngine.playVroumUi(); onBack() }
+                }
+            }
+        }
+    }
+}
+
+/** Une moitié d'écran du duel : vue GL, contrôles tactiles, bandeau de progression et décompte. */
+@Composable
+private fun DuelHalf(player: Int, g: VroumGame, v: VroumGlView, tick: Int) {
+    @Suppress("UNUSED_EXPRESSION") tick
+    val col = if (player == 1) V_CYAN else V_PINK
+    Box(Modifier.fillMaxSize()) {
+        AndroidView(factory = { v.also { it.onResume() } }, modifier = Modifier.fillMaxSize())
+        Box(Modifier.fillMaxSize().pointerInput(g) {
+            detectTapGestures(onTap = { pos -> if (pos.x < size.width / 2f) v.queueEvent { g.moveLane(-1) } else v.queueEvent { g.moveLane(1) } })
+        })
+        // bandeau joueur + progression vers l'arrivée
+        Row(Modifier.align(Alignment.TopCenter).fillMaxWidth().padding(top = 8.dp, start = 62.dp, end = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.clip(RoundedCornerShape(12.dp)).background(col).padding(horizontal = 10.dp, vertical = 3.dp)) {
+                Text(stringResource(R.string.vroum_player_n, player), color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 13.sp, maxLines = 1)
+            }
+            Spacer(Modifier.width(8.dp))
+            Box(Modifier.weight(1f).height(10.dp)) {
+                Box(Modifier.fillMaxSize().clip(RoundedCornerShape(5.dp)).background(Color(0x66000000)))
+                Box(Modifier.fillMaxWidth((g.dist / VroumGame.LEVEL_LEN).coerceIn(0.02f, 1f)).fillMaxHeight().clip(RoundedCornerShape(5.dp)).background(col))
+            }
+            Text(" 🏁", fontSize = 14.sp)
+        }
+        JumpButton(modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 14.dp), cooldown = (g.jumpCd / g.JUMP_CD).coerceIn(0f, 1f), frame = tick) { v.queueEvent { g.jump() } }
+        if (g.introT > 0f) Text("${kotlin.math.ceil(g.introT.toDouble()).toInt().coerceIn(1, 3)}", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 60.sp,
+            modifier = Modifier.align(Alignment.Center), style = androidx.compose.ui.text.TextStyle(shadow = androidx.compose.ui.graphics.Shadow(Color(0xAA000000), Offset(0f, 3f), 8f)))
+    }
+}
+
+@Composable
+private fun LevelScreen(spr: VSprites, diff: Int, endless: Boolean, duel: Boolean, onDiff: (Int) -> Unit, onEndless: (Boolean) -> Unit, onDuel: (Boolean) -> Unit, onBack: () -> Unit, onPlay: (Int) -> Unit) {
     val unlocked by Settings.vroumEndlessUnlocked
     Column(Modifier.fillMaxSize().padding(16.dp).verticalScroll(rememberScrollState())) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1234,14 +1396,18 @@ private fun LevelScreen(spr: VSprites, diff: Int, endless: Boolean, onDiff: (Int
         // Mode : Course (2 000 m jusqu'au village) ou Sans fin (débloqué après une première arrivée)
         Text(stringResource(R.string.vroum_mode), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp, modifier = Modifier.padding(start = 4.dp, bottom = 6.dp))
         Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Color(0x55FFFFFF)).padding(4.dp)) {
-            for ((i, lab) in listOf(R.string.vroum_race, R.string.vroum_endless).withIndex()) {
-                val sel = (i == 1) == endless; val ok = i == 0 || unlocked
-                Box(Modifier.weight(1f).clip(RoundedCornerShape(14.dp)).background(if (sel) Color.White else Color.Transparent).clickableNoRipple { if (ok) onEndless(i == 1) }.padding(vertical = 10.dp), contentAlignment = Alignment.Center) {
-                    Text((if (i == 1 && !unlocked) "🔒 " else "") + stringResource(lab), color = if (sel) V_INK else Color.White.copy(alpha = if (ok) 1f else 0.6f), fontWeight = FontWeight.ExtraBold, fontSize = 15.sp, maxLines = 1)
+            for ((i, lab) in listOf(R.string.vroum_race, R.string.vroum_endless, R.string.vroum_duel).withIndex()) {
+                val sel = when (i) { 0 -> !endless && !duel; 1 -> endless && !duel; else -> duel }
+                val ok = i != 1 || unlocked
+                Box(Modifier.weight(1f).clip(RoundedCornerShape(14.dp)).background(if (sel) Color.White else Color.Transparent)
+                    .clickableNoRipple { if (ok) { if (i == 2) onDuel(true) else { onDuel(false); onEndless(i == 1) } } }.padding(vertical = 10.dp), contentAlignment = Alignment.Center) {
+                    Text((if (i == 1 && !unlocked) "🔒 " else if (i == 2) "👥 " else "") + stringResource(lab), color = if (sel) V_INK else Color.White.copy(alpha = if (ok) 1f else 0.6f), fontWeight = FontWeight.ExtraBold, fontSize = 14.sp, maxLines = 1)
                 }
             }
         }
-        Text(if (!unlocked) stringResource(R.string.vroum_endless_locked) else stringResource(if (endless) R.string.vroum_mode_arcade_hint else R.string.vroum_mode_race_hint),
+        Text(if (duel) stringResource(R.string.vroum_duel_hint)
+             else if (!unlocked) stringResource(R.string.vroum_endless_locked)
+             else stringResource(if (endless) R.string.vroum_mode_arcade_hint else R.string.vroum_mode_race_hint),
             color = Color.White.copy(alpha = 0.85f), fontSize = 12.sp, modifier = Modifier.padding(start = 6.dp, top = 4.dp))
         Spacer(Modifier.height(12.dp))
         // Circuits : 5 thèmes en grille de 2 colonnes
@@ -1250,7 +1416,8 @@ private fun LevelScreen(spr: VSprites, diff: Int, endless: Boolean, onDiff: (Int
         for (r in rows) {
             Row(Modifier.fillMaxWidth().height(150.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 for (i in r) LevelCard(stringResource(THEMES[i].nameRes), spr.cards.getOrNull(i) ?: spr.title, true, null,
-                    Modifier.weight(1f).fillMaxHeight(), stars = starsMap["${THEMES[i].key}_${if (endless) "a" else "c"}$diff"] ?: -1) { onPlay(i) }
+                    Modifier.weight(1f).fillMaxHeight(),
+                    starsByDiff = (0..2).map { d -> starsMap["${THEMES[i].key}_${if (endless) "a" else "c"}$d"] ?: -1 }) { onPlay(i) }
                 if (r.size == 1) Spacer(Modifier.weight(1f))
             }
             Spacer(Modifier.height(12.dp))
@@ -1262,7 +1429,7 @@ private fun LevelScreen(spr: VSprites, diff: Int, endless: Boolean, onDiff: (Int
 }
 
 @Composable
-private fun LevelCard(label: String, img: ImageBitmap?, enabled: Boolean, lockedText: String?, modifier: Modifier, stars: Int = -1, onClick: () -> Unit) {
+private fun LevelCard(label: String, img: ImageBitmap?, enabled: Boolean, lockedText: String?, modifier: Modifier, starsByDiff: List<Int> = emptyList(), onClick: () -> Unit) {
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -1273,10 +1440,16 @@ private fun LevelCard(label: String, img: ImageBitmap?, enabled: Boolean, locked
     ) {
         img?.let { Image(painter = BitmapPainter(it), contentDescription = null, modifier = Modifier.fillMaxSize().alpha(if (enabled) 1f else 0.4f), contentScale = ContentScale.Crop) }
         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xB3000000)))))
-        // étoiles gagnées sur ce circuit (mode + difficulté sélectionnés)
-        if (stars >= 0) Row(Modifier.align(Alignment.TopEnd).padding(8.dp).clip(RoundedCornerShape(12.dp)).background(Color(0x66000000)).padding(horizontal = 8.dp, vertical = 2.dp)) {
-            for (k in 0 until 3) Text("★", color = if (k < stars) V_GOLD else Color.White.copy(alpha = 0.35f), fontSize = 14.sp,
-                style = androidx.compose.ui.text.TextStyle(shadow = androidx.compose.ui.graphics.Shadow(Color(0x88000000), Offset(0f, 1f), 3f)))
+        // étoiles gagnées sur ce circuit : une ligne par difficulté déjà jouée (🙂 / 😎 / 🔥), pour le mode sélectionné
+        if (starsByDiff.any { it >= 0 }) Column(Modifier.align(Alignment.TopEnd).padding(8.dp).clip(RoundedCornerShape(12.dp)).background(Color(0x66000000)).padding(horizontal = 7.dp, vertical = 3.dp)) {
+            val glyphs = listOf("🙂", "😎", "🔥")
+            starsByDiff.forEachIndexed { d, stars ->
+                if (stars >= 0) Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(glyphs[d], fontSize = 10.sp, modifier = Modifier.padding(end = 2.dp))
+                    for (k in 0 until 3) Text("★", color = if (k < stars) V_GOLD else Color.White.copy(alpha = 0.35f), fontSize = 12.sp,
+                        style = androidx.compose.ui.text.TextStyle(shadow = androidx.compose.ui.graphics.Shadow(Color(0x88000000), Offset(0f, 1f), 3f)))
+                }
+            }
         }
         Column(Modifier.align(Alignment.BottomStart).padding(14.dp)) {
             Text(label, color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 19.sp, lineHeight = 21.sp,

@@ -17,8 +17,8 @@ android {
         applicationId = "com.goodbrainrot.app"
         minSdk = 29
         targetSdk = 35
-        versionCode = 104
-        versionName = "3.84"
+        versionCode = 106
+        versionName = "3.86"
 
         // Date de build injectee dans l'app (visible dans les Options).
         val buildTime = SimpleDateFormat("dd/MM/yyyy HH:mm").apply {
@@ -27,10 +27,10 @@ android {
         buildConfigField("String", "BUILD_TIME", "\"$buildTime\"")
     }
 
-    // Signature release : keystore locale HORS dépôt (E:\Divers\Dev\Vibecoding\GoodBrainRot-keys\).
+    // Signature release : keystore locale HORS dépôt, dans le dossier frère ../GoodBrainRot-keys/.
     // Si le fichier keystore.properties est absent, le build release reste possible mais non signé.
     val ksProps = Properties().apply {
-        val f = file("E:/Divers/Dev/Vibecoding/GoodBrainRot-keys/keystore.properties")
+        val f = rootProject.file("../GoodBrainRot-keys/keystore.properties")
         if (f.exists()) f.inputStream().use { load(it) }
     }
     if (ksProps.getProperty("storeFile") != null) {

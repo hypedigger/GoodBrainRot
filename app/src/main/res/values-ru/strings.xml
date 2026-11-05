@@ -274,6 +274,13 @@
     <string name="vroum_vehicle">Машина</string>
     <string name="vroum_mode_race_hint">Доберись до деревни, пока не вышло время!</string>
     <string name="vroum_mode_arcade_hint">Проезжай как можно дальше: игра кончается, когда кончается бензин.</string>
+    <string name="vroum_duel">2 игрока</string>
+    <string name="vroum_duel_hint">У каждого своя половина экрана: побеждает тот, кто первым доедет до деревни!</string>
+    <string name="vroum_player_n">ИГРОК %1$d</string>
+    <string name="vroum_duel_wins">Игрок %1$d побеждает!</string>
+    <string name="vroum_tuto_lane">Нажимай слева или справа, чтобы сменить полосу</string>
+    <string name="vroum_tuto_jump">Нажми кнопку, чтобы прыгнуть</string>
+    <string name="vroum_tuto_items">Собирай блестящее, перепрыгивай красное!</string>
     <string name="gz_slice_easy">Легко</string>
     <string name="gz_slice_classic">Классика · 3 жизни</string>
     <string name="gz_no_lives">Три укуса!</string>

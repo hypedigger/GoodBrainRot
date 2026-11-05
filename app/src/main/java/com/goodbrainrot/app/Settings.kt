@@ -56,6 +56,8 @@ object Settings {
     val vroumEndlessUnlocked = mutableStateOf(false)
     // Étoiles par circuit : clé "<thème>_<c|a><difficulté>" (c = Course, a = Arcade) -> 0..3, on garde le meilleur
     val vroumStars = mutableStateOf<Map<String, Int>>(emptyMap())
+    // Tutoriel Vroum déjà vu (3 bulles à la première partie)
+    val vroumTutoSeen = mutableStateOf(false)
 
     // Jardinier Zen : pièces, paliers d'outils débloqués (manuel / électrique), outil actif, streak
     val gardenCoins = mutableIntStateOf(0)
@@ -109,6 +111,7 @@ object Settings {
         enemyEntryVuln.floatValue = sp.getFloat("enemy_entry_vuln", 0.35f)
         applyShmupVolumes()
         vroumEndlessUnlocked.value = sp.getBoolean("vroum_endless", false)
+        vroumTutoSeen.value = sp.getBoolean("vroum_tuto_seen", false)
         vroumStars.value = (sp.getString("vroum_stars", "") ?: "").split("|").mapNotNull { e ->
             val p = e.split(":"); if (p.size == 2) p[1].toIntOrNull()?.let { p[0] to it } else null
         }.toMap()
@@ -225,6 +228,11 @@ object Settings {
         sp.edit().putString("vroum_stars", m.entries.joinToString("|") { "${it.key}:${it.value}" }).apply()
     }
     /** Fantôme du meilleur temps d'une Course : "véhicule;temps;d0:l0,d1:l1,..." (dist en dm, voie, un échantillon / 0,25 s). */
+    fun setVroumTutoSeen(value: Boolean) {
+        vroumTutoSeen.value = value
+        sp.edit().putBoolean("vroum_tuto_seen", value).apply()
+    }
+
     fun vroumGhost(key: String): String? = sp.getString("vroum_ghost_$key", null)
     fun setVroumGhost(key: String, v: String) = sp.edit().putString("vroum_ghost_$key", v).apply()
 

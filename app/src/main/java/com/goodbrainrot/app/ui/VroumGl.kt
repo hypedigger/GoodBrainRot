@@ -351,12 +351,20 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
                     bills.add(Bill(p.z, x, gy, 2.7f, tex[g.theme.holeTex] ?: tex["vv_hole"], 1f, 1f, 1f, 1f, squash = 0.9f, flat = true))
                 }
                 VItem.LOG -> {
-                    // tronc / congère / chat (texture du thème) en travers de la voie : halo rouge + billboard, à SAUTER
+                    // tronc / congère / chat / rocher (texture du thème) : halo rouge + billboard, à SAUTER.
+                    // Les « crossers » (chat de Tokyo, rocher du Volcan) traversent la route : x continu sur fLane.
+                    val lx = if (p.fDir != 0) g.xCenter(p.z) + (p.fLane - (g.lanes - 1) / 2f) * VroumGame.LANE_M else x
                     val pulse = 0.5f + 0.5f * sin(g.elapsed * 6f + p.z)
-                    bills.add(Bill(p.z + 0.02f, x, gy, 4.0f + 0.5f * pulse, disc, 0.3f + 0.2f * pulse, 1f, 0.15f, 0.1f, squash = 0.9f, flat = true))
-                    bills.add(Bill(p.z, x, gy, 2.9f, disc, 0.4f, 0f, 0f, 0f, squash = 0.7f, flat = true))
-                    val t = tex[g.theme.logTex] ?: tex["vv_log"]
-                    bills.add(Bill(p.z - 0.01f, x, gy, 2.9f, t, 1f, if (t == null) 0.45f else 1f, if (t == null) 0.3f else 1f, if (t == null) 0.2f else 1f, squash = if (t == null) 0.35f else 1f))
+                    bills.add(Bill(p.z + 0.02f, lx, gy, 4.0f + 0.5f * pulse, disc, 0.3f + 0.2f * pulse, 1f, 0.15f, 0.1f, squash = 0.9f, flat = true))
+                    bills.add(Bill(p.z, lx, gy, 2.9f, disc, 0.4f, 0f, 0f, 0f, squash = 0.7f, flat = true))
+                    val t = (if (p.fDir != 0 && g.theme.key == "volcano") tex["vr_rock"] else null) ?: tex[g.theme.logTex] ?: tex["vv_log"]
+                    // rocher du Volcan : il ROULE (rotation continue) ; chat de Tokyo : petit trottinement
+                    val rolling = p.fDir != 0 && g.theme.key == "volcano"
+                    val rot = if (rolling) -p.fDir * 16f * sin(g.elapsed * 13f) else 0f
+                    val hop = if (rolling) 0.35f * abs(sin(g.elapsed * 13f)) else 0f
+                    val sq = if (t == null) 0.35f else if (p.fDir != 0 && g.theme.key == "tokyo") 1f + 0.06f * sin(g.elapsed * 14f) else 1f
+                    val (lr, lg, lb) = if (t == null) Triple(0.45f, 0.3f, 0.2f) else if (rolling) Triple(0.85f, 0.55f, 0.48f) else Triple(1f, 1f, 1f)
+                    bills.add(Bill(p.z - 0.01f, lx, gy + hop, if (rolling) 2.4f else 2.9f, t, 1f, lr, lg, lb, squash = sq, rot = rot))
                 }
                 VItem.PUDDLE -> {
                     // piège : anneau rouge qui pulse autour de la flaque
@@ -385,8 +393,8 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
                         bills.add(Bill(p.z + 0.02f, x + cos(a) * 1.4f, gy + bob + 0.9f + sin(a * 1.3f) * 0.7f, 0.35f, disc, 0.9f, sr, sg, sb)) }
                     bills.add(Bill(p.z + 0.01f, x, gy, sz * (1.6f + 0.25f * glow), disc, 0.3f + 0.2f * glow, gr, gg, gb, squash = 0.6f, flat = true))
                     bills.add(Bill(p.z, x, gy, sz * 0.9f, disc, 0.3f, 0f, 0f, 0f, squash = 0.5f, flat = true))
-                    if (p.type == VItem.STAR) bills.add(Bill(p.z + 0.01f, x, gy + bob - 0.3f, sz * 1.5f, null, 0.22f + 0.1f * sin(p.t * 10f), 1f, 0.82f, 0.3f))
-                    if (p.type == VItem.CANNON) bills.add(Bill(p.z + 0.01f, x, gy + bob - 0.3f, sz * 1.4f, null, 0.22f + 0.1f * sin(p.t * 10f), 0.3f, 0.85f, 1f))
+                    if (p.type == VItem.STAR) bills.add(Bill(p.z + 0.01f, x, gy + bob - 0.3f, sz * 1.5f, disc, 0.35f + 0.15f * sin(p.t * 10f), 1f, 0.82f, 0.3f))
+                    if (p.type == VItem.CANNON) bills.add(Bill(p.z + 0.01f, x, gy + bob - 0.3f, sz * 1.4f, disc, 0.35f + 0.15f * sin(p.t * 10f), 0.3f, 0.85f, 1f))
                     val (cr, cg, cb) = if (t != null) Triple(1f, 1f, 1f) else when (p.type) { VItem.FUEL -> Triple(1f, 0.25f, 0.25f); VItem.CANNON -> Triple(0.45f, 0.5f, 0.6f); else -> Triple(1f, 0.82f, 0.3f) }
                     bills.add(Bill(p.z - 0.01f, x, gy + bob, sz, t, 1f, cr, cg, cb))
                 }
@@ -424,7 +432,7 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
             bills.add(Bill(VroumGame.PLAYER_Z + 0.03f, x, gy, 4f + 10f * k, disc, 0.25f * (1f - k), 0.75f, 0.62f, 0.45f, squash = 0.9f, flat = true))
         }
         // fantôme du meilleur temps (Course) : le même bolide en spectre bleuté semi-transparent
-        if (g.ghostD != null && !g.endless) {
+        if (g.ghostD != null) {
             val gz = g.ghostDist() - s + VroumGame.PLAYER_Z
             if (gz > 1.5f && gz < VroumGame.Z_FAR) {
                 val gx = g.xCenter(gz) + g.laneX(g.ghostLane().coerceIn(0, g.lanes - 1))
@@ -529,7 +537,8 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
         }
         for (p in g.parts) {
             val a = (p.life / p.maxLife).coerceIn(0f, 1f)
-            bills.add(Bill(p.z, p.x, p.y, p.size, disc, a, p.r, p.g, p.b))
+            if (p.streak > 0f) bills.add(Bill(p.z, p.x, p.y, p.size, null, a * 0.7f, p.r, p.g, p.b, stretch = p.streak))
+            else bills.add(Bill(p.z, p.x, p.y, p.size, disc, a, p.r, p.g, p.b))
         }
         bills.sortByDescending { it.z }
         var cur: Int = -1

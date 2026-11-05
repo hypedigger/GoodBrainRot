@@ -1,5 +1,20 @@
 # Nouveautés — GoodBrainRot
 
+## 3.86 — 2026-11-05
+- **Vroum — mode 2 joueurs** : nouveau mode « 👥 2 joueurs » sur l'écran des circuits. **Écran partagé** (gauche | droite en paysage, haut | bas en portrait), chacun touche sa moitié pour changer de voie et a son bouton de saut ; deux bolides invincibles, sans chrono : **le premier arrivé au village gagne** (écran du vainqueur + Rejouer).
+- **Vroum — étoiles de toutes les difficultés** sur chaque carte de circuit (une ligne 🙂 / 😎 / 🔥 par difficulté déjà jouée, pour le mode choisi).
+- **Vroum — obstacles qui bougent** : à Tokyo le **chat traverse la route**, au Volcan un **rocher dévale en rebondissant** — ils attendent sur le bas-côté et traversent quand tu approches.
+- **Vroum — fantôme en Arcade** : ta plus longue distance est rejouée par un fantôme la fois suivante.
+- **Vroum — météo** : **pluie** dans la forêt de nuit (deux fois plus de flaques), **rafales de vent** dans la neige de Noël.
+- **Vroum — tutoriel** à la toute première partie : 3 bulles (changer de voie → sauter → ramasser ce qui brille / sauter le rouge) qui avancent avec les gestes de l'enfant.
+- **Vroum — klaxons** : bip-bip de recul pour la pelleteuse, vrai grognement d'ours (Kenney, CC0).
+- Correctif : le halo des bonus étoile / canon était un **carré jaune** au lieu d'une lueur ronde.
+
+## 3.85 — 2026-10-09
+- **APK release signée** (R8) : **42,5 Mo** ; sons convertis MP3 → OGG (12,8 → 2,8 Mo).
+- **Rapport de plantage local** dans l'espace parents (bouton Partager / Effacer), rien n'est envoyé.
+- Batterie : le rendu 3D (Vroum, Jardinier) se met en pause quand l'app passe en arrière-plan.
+
 ## 3.84 — 2026-09-13
 - **APK deux fois plus léger** : 112 → **76 Mo** (images converties en WebP, photos recompressées) — rien ne change à l'écran.
 - **Vroum — étoiles par circuit** : les ★ gagnées (par mode et difficulté) sont **mémorisées et affichées sur les cartes de circuit**.
