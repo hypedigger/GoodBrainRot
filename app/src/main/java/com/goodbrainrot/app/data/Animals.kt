@@ -40,7 +40,17 @@ object Animals {
         Animal("mouse", "🐭", R.string.animal_mouse),
         Animal("snake", "🐍", R.string.animal_snake),
         Animal("bee", "🐝", R.string.animal_bee),
-        Animal("dolphin", "🐬", R.string.animal_dolphin)
+        Animal("dolphin", "🐬", R.string.animal_dolphin),
+        // ajoutés pour leurs cris très reconnaissables (sons Wikimedia Commons, photos déjà embarquées)
+        Animal("donkey", "🫏", R.string.animal_donkey),
+        Animal("turkey_bird", "🦃", R.string.animal_turkey),
+        Animal("goose", "🪿", R.string.animal_goose),
+        Animal("crow", "🐦‍⬛", R.string.animal_crow),
+        Animal("seagull", "🐦", R.string.animal_seagull),
+        Animal("cricket_insect", "🦗", R.string.animal_cricket),
+        Animal("pigeon", "🕊️", R.string.animal_pigeon),
+        Animal("whale", "🐋", R.string.animal_whale),
+        Animal("peacock", "🦚", R.string.animal_peacock)
     )
 
     fun byKey(key: String): Animal? = ALL.firstOrNull { it.key == key }

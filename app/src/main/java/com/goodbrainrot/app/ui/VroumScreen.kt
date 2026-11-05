@@ -364,7 +364,8 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
             else -> if (endless) 18f + min(14f, dist / 600f) else 18f
         }
         val intro = if (inIntro) 0.25f + 0.75f * (1f - (introT / INTRO_DUR).coerceIn(0f, 1f)) else 1f
-        return base * intro * (if (superT > 0f) 2.1f else if (turboT > 0f) 1.7f else 1f)
+        // boost : super ×2,1 > turbo ×1,7 > géant ×1,45 (pendant toute la transformation)
+        return base * intro * (if (superT > 0f) 2.1f else if (turboT > 0f) 1.7f else if (giant > 0) 1.45f else 1f)
     }
     /** Intensité du boost pour les effets (0 rien, 1 turbo, 2 super). */
     val boostLevel: Int get() = if (superT > 0f) 2 else if (turboT > 0f) 1 else 0

@@ -65,7 +65,7 @@ fun AvatarIcon(avatar: String, size: androidx.compose.ui.unit.Dp, modifier: Modi
  * sinon icône IA « mignonne » (ic_<clé>), sinon fallback emoji.
  */
 @Composable
-fun AnimalVisual(animal: Animal, modifier: Modifier = Modifier, emojiSize: Int = 52) {
+fun AnimalVisual(animal: Animal, modifier: Modifier = Modifier, emojiSize: Int = 52, photoScale: ContentScale = ContentScale.Fit) {
     val context = LocalContext.current
     val usePhotos = Settings.useContentPhotos.value
     val bitmap = remember(animal.key, usePhotos) { if (usePhotos) loadAnimalImage(context, animal.key) else null }
@@ -75,7 +75,7 @@ fun AnimalVisual(animal: Animal, modifier: Modifier = Modifier, emojiSize: Int =
             bitmap = bitmap,
             contentDescription = stringResource(animal.nameRes),
             modifier = modifier,
-            contentScale = ContentScale.Fit
+            contentScale = photoScale
         )
         iconId != 0 -> Image(
             painter = painterResource(iconId),
@@ -94,7 +94,7 @@ fun AnimalVisual(animal: Animal, modifier: Modifier = Modifier, emojiSize: Int =
  * sinon dessin vectoriel, sinon emoji, sinon le nom en texte.
  */
 @Composable
-fun ContentVisual(item: ContentItem, modifier: Modifier = Modifier, emojiSize: Int = 56) {
+fun ContentVisual(item: ContentItem, modifier: Modifier = Modifier, emojiSize: Int = 56, photoScale: ContentScale = ContentScale.Fit) {
     val context = LocalContext.current
     val usePhotos = Settings.useContentPhotos.value
     val bitmap = remember(item.key, item.folder, usePhotos) {
@@ -107,7 +107,7 @@ fun ContentVisual(item: ContentItem, modifier: Modifier = Modifier, emojiSize: I
             bitmap = bitmap,
             contentDescription = item.displayName(context),
             modifier = modifier,
-            contentScale = ContentScale.Fit
+            contentScale = photoScale
         )
         drawableId != 0 -> Image(
             painter = painterResource(drawableId),

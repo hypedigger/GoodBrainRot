@@ -64,7 +64,7 @@ private val PARENT_CATS = listOf(
     ParentCat(R.string.activity_color, "color", Routes.QUIZ_COLOR) { 8 },
     ParentCat(R.string.activity_shape, "shape", Routes.QUIZ_SHAPE) { 6 },
     ParentCat(R.string.activity_count, "count", Routes.QUIZ_COUNT) { 6 },
-    ParentCat(R.string.activity_flags, "flag", Routes.QUIZ_FLAG) { FLAGS.size },
+    ParentCat(R.string.activity_flags, "flag", Routes.QUIZ_FLAG) { loadFlagPool(it).size },
     ParentCat(R.string.activity_jobs, "job", Routes.QUIZ_JOB) { JOBS.size },
     ParentCat(R.string.activity_instruments, "instrument", Routes.QUIZ_INSTRUMENT) { EAR_INSTRUMENTS.size }
 )

@@ -1,5 +1,15 @@
 # Nouveautés — GoodBrainRot
 
+## 3.90 — 2026-11-05
+- **Quiz — nombre de propositions** dans les Options : **Auto** (suit le niveau de l'enfant), **Facile 4**, **Moyen 6**, **Difficile 8** (drapeaux : 4 / 9 / 15).
+- **Quiz — présentation refaite** : la grille est **centrée et calculée pour tenir dans l'écran** (jamais de défilement), cases les plus grandes possible, photos qui remplissent la case.
+- **Quiz Compte** : le **10** est composé avec les chiffres illustrés (plus la police de l'appli), à la même taille que les autres.
+- **Drapeaux : les 196 pays** (drapeaux officiels Wikimedia Commons, noms dans les 5 langues), en commençant par les pays connus puis de plus en plus exotiques au fil des progrès ; jusqu'à **3 colonnes × 5 lignes**.
+- **Métiers : 52** au lieu de 18 (infirmière, garagiste, clown, magicien, cow-boy, détective, apiculteur, bûcheron, conducteur de train…).
+- **« À qui ce son ? »** : **29 animaux** ont maintenant un vrai cri (18 nouveaux, Wikimedia Commons : canard, hibou, lion, loup, grenouille, âne, dindon, oie, corbeau, mouette, grillon, pigeon, baleine, paon…) ; un animal sans cri n'est jamais proposé, et si un son ne se lit pas, le nom n'est plus prononcé (ça donnait la réponse).
+- **Vroum — mode géant** : **boost de vitesse** pendant toute la transformation ; le halo doré n'est plus un **carré** qui clignotait autour du bolide.
+- **Serveur APK** : bouton **« Arrêter le serveur »** sur la page.
+
 ## 3.89 — 2026-11-05
 - **Quiz Drapeaux** (hub Reconnais) : **24 pays**, drapeaux **dessinés par l'app** (couleurs et proportions officielles simplifiées, États-Unis à 50 étoiles, Union Jack, Chine, Turquie, Inde avec sa roue…), noms dans les 5 langues.
 - **Quiz Métiers** (hub Reconnais) : **18 métiers** illustrés (pompier, docteur, astronaute, boulanger, maîtresse…).

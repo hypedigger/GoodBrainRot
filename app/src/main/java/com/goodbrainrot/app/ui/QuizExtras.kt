@@ -4,6 +4,10 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.border
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -37,6 +41,23 @@ internal val FLAGS: List<Pair<String, Int>> = listOf(
     "us" to R.string.flag_us, "gb" to R.string.flag_gb, "in" to R.string.flag_in, "tr" to R.string.flag_tr,
 )
 
+/**
+ * Tous les pays (196) : assets/content/flags.json (codes ISO, noms en 5 langues — Wikidata CC0 — dans l'ordre
+ * « pays connus d'abord ») + images assets/flags/<code>.webp (Wikimedia Commons). Repli : les 24 drapeaux dessinés.
+ */
+internal fun loadFlagPool(context: Context): List<Pair<String, String>> {
+    val lang = context.resources.configuration.locales[0].language
+    return try {
+        val arr = org.json.JSONArray(context.assets.open("content/flags.json").bufferedReader().use { it.readText() })
+        (0 until arr.length()).map { i ->
+            val o = arr.getJSONObject(i); val n = o.getJSONObject("names")
+            o.getString("code") to (n.optString(lang).ifBlank { n.optString("en") })
+        }
+    } catch (_: Exception) {
+        FLAGS.map { (code, res) -> code to context.getString(res) }
+    }
+}
+
 /** Métiers : image assets/jobs/<clé>.jpg + nom. */
 internal val JOBS: List<Pair<String, Int>> = listOf(
     "firefighter" to R.string.job_firefighter, "doctor" to R.string.job_doctor, "cook" to R.string.job_cook,
@@ -45,6 +66,18 @@ internal val JOBS: List<Pair<String, Int>> = listOf(
     "builder" to R.string.job_builder, "painter" to R.string.job_painter, "baker" to R.string.job_baker,
     "dentist" to R.string.job_dentist, "fisher" to R.string.job_fisher, "gardener" to R.string.job_gardener,
     "musician" to R.string.job_musician, "teacher" to R.string.job_teacher, "hairdresser" to R.string.job_hairdresser,
+    "nurse" to R.string.job_nurse, "mechanic" to R.string.job_mechanic, "plumber" to R.string.job_plumber,
+    "electrician" to R.string.job_electrician, "carpenter" to R.string.job_carpenter, "butcher" to R.string.job_butcher,
+    "waiter" to R.string.job_waiter, "scientist" to R.string.job_scientist, "lifeguard" to R.string.job_lifeguard,
+    "sailor" to R.string.job_sailor, "photographer" to R.string.job_photographer, "dancer" to R.string.job_dancer,
+    "singer" to R.string.job_singer, "clown" to R.string.job_clown, "magician" to R.string.job_magician,
+    "cowboy" to R.string.job_cowboy, "detective" to R.string.job_detective, "judge" to R.string.job_judge,
+    "lumberjack" to R.string.job_lumberjack, "beekeeper" to R.string.job_beekeeper, "shepherd" to R.string.job_shepherd,
+    "pastry_chef" to R.string.job_pastry_chef, "florist" to R.string.job_florist, "bus_driver" to R.string.job_bus_driver,
+    "train_driver" to R.string.job_train_driver, "miner" to R.string.job_miner, "tailor" to R.string.job_tailor,
+    "librarian" to R.string.job_librarian, "garbage_collector" to R.string.job_garbage_collector, "diver" to R.string.job_diver,
+    "zookeeper" to R.string.job_zookeeper, "footballer" to R.string.job_footballer, "pharmacist" to R.string.job_pharmacist,
+    "programmer" to R.string.job_programmer,
 )
 
 /** Instruments reconnaissables à l'oreille (échantillons déjà embarqués pour les instruments de l'app). */
@@ -86,9 +119,32 @@ internal object EarInstrumentPlayer {
     }
 }
 
-/** Drapeau dessiné au format 3:2, coins arrondis, centré dans [modifier]. */
+/** Drapeau : image officielle (assets/flags) si présente, sinon drapeau dessiné. */
 @Composable
 internal fun FlagView(code: String, modifier: Modifier = Modifier) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val bmp = androidx.compose.runtime.remember(code) {
+        try { context.assets.open("flags/$code.webp").use { android.graphics.BitmapFactory.decodeStream(it) } } catch (_: Exception) { null }
+    }
+    if (bmp != null) {
+        androidx.compose.foundation.layout.Box(modifier, contentAlignment = androidx.compose.ui.Alignment.Center) {
+            androidx.compose.foundation.Image(
+                bitmap = bmp.asImageBitmap(), contentDescription = null,
+                contentScale = androidx.compose.ui.layout.ContentScale.Fit,
+                modifier = Modifier.flagFrame()
+            )
+        }
+    } else DrawnFlag(code, modifier)
+}
+
+/** Fin liseré gris autour du drapeau (les drapeaux à fond blanc se détachent du blanc de la case). */
+private fun Modifier.flagFrame(): Modifier =
+    this.then(Modifier.border(1.dp, Color(0x33000000), androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
+        .clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp)))
+
+/** Drapeau dessiné au format 3:2, coins arrondis, centré dans [modifier]. */
+@Composable
+private fun DrawnFlag(code: String, modifier: Modifier = Modifier) {
     Canvas(modifier) {
         var fw = size.width; var fh = fw / 1.5f
         if (fh > size.height) { fh = size.height; fw = fh * 1.5f }

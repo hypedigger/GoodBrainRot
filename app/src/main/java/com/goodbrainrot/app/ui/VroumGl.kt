@@ -483,8 +483,9 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
                 // nuit : phares (nappe lumineuse au sol devant le bolide)
                 if (g.theme.night) bills.add(Bill(z + 5.5f, x, gy, 5.2f, disc, 0.32f, 1f, 0.95f, 0.72f, squash = 1f, stretch = 2.4f, flat = true))
                 if (g.giant > 0) {
-                    val pulse = 0.25f + 0.15f * sin(g.elapsed * 12f)
-                    bills.add(Bill(z + 0.02f, x, gy + lift - 0.3f, pw * 1.5f, null, pulse, 1f, 0.82f, 0.3f, squash = 1f))
+                    // halo doré ROND (texture disque) : sans texture c'était un carré plein visible autour du sprite
+                    val pulse = 0.35f + 0.2f * sin(g.elapsed * 12f)
+                    bills.add(Bill(z + 0.02f, x, gy + lift - pw * 0.25f, pw * 1.7f, disc, pulse, 1f, 0.82f, 0.3f, squash = 1f))
                 }
                 val by = gy + lift + bob
                 val stride = if (moving) sin(ph) else 0f

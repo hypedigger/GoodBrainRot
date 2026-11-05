@@ -28,6 +28,14 @@ TUTORIEL.md
 # sons non redistribuables (LaSonotheque : libres d'usage mais pas de redistribution)
 # -> voir CREDITS.md ; l'app se rabat sur le TTS quand le cri manque
 app/src/main/assets/sounds/*.mp3
+# (convertis en .ogg depuis la v3.85 : on les liste un par un, les autres cris viennent de Wikimedia Commons)
+app/src/main/assets/sounds/cat.ogg
+app/src/main/assets/sounds/cow.ogg
+app/src/main/assets/sounds/goat.ogg
+app/src/main/assets/sounds/hen.ogg
+app/src/main/assets/sounds/horse.ogg
+app/src/main/assets/sounds/sheep.ogg
+app/src/main/assets/sounds/rooster.ogg
 
 # kits de batterie : provenance mixte -> non redistribues ; scripts/fetch_samples.ps1
 # retelecharge les samples Sonic Pi (CC0), sinon l'app synthetise les sons

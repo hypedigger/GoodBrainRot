@@ -40,9 +40,11 @@ private fun loadAssetImage(context: Context, folder: String, key: String): Image
     return null
 }
 
-/** Liste des clés d'animaux qui ont un vrai enregistrement dans les assets. */
+/** Liste des clés d'animaux qui ont un vrai enregistrement (lisible, non vide) dans les assets. */
 fun animalsWithSound(context: Context): Set<String> = try {
     (context.assets.list("sounds") ?: emptyArray())
+        .filter { it.substringAfterLast('.', "").lowercase() in SOUND_EXTENSIONS }
+        .filter { f -> try { context.assets.openFd("sounds/$f").use { it.length > 2_000 } } catch (_: Exception) { false } }
         .map { it.substringBeforeLast('.') }
         .toSet()
 } catch (_: Exception) {
@@ -59,7 +61,8 @@ object AnimalSoundPlayer {
     private var current: MediaPlayer? = null
     private var stopJob: Job? = null
 
-    fun play(context: Context, animal: Animal, sayNameAfter: Boolean) {
+    /** [speakIfMissing] = false dans le quiz des sons : dire le nom donnerait la réponse. */
+    fun play(context: Context, animal: Animal, sayNameAfter: Boolean, speakIfMissing: Boolean = true) {
         stop()
         val name = context.getString(animal.nameRes)
         for (ext in SOUND_EXTENSIONS) {
@@ -72,7 +75,7 @@ object AnimalSoundPlayer {
                     stop()
                     if (sayNameAfter) Tts.speak(name)
                 }
-                mp.setOnErrorListener { _, _, _ -> stop(); true }
+                mp.setOnErrorListener { _, _, _ -> stop(); if (speakIfMissing) Tts.speak(name); true }
                 mp.prepare()
                 mp.start()
                 current = mp
@@ -87,7 +90,7 @@ object AnimalSoundPlayer {
             } catch (_: Exception) {
             }
         }
-        Tts.speak(name)
+        if (speakIfMissing) Tts.speak(name)
     }
 
     fun stop() {

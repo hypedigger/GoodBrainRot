@@ -91,6 +91,7 @@ private sealed class QuizDisplay {
     data class AnimalImage(val animal: Animal) : QuizDisplay()
     data class BigText(val text: String, val color: Color) : QuizDisplay()
     data class IconImage(val res: Int) : QuizDisplay()   // lettre/chiffre en image IA
+    data class IconRow(val res: List<Int>) : QuizDisplay()   // nombre à plusieurs chiffres (images IA côte à côte)
     data class ColorTile(val color: Color) : QuizDisplay()
     data class ShapeIcon(val kind: ShapeKind, val color: Color) : QuizDisplay()
     data class Content(val item: ContentItem) : QuizDisplay()
@@ -102,8 +103,13 @@ private fun drawableId(context: android.content.Context, name: String): Int =
     context.resources.getIdentifier(name, "drawable", context.packageName)
 
 private fun numberDisplay(context: android.content.Context, n: Int): QuizDisplay {
-    val res = if (n in 0..9) drawableId(context, "num_$n") else 0
-    return if (res != 0) QuizDisplay.IconImage(res) else QuizDisplay.BigText("$n", DeepRainbow[n % DeepRainbow.size])
+    // nombres à plusieurs chiffres (10) : on juxtapose les chiffres générés, jamais la police de l'appli
+    val digits = "$n".map { drawableId(context, "num_$it") }
+    return when {
+        digits.size == 1 && digits[0] != 0 -> QuizDisplay.IconImage(digits[0])
+        digits.isNotEmpty() && digits.all { it != 0 } -> QuizDisplay.IconRow(digits)
+        else -> QuizDisplay.BigText("$n", DeepRainbow[n % DeepRainbow.size])
+    }
 }
 
 private fun letterDisplay(context: android.content.Context, letter: String, index: Int): QuizDisplay {
@@ -226,10 +232,22 @@ private fun buildPool(context: android.content.Context, type: QuizType): List<Qu
                 QuizItem(item.key, item.displayName(context), QuizDisplay.Content(item))
             }
         }
-        QuizType.FLAG -> FLAGS.map { (code, nameRes) -> QuizItem("fl_$code", context.getString(nameRes), QuizDisplay.Flag(code)) }
+        QuizType.FLAG -> loadFlagPool(context).map { (code, name) -> QuizItem("fl_$code", name, QuizDisplay.Flag(code)) }
         QuizType.JOB -> JOBS.map { (key, nameRes) -> QuizItem("job_$key", context.getString(nameRes), QuizDisplay.AssetImage("jobs/$key.jpg")) }
         QuizType.INSTRUMENT -> EAR_INSTRUMENTS.map { QuizItem("in_${it.key}", context.getString(it.nameRes), QuizDisplay.IconImage(it.iconRes)) }
     }
+
+/** Propositions par palier (1 Facile, 2 Moyen, 3 Difficile) ; les drapeaux vont jusqu'à 3 colonnes × 5 lignes. */
+internal val QUIZ_TIER_CHOICES = listOf(4, 6, 8)
+private val FLAG_TIER_CHOICES = listOf(4, 9, 15)
+internal fun quizTierOf(choices: Int): Int = when { choices <= 4 -> 1; choices <= 6 -> 2; else -> 3 }
+private fun currentQuizTier(): Int =
+    if (Settings.quizAutoDifficulty.value) {
+        val level = com.goodbrainrot.app.data.Profiles.level(com.goodbrainrot.app.data.Profiles.current().xp)
+        when { level <= 2 -> 1; level <= 5 -> 2; else -> 3 }
+    } else quizTierOf(Settings.quizChoices.intValue)
+private fun choicesFor(type: QuizType, tier: Int): Int =
+    (if (type == QuizType.FLAG) FLAG_TIER_CHOICES else QUIZ_TIER_CHOICES)[(tier - 1).coerceIn(0, 2)]
 
 private fun isImageType(type: QuizType) = type in listOf(
     QuizType.IMG_ANIMAL, QuizType.IMG_VEHICLE, QuizType.IMG_DINO, QuizType.IMG_MIXED
@@ -305,7 +323,7 @@ private fun buildRound(
 private fun speakTarget(context: android.content.Context, type: QuizType, round: Round) {
     when (type) {
         QuizType.SOUND -> round.target.animal?.let {
-            AnimalSoundPlayer.play(context, it, sayNameAfter = false)
+            AnimalSoundPlayer.play(context, it, sayNameAfter = false, speakIfMissing = false)
         }
         // instrument à l'oreille : on joue une petite phrase, sans dire le nom (c'est la réponse)
         QuizType.INSTRUMENT -> EarInstrumentPlayer.play(context, round.target.id.removePrefix("in_"))
@@ -334,13 +352,9 @@ fun QuizScreen(type: QuizType, onBack: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val pool = remember(type) { buildPool(context, type) }
-    // Difficulté adaptative : le nombre de choix suit le niveau global de
-    // l'enfant (4 propositions au début, +1 tous les 2 niveaux, plafonné à 9).
-    val baseChoices = if (Settings.quizAutoDifficulty.value) {
-        val level = com.goodbrainrot.app.data.Profiles.level(com.goodbrainrot.app.data.Profiles.current().xp)
-        (3 + (level + 1) / 2).coerceIn(4, 9)
-    } else Settings.quizChoices.intValue
-    val choiceCount = baseChoices.coerceIn(2, pool.size)
+    // Nombre de propositions : palier Facile / Moyen / Difficile, choisi dans les options
+    // ou (mode auto) déduit du niveau global de l'enfant.
+    val choiceCount = choicesFor(type, currentQuizTier()).coerceIn(2, pool.size)
     val totalQuestions = Settings.quizQuestions.intValue
     val pointsCorrect = Settings.quizPointsCorrect.intValue
     val pointsWrong = Settings.quizPointsWrong.intValue
@@ -363,8 +377,10 @@ fun QuizScreen(type: QuizType, onBack: () -> Unit) {
     val round = remember(roundId) {
         // Pour les jeux d'images : fenêtre qui s'élargit du classique vers l'exotique
         // à mesure que l'enfant maîtrise des items (en révision : tout le contenu).
-        val effectivePool = if (isImageType(type) && pool.isNotEmpty() && !review) {
-            val n = (8 + 2 * Stats.learnedCount(catKey)).coerceIn(choiceCount, pool.size)
+        // Drapeaux : même principe sur 196 pays, en partant des plus connus.
+        val effectivePool = if ((isImageType(type) || type == QuizType.FLAG) && pool.isNotEmpty() && !review) {
+            val base = if (type == QuizType.FLAG) 16 else 8
+            val n = (base + 2 * Stats.learnedCount(catKey)).coerceIn(choiceCount, pool.size)
             pool.take(n)
         } else pool
         val r = buildRound(type, effectivePool, choiceCount, usedTargets.toSet(), catKey, if (review) reviewIds else emptySet())
@@ -426,16 +442,34 @@ fun QuizScreen(type: QuizType, onBack: () -> Unit) {
                 modifier = Modifier.align(Alignment.CenterHorizontally).padding(bottom = 4.dp))
             QuizPrompt(type, round, modifier = Modifier.fillMaxWidth())
 
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(if (choiceCount <= 6) 2 else 3),
+            // Grille qui TIENT dans l'écran, centrée : on choisit le nombre de colonnes qui donne
+            // les plus grandes cases possible pour le nombre de propositions (jamais de défilement).
+            androidx.compose.foundation.layout.BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                contentAlignment = Alignment.Center
             ) {
-                items(round.choices, key = { it.id }) { item ->
+                val gap = 12.dp
+                val tileAspect = if (type == QuizType.FLAG) 1.25f else 1f   // largeur / hauteur d'une case
+                val n = round.choices.size
+                var cols = 2; var tileW = 0.dp
+                // au moins 2 colonnes dès 3 propositions : une seule colonne ressemble à une liste, pas à une grille de jeu
+                // drapeaux à 9+ propositions : 3 colonnes (3 × 3, 3 × 5), format demandé
+                val minCols = when { type == QuizType.FLAG && n >= 9 -> 3; n >= 3 -> 2; else -> 1 }
+                for (c in minCols..4) {
+                    val rows = (n + c - 1) / c
+                    val byW = (maxWidth - gap * (c - 1)) / c
+                    val byH = (maxHeight - gap * (rows - 1)) / rows * tileAspect
+                    val w = minOf(byW, byH)
+                    if (w > tileW + 1.dp) { tileW = w; cols = c }
+                }
+                val tileH = tileW / tileAspect
+                Column(verticalArrangement = Arrangement.spacedBy(gap), horizontalAlignment = Alignment.CenterHorizontally) {
+                    round.choices.chunked(cols).forEach { rowItems ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(gap)) {
+                            rowItems.forEach { item -> androidx.compose.runtime.key(item.id) { Box(Modifier.size(tileW, tileH)) {
                     val isTarget = item.id == round.target.id
                     val hidden = item.id in hiddenIds
                     val tileColor = when (type) {
@@ -495,7 +529,7 @@ fun QuizScreen(type: QuizType, onBack: () -> Unit) {
 
                     Box(
                         modifier = Modifier
-                            .aspectRatio(1f)
+                            .fillMaxSize()
                             .graphicsLayer {
                                 scaleX = scale; scaleY = scale
                                 rotationY = spin.value
@@ -523,6 +557,9 @@ fun QuizScreen(type: QuizType, onBack: () -> Unit) {
                                 QuizTileContent(type, item.display, tileColor)
                                 if (solved && isTarget) Text(text = "🎉", fontSize = 44.sp)
                             }
+                        }
+                    }
+                            } } }
                         }
                     }
                 }
@@ -703,7 +740,8 @@ private fun QuizBottomBar(type: QuizType, round: Round, onSpeak: () -> Unit) {
 private fun QuizTileContent(type: QuizType, display: QuizDisplay, tileColor: Color) {
     when (display) {
         is QuizDisplay.AnimalImage -> AnimalVisual(
-            animal = display.animal, modifier = Modifier.fillMaxSize(), emojiSize = 64
+            animal = display.animal, modifier = Modifier.fillMaxSize(), emojiSize = 64,
+            photoScale = androidx.compose.ui.layout.ContentScale.Crop
         )
         is QuizDisplay.BigText -> Text(
             text = display.text, fontSize = 72.sp,
@@ -731,8 +769,10 @@ private fun QuizTileContent(type: QuizType, display: QuizDisplay, tileColor: Col
             backgroundColor = Color.White, modifier = Modifier.fillMaxSize(0.7f)
         )
         is QuizDisplay.Content -> ContentVisual(
-            item = display.item, modifier = Modifier.fillMaxSize(), emojiSize = 64
+            item = display.item, modifier = Modifier.fillMaxSize(), emojiSize = 64,
+            photoScale = androidx.compose.ui.layout.ContentScale.Crop
         )
+        is QuizDisplay.IconRow -> DigitRow(display.res)
         is QuizDisplay.Flag -> FlagView(display.code, modifier = Modifier.fillMaxSize(0.88f))
         is QuizDisplay.AssetImage -> {
             val context = LocalContext.current
@@ -741,6 +781,46 @@ private fun QuizTileContent(type: QuizType, display: QuizDisplay, tileColor: Col
             }
             if (bmp != null) androidx.compose.foundation.Image(bitmap = bmp, contentDescription = null, modifier = Modifier.fillMaxSize(),
                 contentScale = androidx.compose.ui.layout.ContentScale.Crop)
+        }
+    }
+}
+
+/**
+ * Nombre à plusieurs chiffres (10) avec les chiffres générés : chaque image est rognée à son contour visible
+ * (les PNG ont de larges marges transparentes), les chiffres sont accolés, à la MÊME hauteur qu'un chiffre seul ;
+ * on ne réduit que si l'ensemble ne tient pas dans la case avec une petite marge.
+ */
+@Composable
+private fun DigitRow(res: List<Int>) {
+    val context = LocalContext.current
+    val digits = remember(res) {
+        res.map { id ->
+            val bmp = android.graphics.BitmapFactory.decodeResource(context.resources, id)
+            var x0 = bmp.width; var y0 = bmp.height; var x1 = 0; var y1 = 0
+            val px = IntArray(bmp.width * bmp.height); bmp.getPixels(px, 0, bmp.width, 0, 0, bmp.width, bmp.height)
+            for (y in 0 until bmp.height) for (x in 0 until bmp.width) if ((px[y * bmp.width + x] ushr 24) > 24) {
+                if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y
+            }
+            Triple(bmp.asImageBitmap(), androidx.compose.ui.unit.IntOffset(x0, y0), androidx.compose.ui.unit.IntSize(x1 - x0 + 1, y1 - y0 + 1))
+        }
+    }
+    Canvas(Modifier.fillMaxSize()) {
+        val (img0, _, sz0) = digits.first()
+        // hauteur visible d'un chiffre seul affiché à 82 % de la case (comme les autres réponses)
+        val single = size.minDimension * 0.82f
+        var h = single * sz0.height / img0.height
+        val gap = h * 0.04f
+        var totalW = digits.sumOf { (_, _, s) -> (s.width * h / s.height).toDouble() }.toFloat() + gap * (digits.size - 1)
+        val maxW = size.width * 0.9f
+        if (totalW > maxW) { val k = maxW / totalW; h *= k; totalW = maxW }
+        var x = (size.width - totalW) / 2f
+        val y = (size.height - h) / 2f
+        for ((img, off, s) in digits) {
+            val w = s.width * h / s.height
+            drawImage(img, srcOffset = off, srcSize = s,
+                dstOffset = androidx.compose.ui.unit.IntOffset(x.toInt(), y.toInt()),
+                dstSize = androidx.compose.ui.unit.IntSize(w.toInt(), h.toInt()))
+            x += w + gap
         }
     }
 }

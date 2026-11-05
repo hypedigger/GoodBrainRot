@@ -323,3 +323,34 @@ All bundled images were resolved.
 - Instrument samples ("realistic sound" option): tonejs-instruments (github.com/nbrosowsky/tonejs-instruments); piano = Salamander Grand Piano — **CC BY 3.0** (Alexander Holm), attribution required; guitars (acoustic/electric/nylon), bass, xylophone from the same repository.
 - Minigame sprites, illustrations and textures: generated locally (Z-Image Turbo via ComfyUI). Music: MusicGen (local generation).
 - Missing assets fall back automatically in the app: emoji for images, text-to-speech for sounds.
+
+## Flags (196 countries)
+
+Images: `assets/flags/<iso>.webp`, rendered from the flag SVGs of Wikimedia Commons ("Flag of …"): public domain,
+except Oman (Omani Open Government Licence 1.0). Country list, ISO codes and names in the 5 languages: Wikidata (CC0),
+some names shortened for children. The source page of each flag is stored in `assets/content/flags.json`.
+
+## Animal sounds (Wikimedia Commons)
+
+Trimmed to the clearest ~3 s, normalized and re-encoded (mono Ogg Vorbis).
+
+| Local file | Source | Author | License |
+|---|---|---|---|
+| `sounds/bear.ogg` | [Yellowstone sound library - Grizzly Bears Roar - 001.mp3](https://commons.wikimedia.org/wiki/File%3AYellowstone_sound_library_-_Grizzly_Bears_Roar_-_001.mp3) | NPS & MSU Acoustic Atlas / Jennifer Jerrett | Public domain |
+| `sounds/bee.ogg` | [Bee buzzing sound (animal noises).opus](https://commons.wikimedia.org/wiki/File%3ABee_buzzing_sound_%28animal_noises%29.opus) | Free Sounds Library User Spanac | CC BY 3.0 |
+| `sounds/cricket_insect.ogg` | [Cricket Gryllus bimaculatus Chirps.oga](https://commons.wikimedia.org/wiki/File%3ACricket_Gryllus_bimaculatus_Chirps.oga) | Rickjpelleg | CC BY-SA 4.0 |
+| `sounds/crow.ogg` | [Corvus corone - Carrion Crow XC511982.mp3](https://commons.wikimedia.org/wiki/File%3ACorvus_corone_-_Carrion_Crow_XC511982.mp3) | Marie-Lan Taÿ Pamart | CC BY-SA 4.0 |
+| `sounds/donkey.ogg` | [157763 felix-blume a-donkey-is-braying-in-his-enclosure-in-south-of-france.wav](https://commons.wikimedia.org/wiki/File%3A157763_felix-blume_a-donkey-is-braying-in-his-enclosure-in-south-of-france.wav) | felix-blume | CC0 |
+| `sounds/duck.ogg` | [Anas platyrhynchos - Mallard XC62258.mp3](https://commons.wikimedia.org/wiki/File%3AAnas_platyrhynchos_-_Mallard_XC62258.mp3) | Jonathon Jongsma | CC BY-SA 3.0 |
+| `sounds/frog.ogg` | [Single Frog Croak.oga](https://commons.wikimedia.org/wiki/File%3ASingle_Frog_Croak.oga) | MichaeltheFox8621 | CC BY-SA 4.0 |
+| `sounds/goose.ogg` | [Anser albifrons - Greater White-fronted Goose - XC96532.ogg](https://commons.wikimedia.org/wiki/File%3AAnser_albifrons_-_Greater_White-fronted_Goose_-_XC96532.ogg) | Jonathon Jongsma | CC BY-SA 3.0 |
+| `sounds/lion.ogg` | [Lionroar.wav](https://commons.wikimedia.org/wiki/File%3ALionroar.wav) | Jonathan Growcott, Alex Lobora, Andrew Markham, Charlotte E. Searle, Johan Wahlström, Matt | CC BY 4.0 |
+| `sounds/monkey.ogg` | [Mantled Howler Monkey (Alouatta palliata) (W ALOUATTA PALLIATA R1 C2).ogg](https://commons.wikimedia.org/wiki/File%3AMantled_Howler_Monkey_%28Alouatta_palliata%29_%28W_ALOUATTA_PALLIATA_R1_C2%29.ogg) | unknown | CC BY 4.0 |
+| `sounds/owl.ogg` | [Strix aluco - Tawny Owl XC500920.mp3](https://commons.wikimedia.org/wiki/File%3AStrix_aluco_-_Tawny_Owl_XC500920.mp3) | Alvaro Ortiz Troncoso | CC BY-SA 4.0 |
+| `sounds/peacock.ogg` | [Pavo cristatus (call).ogg](https://commons.wikimedia.org/wiki/File%3APavo_cristatus_%28call%29.ogg) | Ke4roh | Public domain |
+| `sounds/pigeon.ogg` | [Columba livia - Rock Dove XC541143.mp3](https://commons.wikimedia.org/wiki/File%3AColumba_livia_-_Rock_Dove_XC541143.mp3) | Marie-Lan Taÿ Pamart | CC BY-SA 4.0 |
+| `sounds/seagull.ogg` | [Larus argentatus - European Herring Gull XC436943.mp3](https://commons.wikimedia.org/wiki/File%3ALarus_argentatus_-_European_Herring_Gull_XC436943.mp3) | Joost van Bruggen | CC BY-SA 4.0 |
+| `sounds/snake.ogg` | [Rattlesnake.ogg](https://commons.wikimedia.org/wiki/File%3ARattlesnake.ogg) | unknown | Public domain |
+| `sounds/turkey_bird.ogg` | [Meleagris gallopavo - Wild Turkey - XC104532.ogg](https://commons.wikimedia.org/wiki/File%3AMeleagris_gallopavo_-_Wild_Turkey_-_XC104532.ogg) | Jonathon Jongsma | CC BY-SA 3.0 |
+| `sounds/whale.ogg` | [Humpback-Whale-Song-and-Foraging-Behavior-on-an-Antarctic-Feeding-Ground-pone.0051214.s001.oga](https://commons.wikimedia.org/wiki/File%3AHumpback-Whale-Song-and-Foraging-Behavior-on-an-Antarctic-Feeding-Ground-pone.0051214.s001.oga) | Stimpert A, Peavey L, Friedlaender A, Nowacek D | CC BY 2.5 |
+| `sounds/wolf.ogg` | [Wolf howls.ogg](https://commons.wikimedia.org/wiki/File%3AWolf_howls.ogg) | unknown | Public domain |

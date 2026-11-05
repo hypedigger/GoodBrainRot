@@ -36,6 +36,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.clickable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.appcompat.app.AppCompatDelegate
@@ -315,24 +316,26 @@ private fun QuizTab() {
     HorizontalDivider()
     Spacer(modifier = Modifier.height(8.dp))
 
-    // Difficulté auto : le nombre de choix suit le niveau de l'enfant.
+    // Nombre de propositions : auto (suit le niveau de l'enfant) ou Facile 4 / Moyen 6 / Difficile 8
+    // (drapeaux : 4 / 8 / 12). Tout tient toujours à l'écran, sans défilement.
     val autoDiff by Settings.quizAutoDifficulty
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-        Switch(checked = autoDiff, onCheckedChange = { Settings.setQuizAutoDifficulty(it) })
-        Text(
-            text = stringResource(R.string.quiz_auto_difficulty_label),
-            fontSize = 18.sp,
-            modifier = Modifier.padding(start = 12.dp)
-        )
+    val tier = quizTierOf(Settings.quizChoices.intValue)
+    Text(stringResource(R.string.quiz_level_title), fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
+    val levelOptions = listOf(0 to R.string.quiz_level_auto, 1 to R.string.quiz_level_easy, 2 to R.string.quiz_level_medium, 3 to R.string.quiz_level_hard)
+    for ((t, labelRes) in levelOptions) {
+        val selected = if (t == 0) autoDiff else !autoDiff && tier == t
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth().clickable {
+                if (t == 0) Settings.setQuizAutoDifficulty(true)
+                else { Settings.setQuizAutoDifficulty(false); Settings.setQuizChoices(QUIZ_TIER_CHOICES[t - 1]) }
+            }.padding(vertical = 2.dp)
+        ) {
+            androidx.compose.material3.RadioButton(selected = selected, onClick = null)
+            Text(stringResource(labelRes), fontSize = 17.sp, modifier = Modifier.padding(start = 8.dp))
+        }
     }
-    if (!autoDiff) {
-        Stepper(
-            label = stringResource(R.string.quiz_choices_label),
-            value = Settings.quizChoices.intValue,
-            range = 4..10,
-            onChange = { Settings.setQuizChoices(it) }
-        )
-    }
+    Text(stringResource(R.string.quiz_level_flags_hint), fontSize = 13.sp, modifier = Modifier.padding(start = 4.dp, bottom = 6.dp))
     Stepper(
         label = stringResource(R.string.quiz_questions_label),
         value = Settings.quizQuestions.intValue,
