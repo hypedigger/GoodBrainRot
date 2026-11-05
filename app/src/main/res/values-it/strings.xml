@@ -295,4 +295,14 @@
     <string name="crash_title">Rapporto di arresto</string>
     <string name="crash_share">Condividi</string>
     <string name="crash_clear">Elimina</string>
+    <string name="gz_great">Benissimo!</string>
+    <string name="gz_good">Bene!</string>
+    <string name="gz_triple">TRIPLO!</string>
+    <string name="gz_quadruple">QUADRUPLO!</string>
+    <string name="gz_mega">MEGA COMBO</string>
+    <string name="gz_water_hint">Tieni premuto per annaffiare!</string>
+    <string name="gz_bloom">Tutto fiorito!</string>
+    <string name="gz_nuke">NUCLEARE!</string>
+    <string name="gz_gold">Dorato!</string>
+    <string name="gz_again">Ancora!</string>
 </resources>

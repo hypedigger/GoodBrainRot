@@ -295,4 +295,14 @@
     <string name="crash_title">Informe de fallo</string>
     <string name="crash_share">Compartir</string>
     <string name="crash_clear">Borrar</string>
+    <string name="gz_great">¡Muy bien!</string>
+    <string name="gz_good">¡Bien!</string>
+    <string name="gz_triple">¡TRIPLE!</string>
+    <string name="gz_quadruple">¡CUÁDRUPLE!</string>
+    <string name="gz_mega">MEGA COMBO</string>
+    <string name="gz_water_hint">¡Mantén el dedo para regar!</string>
+    <string name="gz_bloom">¡En flor!</string>
+    <string name="gz_nuke">¡NUCLEAR!</string>
+    <string name="gz_gold">¡Dorado!</string>
+    <string name="gz_again">¡Otra vez!</string>
 </resources>

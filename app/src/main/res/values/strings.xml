@@ -304,4 +304,14 @@
     <string name="crash_title">Crash report</string>
     <string name="crash_share">Share</string>
     <string name="crash_clear">Dismiss</string>
+    <string name="gz_great">Great!</string>
+    <string name="gz_good">Good!</string>
+    <string name="gz_triple">TRIPLE!</string>
+    <string name="gz_quadruple">QUADRUPLE!</string>
+    <string name="gz_mega">MEGA COMBO</string>
+    <string name="gz_water_hint">Hold your finger to water!</string>
+    <string name="gz_bloom">In bloom!</string>
+    <string name="gz_nuke">NUCLEAR!</string>
+    <string name="gz_gold">Golden!</string>
+    <string name="gz_again">Again!</string>
 </resources>

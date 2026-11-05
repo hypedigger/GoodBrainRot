@@ -187,7 +187,7 @@ internal class GardenRenderer(private val ctx: Context) : GLSurfaceView.Renderer
             loadTexture(n, repeat = n != "gz_sky" && n != "gz_rings")?.let { tex[n] = it }
         for (n in listOf("gz_leaf1", "gz_leaf2", "gz_leaf3", "gz_flower1", "gz_flower2", "gz_bee", "gz_nest", "gz_bird",
                          "gz_gardener_a", "gz_gardener_b", "gz_tree_a", "gz_tree_b", "gz_fence", "gz_flowerbed", "gz_butterfly", "gz_cloud", "gz_bench", "gz_stump",
-                         "gz_leaf_bamboo", "gz_shed", "gz_wheelbarrow", "gz_watering", "gz_pot"))
+                         "gz_leaf_bamboo", "gz_shed", "gz_wheelbarrow", "gz_watering", "gz_pot", "gz_apple", "gz_pumpkin", "gz_orange"))
             loadTexture(n, repeat = false)?.let { tex[n] = it }
         tex["gz_disc"] = makeSoftDisc()
         cyl = Meshes.cylinder(12, 1f); cone = Meshes.cylinder(12, 0.02f); sph = Meshes.sphere(); box = Meshes.box(); card = Meshes.card()

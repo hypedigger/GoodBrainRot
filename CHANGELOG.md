@@ -1,5 +1,14 @@
 # Nouveautés — GoodBrainRot
 
+## 3.87 — 2026-11-05
+- **Jardinier — hache du titan** : chaque coup fait un **« TCHAK ! »** massif (son dédié, grosse secousse) et tout ce qui pousse autour du point d'impact tombe d'un coup.
+- **Jardinier — tronçonneuse NUCLÉAIRE** : la première coupe déclenche un **laser vert** qui traverse tout l'écran — en Tranche il réduit en miettes tout ce qui vole (en classique il épargne abeilles et nids), en Rush il rase toutes les pousses ; recharge de quelques secondes.
+- **Topiaire — précision par plante** : « **98 % Parfait !** » / « Très bien ! » / « Bien ! » à chaque plante finie (les pousses oubliées et les coups de cisaille dans le vide font baisser le score), bonus selon la précision, précision moyenne sur l'écran de fin.
+- **Topiaire — arrosoir** : entre deux plantes, un arrosoir apparaît — **maintiens le doigt ~2 s pour arroser** : +100 et la plante suivante sort **toute fleurie**.
+- **Rush — pousses dorées** éclair (jaillissent vite, ne restent que 0,8 s, +50, son scintillant) et **grosses pousses** à couper en **deux coups** (« Encore ! »).
+- **Tranche — fruits** : pommes, citrouilles et oranges à trancher (+25, giclée de jus de leur couleur, son juteux) ; **combos nommés** TRIPLE ! / QUADRUPLE ! / MÉGA COMBO (un seul texte par geste au lieu d'une pile illisible).
+- Correctif : le compteur de pousses restantes pouvait passer en négatif.
+
 ## 3.86 — 2026-11-05
 - **Vroum — mode 2 joueurs** : nouveau mode « 👥 2 joueurs » sur l'écran des circuits. **Écran partagé** (gauche | droite en paysage, haut | bas en portrait), chacun touche sa moitié pour changer de voie et a son bouton de saut ; deux bolides invincibles, sans chrono : **le premier arrivé au village gagne** (écran du vainqueur + Rejouer).
 - **Vroum — étoiles de toutes les difficultés** sur chaque carte de circuit (une ligne 🙂 / 😎 / 🔥 par difficulté déjà jouée, pour le mode choisi).

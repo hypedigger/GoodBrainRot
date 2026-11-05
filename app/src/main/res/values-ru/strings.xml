@@ -295,4 +295,14 @@
     <string name="crash_title">Отчёт о сбое</string>
     <string name="crash_share">Поделиться</string>
     <string name="crash_clear">Удалить</string>
+    <string name="gz_great">Отлично!</string>
+    <string name="gz_good">Хорошо!</string>
+    <string name="gz_triple">ТРОЙНОЙ!</string>
+    <string name="gz_quadruple">ЧЕТВЕРНОЙ!</string>
+    <string name="gz_mega">МЕГА КОМБО</string>
+    <string name="gz_water_hint">Держи палец, чтобы полить!</string>
+    <string name="gz_bloom">Расцвело!</string>
+    <string name="gz_nuke">ЯДЕРНО!</string>
+    <string name="gz_gold">Золотой!</string>
+    <string name="gz_again">Ещё!</string>
 </resources>

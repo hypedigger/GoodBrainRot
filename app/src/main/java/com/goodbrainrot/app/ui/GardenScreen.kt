@@ -7,6 +7,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -121,7 +122,11 @@ fun GardenScreen(onBack: () -> Unit) {
     val controller = remember(runToken, gameKey) { ArcadeController(gameKey, 0, withLevels = false, speedRamp = false) }
     val tool = toolById(Settings.gardenActiveTool.intValue)
     val labels = mapOf("bushdone" to stringResource(R.string.gz_bush_done), "combo" to stringResource(R.string.gz_combo),
-        "missed" to stringResource(R.string.gz_missed), "fast" to stringResource(R.string.gz_fast))
+        "missed" to stringResource(R.string.gz_missed), "fast" to stringResource(R.string.gz_fast),
+        "great" to stringResource(R.string.gz_great), "good" to stringResource(R.string.gz_good),
+        "triple" to stringResource(R.string.gz_triple), "quadruple" to stringResource(R.string.gz_quadruple), "mega" to stringResource(R.string.gz_mega),
+        "bloom" to stringResource(R.string.gz_bloom), "nuke" to stringResource(R.string.gz_nuke), "gold" to stringResource(R.string.gz_gold),
+        "again" to stringResource(R.string.gz_again))
     var sliceEasy by remember { mutableStateOf(true) }
     val game = remember(runToken) { if (phase == GPhase.PLAY) GardenGame(mode, tool, dayNumber(), labels, easy = mode == GMode.SLICE && sliceEasy) else null }
     val renderer = remember(game) { game?.let { g -> GardenRenderer(ctx).also { r -> r.onFrame = { rr, dt -> g.update(dt, rr); g.render(rr) } } } }
@@ -170,6 +175,11 @@ fun GardenScreen(onBack: () -> Unit) {
                         "newbush" -> Sfx.play("gz_rustle", 0.9f, 1.2f)
                         "multi" -> { Sfx.play("gz_slowmo", 0.9f, 1f); SoundEngine.playVvYahoo(); Haptics.tap(ctx) }
                         "timeup" -> SoundEngine.playVvGameOver()
+                        "tchak" -> { Sfx.play("gz_tchak", 1f, 0.95f + Random.nextFloat() * 0.1f); Haptics.tap(ctx) }
+                        "nuke" -> { Sfx.play("gz_nuke", 1f, 1f); Haptics.tap(ctx) }
+                        "splat" -> { Sfx.play("gz_splat", 0.9f, 0.9f + Random.nextFloat() * 0.25f); Haptics.tap(ctx) }
+                        "gold" -> { Sfx.play("gz_gold", 1f, 1f); Sfx.play("gz_snip", 0.6f, 1.1f); Haptics.tap(ctx) }
+                        "watered" -> { SoundEngine.playVvSuccess(); Haptics.tap(ctx) }
                     }
                 }
                 tick++
@@ -216,7 +226,7 @@ fun GardenScreen(onBack: () -> Unit) {
                     Column(Modifier.fillMaxSize().padding(24.dp).verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                         val g = game
                         Text(stringResource(if (game?.mode == GMode.SLICE && game.lives <= 0 && !game.easy) R.string.gz_no_lives else R.string.gz_time_up), color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 30.sp)
-                        if (g?.mode == GMode.ZEN) Text(stringResource(R.string.gz_bushes) + " ${g.bushesDone}  ·  " + stringResource(R.string.gz_precision) + " ${g.precision} %", color = G_LEAF, fontWeight = FontWeight.Bold, fontSize = 18.sp, modifier = Modifier.padding(top = 8.dp))
+                        if (g?.mode == GMode.ZEN) Text(stringResource(R.string.gz_bushes) + " ${g.bushesDone}  ·  " + stringResource(R.string.gz_precision) + " ${g.avgPrecision} %", color = G_LEAF, fontWeight = FontWeight.Bold, fontSize = 18.sp, modifier = Modifier.padding(top = 8.dp))
                         Text("${controller.score}", color = G_GOLD, fontWeight = FontWeight.ExtraBold, fontSize = 48.sp)
                         Text(stringResource(R.string.gz_earned, earned), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 22.sp)
                         if (dailyBonus) Text(stringResource(R.string.gz_daily_bonus), color = G_GOLD, fontWeight = FontWeight.Bold, fontSize = 16.sp)
@@ -425,6 +435,9 @@ private fun SwipeLayer(g: GardenGame, glView: GardenGlView, tick: Int) {
     val pts = remember { ArrayList<Offset>() }
     var ver by remember { mutableIntStateOf(0) }
     Box(Modifier.fillMaxSize().pointerInput(g) {
+        // doigt simplement posé (sans glisser) : sert à l'arrosoir de la Topiaire
+        detectTapGestures(onPress = { g.holding = true; try { tryAwaitRelease() } finally { g.holding = false } })
+    }.pointerInput(g) {
         // Topiaire : un glisser qui COMMENCE dans le bas de l'écran (sous la plante) TOURNE la plante
         // au lieu de couper — la rotation auto se met alors en pause quelques secondes.
         var rotMode = false
@@ -447,10 +460,22 @@ private fun SwipeLayer(g: GardenGame, glView: GardenGlView, tick: Int) {
         Canvas(Modifier.fillMaxSize()) {
             if (pts.size >= 2) {
                 val p = Path(); p.moveTo(pts[0].x, pts[0].y); for (i in 1 until pts.size) p.lineTo(pts[i].x, pts[i].y)
-                drawPath(p, Color.White.copy(alpha = 0.35f), style = Stroke(width = size.width * g.tool.band * 2f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                drawPath(p, if (g.tool.id == 15) Color(0xFF7CFF6B).copy(alpha = 0.22f) else Color.White.copy(alpha = 0.35f), style = Stroke(width = size.width * g.tool.band * 2f, cap = StrokeCap.Round, join = StrokeJoin.Round))
                 drawPath(p, if (g.tool.electric && g.tool.tier == 5) Color(0xFF7CFF6B) else Color.White, style = Stroke(width = 6f, cap = StrokeCap.Round, join = StrokeJoin.Round))
             }
             if (g.flash > 0f) drawRect(Color(0xFFFF6B6B).copy(alpha = g.flash * 0.35f))
+            // laser de la tronçonneuse nucléaire : voile vert + faisceau prolongé d'un bord à l'autre de l'écran
+            val la = g.laser
+            if (la > 0f) {
+                drawRect(Color(0xFF7CFF6B).copy(alpha = la * 0.22f))
+                var dx = g.laserX1 - g.laserX0; var dy = g.laserY1 - g.laserY0
+                val l = kotlin.math.sqrt(dx * dx + dy * dy)
+                if (l < 1f) { dx = 1f; dy = 0f } else { dx /= l; dy /= l }
+                val ext = size.width + size.height
+                val s = Offset(g.laserX0 - dx * ext, g.laserY0 - dy * ext); val e = Offset(g.laserX1 + dx * ext, g.laserY1 + dy * ext)
+                drawLine(Color(0xFF7CFF6B).copy(alpha = la * 0.55f), s, e, strokeWidth = size.width * 0.07f * la, cap = StrokeCap.Round)
+                drawLine(Color.White.copy(alpha = la), s, e, strokeWidth = 10f * la + 2f, cap = StrokeCap.Round)
+            }
         }
     }
 }
@@ -500,12 +525,19 @@ private fun GardenHud(g: GardenGame, tool: GTool, frame: Int) {
         }
         else if (g.mode != GMode.ZEN && g.elapsed in 5f..8f) Text(stringResource(R.string.gz_bees_hint), color = Color(0xFFFFE08A), fontSize = 14.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,
             modifier = Modifier.align(Alignment.TopCenter).padding(top = 84.dp))
+        // ---- Topiaire, entre deux plantes : arrosoir (maintenir le doigt) + jauge de remplissage
+        if (g.mode == GMode.ZEN && g.waterPhase >= 0f) Column(Modifier.align(Alignment.BottomCenter).padding(bottom = 104.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            GPill { Text("💧 " + stringResource(R.string.gz_water_hint), color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp, maxLines = 1) }
+            Box(Modifier.padding(top = 8.dp).width(200.dp).height(12.dp).clip(RoundedCornerShape(6.dp)).background(Color(0x55FFFFFF))) {
+                Box(Modifier.fillMaxWidth((g.waterT / g.WATER_NEED).coerceIn(0f, 1f)).fillMaxHeight().background(Brush.horizontalGradient(listOf(Color(0xFF7FD4FF), Color(0xFF3F8EFC)))))
+            }
+        }
         // ---- bas : barre d'état du mode
         Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 26.dp)) {
             when (g.mode) {
                 GMode.ZEN -> GPill {
                     // icônes des pousses restantes (jusqu'à 14) + compteur, puis nombre de plantes finies
-                    val left = g.outsideLeft
+                    val left = g.outsideLeft.coerceAtLeast(0)
                     Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) { repeat(left.coerceIn(0, 14)) { TwigIcon() }; if (left > 14) Text("…", color = Color.White, fontSize = 14.sp) }
                     Text("$left", color = Color(0xFFFF9A3C), fontWeight = FontWeight.ExtraBold, fontSize = 26.sp, modifier = Modifier.padding(start = 10.dp))
                     Box(Modifier.padding(horizontal = 12.dp).size(1.dp, 26.dp).background(Color(0x66FFFFFF)))

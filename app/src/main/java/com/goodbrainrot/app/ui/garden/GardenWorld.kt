@@ -52,16 +52,25 @@ internal class Branch(val a: Vec3, var b: Vec3, val r: Float, val leafKind: Int,
     var tip: Vec3? = null
     var grow = 0f
     var full = 0f
+    var gold = false         // Rush : pousse dorée éclair (+50)
+    var big = false          // Rush : grosse pousse, deux coups
+    var strokeHit = -1       // dernier geste qui l'a touchée (un coup par geste)
+    var counted = false      // Topiaire : déjà comptée comme coupée (une brindille coupée puis sa pousse mère)
 }
 /** Touffe de feuillage du corps d'une plante taillée (Topiaire). */
 internal class Tuft(val pos: Vec3, val kind: Int, val size: Float, val flower: Boolean, val shade: Float)
 internal class Debris(var pos: Vec3, var vel: Vec3, val len: Float, val r: Float, val leafKind: Int, var dirX: Float, var dirY: Float, var dirZ: Float) {
     var life = 2.6f; var spin = 0f; var spinV = (Random.nextFloat() - 0.5f) * 8f
 }
-internal class LeafBurst(var pos: Vec3, var vel: Vec3, val kind: Int, var life: Float, val size: Float, val chip: Boolean = false)
+/** [cr] >= 0 : goutte colorée (jus de fruit, eau d'arrosoir) au lieu d'une feuille. */
+internal class LeafBurst(var pos: Vec3, var vel: Vec3, val kind: Int, var life: Float, val size: Float, val chip: Boolean = false,
+                         val cr: Float = -1f, val cg: Float = 0f, val cb: Float = 0f)
 internal class Bee(var pos: Vec3, var vel: Vec3, var t: Float = 0f)
 internal class Flying(var pos: Vec3, var vel: Vec3, val len: Float, val r: Float, val leafKind: Int, var rot: Float, var rotV: Float, val bee: Boolean = false, val nest: Boolean = false,
-                      val bamboo: Boolean = false, val cuts: Int = 0)   // cuts = nombre de coupes déjà subies (morceau re-tranchable)
+                      val bamboo: Boolean = false, val cuts: Int = 0,   // cuts = nombre de coupes déjà subies (morceau re-tranchable)
+                      val fruit: Int = -1)                              // 0 pomme, 1 citrouille, 2 orange
+internal val FRUIT_TEX = listOf("gz_apple", "gz_pumpkin", "gz_orange")
+private val FRUIT_JUICE = listOf(Triple(0.95f, 0.18f, 0.12f), Triple(1f, 0.55f, 0.08f), Triple(1f, 0.68f, 0.12f))
 /** Papillon / oiseau qui anime le fond (Topiaire). */
 internal class Critter(var pos: Vec3, val bird: Boolean, var t: Float, val speed: Float, val radius: Float, val baseY: Float)
 /** Texte flottant (monde) projeté à l'écran par le renderer. */
@@ -83,7 +92,22 @@ internal class GardenGame(val mode: GMode, val tool: GTool, val seedDay: Int, va
     var timeScale = 1f            // ralenti (Tranche : triple coupe)
     // topiaire
     var totalOutside = 0; var cutOutside = 0; var cutInside = 0
-    val precision: Int get() = if (totalOutside == 0) 100 else ((cutOutside * 100f / totalOutside) - cutInside * 5f).toInt().coerceIn(0, 100)
+    private var wasted = 0          // gestes de coupe qui n'ont rien touché (plante en cours)
+    val precision: Int get() = if (totalOutside == 0) 100 else ((cutOutside * 100f / totalOutside) - cutInside * 5f - wasted * 4f).toInt().coerceIn(0, 100)
+    private var precSum = 0; private var precN = 0
+    /** Précision moyenne des plantes finies (écran de fin). */
+    val avgPrecision: Int get() = if (precN == 0) precision else precSum / precN
+    // arrosoir entre deux plantes : maintenir le doigt -> la plante suivante est toute fleurie
+    var waterPhase = -1f; var waterT = 0f; private var bloom = false
+    val WATER_NEED = 1.8f
+    @Volatile var holding = false
+    // outils ultimes : laser de la tronçonneuse nucléaire (coordonnées écran), TCHAK de la hache du titan
+    @Volatile var laser = 0f
+    @Volatile var laserX0 = 0f; @Volatile var laserY0 = 0f; @Volatile var laserX1 = 0f; @Volatile var laserY1 = 0f
+    private var nukeCd = 0f
+    private var lastCutW: Vec3? = null
+    private var strokeId = 0; private var strokeHits = 0; private var strokeLen = 0f; private var strokeTchak = false
+    private var strokeComboShown = 0; private var comboText: GText? = null
     var turntable = 0f
     var manualRotT = -10f            // dernier moment où le joueur a tourné la plante au doigt
     fun rotateBy(deg: Float) { turntable += deg; manualRotT = elapsed }
@@ -189,7 +213,7 @@ internal class GardenGame(val mode: GMode, val tool: GTool, val seedDay: Int, va
         }
     }
     private fun buildBush(rnd: Random) {
-        branches.clear(); tufts.clear(); totalOutside = 0; cutOutside = 0; cutInside = 0
+        branches.clear(); tufts.clear(); totalOutside = 0; cutOutside = 0; cutInside = 0; wasted = 0
         val ps = prims(shapeKind)
         val top = trunkTop(shapeKind)
         val trunk = Branch(Vec3(0f, 0f, 0f), Vec3(0f, top, 0f), 0.14f, -1, null); trunk.structural = true
@@ -203,7 +227,8 @@ internal class GardenGame(val mode: GMode, val tool: GTool, val seedDay: Int, va
             if (ps.any { it !== p && insidePrim(it, q) }) continue
             if (q.y < 0.35f) continue
             // fleurs : jamais sur les statues (lapin, canard) ; le cœur en a PLUS (roses)
-            val flowerP = when (shapeKind) { 3, 6 -> 0f; 5 -> 0.22f; else -> 0.09f }
+            // après un arrosage réussi, la plante sort TOUTE FLEURIE (même les statues ont quelques fleurs)
+            val flowerP = if (bloom) (when (shapeKind) { 3, 6 -> 0.12f; else -> 0.40f }) else when (shapeKind) { 3, 6 -> 0f; 5 -> 0.22f; else -> 0.09f }
             tufts.add(Tuft(q, rnd.nextInt(2), 0.30f + rnd.nextFloat() * 0.14f, flower = rnd.nextFloat() < flowerP, shade = 0.86f + rnd.nextFloat() * 0.2f))
             made++
         }
@@ -242,11 +267,15 @@ internal class GardenGame(val mode: GMode, val tool: GTool, val seedDay: Int, va
         if (branches.any { !it.structural && abs(it.a.x - x) < 0.6f && abs(it.a.y - y) < 0.6f }) return
         val dir = Vec3((Random.nextFloat() - 0.5f) * 1.3f, 0.2f + Random.nextFloat() * 0.6f, 1f).norm()
         val len = 0.9f + Random.nextFloat() * 0.5f
-        val s = Branch(Vec3(x, y, 0.04f), Vec3(x, y, 0.06f), 0.05f + Random.nextFloat() * 0.025f, Random.nextInt(2), null)
-        s.tip = s.a + dir * len
-        s.nest = Random.nextFloat() < 0.12f
-        s.flower = !s.nest && Random.nextFloat() < 0.25f
-        s.leafSize = if (s.nest) 0.6f else 0.55f
+        val nest = Random.nextFloat() < 0.12f
+        val gold = !nest && elapsed > 6f && Random.nextFloat() < 0.09f
+        val big = !nest && !gold && elapsed > 10f && Random.nextFloat() < 0.15f
+        val s = Branch(Vec3(x, y, 0.04f), Vec3(x, y, 0.06f), if (big) 0.11f else 0.05f + Random.nextFloat() * 0.025f, Random.nextInt(2), null)
+        s.tip = s.a + dir * (if (big) len * 1.15f else len)
+        s.nest = nest; s.gold = gold; s.big = big
+        if (big) s.hp = 2f
+        s.flower = !s.nest && !s.gold && Random.nextFloat() < 0.25f
+        s.leafSize = when { s.nest -> 0.6f; big -> 0.85f; else -> 0.55f }
         branches.add(s)
     }
 
@@ -256,10 +285,12 @@ internal class GardenGame(val mode: GMode, val tool: GTool, val seedDay: Int, va
         val vy = 9.0f + Random.nextFloat() * 2.2f          // apogée 4,3 à 6,6 m : haut de l'écran SANS passer sous le HUD
         val isBee = Random.nextFloat() < 0.14f
         val bamboo = !isBee && Random.nextFloat() < 0.28f
+        val fruit = !isBee && !bamboo && Random.nextFloat() < 0.3f
         // bambou : plus long, plus fin, tourne moins vite (plus facile à re-trancher en 3-4 morceaux)
         flying.add(Flying(Vec3(x, -1.5f, 0f), Vec3(vx, vy + (if (bamboo) 0.8f else 0f), 0f),
             if (bamboo) 1.6f + Random.nextFloat() * 0.8f else 0.9f + Random.nextFloat() * 1.0f, if (bamboo) 0.06f else 0.06f + Random.nextFloat() * 0.08f,
-            Random.nextInt(2), Random.nextFloat() * 360f, (Random.nextFloat() - 0.5f) * (if (bamboo) 120f else 240f), bee = isBee, nest = !isBee && !bamboo && Random.nextFloat() < 0.08f, bamboo = bamboo))
+            Random.nextInt(2), Random.nextFloat() * 360f, (Random.nextFloat() - 0.5f) * (if (bamboo) 120f else 240f),
+            bee = isBee, nest = !isBee && !bamboo && !fruit && Random.nextFloat() < 0.08f, bamboo = bamboo, fruit = if (fruit) Random.nextInt(FRUIT_TEX.size) else -1))
     }
 
     // --------------------------------------------------------------- mise à jour
@@ -271,6 +302,8 @@ internal class GardenGame(val mode: GMode, val tool: GTool, val seedDay: Int, va
         timeLeft -= dt0
         if (shake > 0f) shake = max(0f, shake - dt0 * 40f)
         if (flash > 0f) flash = max(0f, flash - dt0 * 3f)
+        if (laser > 0f) laser = max(0f, laser - dt0 * 1.8f)
+        if (nukeCd > 0f) nukeCd -= dt0
         if (comboTimer > 0f) { comboTimer -= dt0; if (comboTimer <= 0f) combo = 0 }
         when (mode) {
             GMode.ZEN -> {
@@ -289,19 +322,40 @@ internal class GardenGame(val mode: GMode, val tool: GTool, val seedDay: Int, va
                     val a = Random.nextFloat() * 6.28f; val d = 8f + Random.nextFloat() * 8f
                     leaves.add(LeafBurst(Vec3(cos(a) * d, 5f + Random.nextFloat() * 3f, sin(a) * d), Vec3((Random.nextFloat() - 0.5f) * 0.8f, 0.6f, (Random.nextFloat() - 0.5f) * 0.8f), Random.nextInt(2), 6f, 0.28f))
                 }
-                if (nextBushT >= 0f) {
+                if (waterPhase >= 0f) {
+                    // ARROSOIR entre deux plantes : maintenir le doigt ~2 s -> la prochaine plante sort toute fleurie (+100)
+                    if (holding || fingerDown) {
+                        waterT += dt
+                        if (leaves.size < 110) repeat(2) {
+                            leaves.add(LeafBurst(Vec3(0.95f + Random.nextFloat() * 0.25f, 3.35f, 0.7f), Vec3(-1.3f + (Random.nextFloat() - 0.5f) * 0.7f, -0.4f, (Random.nextFloat() - 0.5f) * 0.4f),
+                                0, 0.9f, 0.08f + Random.nextFloat() * 0.04f, chip = true, cr = 0.45f, cg = 0.75f, cb = 1f))
+                        }
+                        if (waterT >= WATER_NEED) {
+                            score += 100; bloom = true; waterPhase = -1f; nextBushT = 0.5f
+                            texts.add(GText(Vec3(0f, 3.3f, 0f), label("bloom", "Tout fleuri !") + "  +100", 1.6f, 0.55f, 0.85f, 1f, big = true)); ev("watered")
+                        }
+                    } else {
+                        waterPhase -= dt
+                        if (waterPhase <= 0f) { waterPhase = -1f; nextBushT = 0.2f }   // pas arrosé : on passe, sans pénalité
+                    }
+                } else if (nextBushT >= 0f) {
                     nextBushT -= dt
                     if (nextBushT <= 0f) {
                         nextBushT = -1f; bushesDone++
                         shapeKind = (shapeKind + 1) % 7
-                        buildBush(Random(seedDay * 31 + 7 + bushesDone * 101)); bushScale = 0.05f
+                        buildBush(Random(seedDay * 31 + 7 + bushesDone * 101)); bushScale = 0.05f; bloom = false
                         ev("newbush")
                     }
                 } else if (totalOutside > 0 && cutOutside >= (totalOutside * 0.9f).toInt()) {   // 90 % du mort suffit : on enchaîne
-                    val bonus = 100 + (timeLeft * 1.5f).toInt()
+                    // précision de CETTE plante (pousses oubliées et coups dans le vide la font baisser)
+                    val prec = precision
+                    precSum += prec; precN++
+                    val bonus = 100 + (timeLeft * 1.5f).toInt() + (prec - 80).coerceAtLeast(0) * 5
                     score += bonus
-                    texts.add(GText(Vec3(0f, 3.6f, 0f), label("bushdone", "Parfait !") + "  +$bonus", 1.8f, 1f, 0.85f, 0.3f, big = true))
-                    ev("done"); nextBushT = 1.4f
+                    val word = when { prec >= 95 -> label("bushdone", "Parfait !"); prec >= 80 -> label("great", "Très bien !"); else -> label("good", "Bien !") }
+                    texts.add(GText(Vec3(0f, 3.7f, 0f), "$prec %  $word", 1.9f, 1f, 0.85f, 0.3f, big = true))
+                    texts.add(GText(Vec3(0f, 3.15f, 0f), "+$bonus", 1.7f, 1f, 0.95f, 0.5f))
+                    ev("done"); waterPhase = 3.5f; waterT = 0f
                 }
             }
             GMode.RUSH -> {
@@ -315,11 +369,12 @@ internal class GardenGame(val mode: GMode, val tool: GTool, val seedDay: Int, va
                     if (b.structural) continue
                     if (!b.alive) { b.full += dt; if (b.full > 0.5f) it.remove(); continue }   // souche coupée : disparaît vite
                     val tip = b.tip ?: continue
-                    if (b.grow < 1f) { b.grow = min(1f, b.grow + dt * speed / 2.4f); b.b = b.a.lerp(tip, b.grow) }
+                    // pousse dorée : jaillit deux fois plus vite et ne reste que 0,8 s ; grosse pousse : un peu plus de temps (2 coups)
+                    if (b.grow < 1f) { b.grow = min(1f, b.grow + dt * speed / (if (b.gold) 1.1f else 2.4f)); b.b = b.a.lerp(tip, b.grow) }
                     else {
                         b.full += dt
-                        if (b.full > 1.0f) {   // trop tard : la pousse se rétracte, c'est un raté (sauf pour un nid)
-                            if (!b.nest) { misses++; combo = 0; flash = 0.45f; ev("miss"); texts.add(GText(tip.copy(), label("missed", "Raté !"), 0.9f, 1f, 0.5f, 0.45f)) }
+                        if (b.full > (when { b.gold -> 0.8f; b.big -> 1.6f; else -> 1.0f })) {   // trop tard : la pousse se rétracte, c'est un raté (sauf nid / dorée)
+                            if (!b.nest && !b.gold) { misses++; combo = 0; flash = 0.45f; ev("miss"); texts.add(GText(tip.copy(), label("missed", "Raté !"), 0.9f, 1f, 0.5f, 0.45f)) }
                             it.remove()
                         }
                     }
@@ -368,17 +423,35 @@ internal class GardenGame(val mode: GMode, val tool: GTool, val seedDay: Int, va
         var hits = 0
         while (true) {
             val pt = swipe.poll() ?: break
-            if (pt[2] < 0.5f) { trail.clear(); continue }
+            if (pt[2] < 0.5f) {
+                // fin d'un geste : en Topiaire, un vrai coup de cisaille dans le vide fait baisser la précision
+                if (mode == GMode.ZEN && strokeHits == 0 && strokeLen > r.viewW * 0.12f && waterPhase < 0f && nextBushT < 0f && bushScale >= 1f) wasted++
+                trail.clear(); strokeId++; strokeHits = 0; strokeLen = 0f; strokeTchak = false; strokeComboShown = 0
+                continue
+            }
             trail.add(pt)
             if (trail.size < 2) continue
             val p0 = trail[trail.size - 2]; val p1 = trail[trail.size - 1]
+            strokeLen += sqrt((p1[0] - p0[0]) * (p1[0] - p0[0]) + (p1[1] - p0[1]) * (p1[1] - p0[1]))
             val band = tool.band * r.viewW
-            hits += cutWith(p0[0], p0[1], p1[0], p1[1], band, r)
+            val h = cutWith(p0[0], p0[1], p1[0], p1[1], band, r)
+            hits += h; strokeHits += h
             if (trail.size > 24) trail.removeAt(0)
         }
         if (hits > 0 && mode != GMode.ZEN) { combo += hits; comboTimer = 2.2f }
-        if (hits >= 3 && mode == GMode.SLICE) { timeScale = 0.3f; ev("multi"); texts.add(GText(Vec3(0f, 3.2f, 0f), label("combo", "COMBO") + " x$hits", 1.2f, 1f, 0.85f, 0.3f, big = true)) }
+        // combo nommé d'après le total du GESTE ; un seul texte à la fois (il est remplacé quand le geste en coupe plus)
+        if (mode == GMode.SLICE && strokeHits >= 3 && strokeHits > strokeComboShown) {
+            if (strokeComboShown < 3) { timeScale = 0.3f; ev("multi") }
+            strokeComboShown = strokeHits
+            comboText?.let { texts.remove(it) }
+            comboText = GText(Vec3(0f, 3.2f, 0f), comboName(strokeHits), 1.2f, 1f, 0.85f, 0.3f, big = true).also { texts.add(it) }
+        }
         if (hits > 0) lastHitCuts = hits
+    }
+    private fun comboName(n: Int) = when (n) {
+        3 -> label("triple", "TRIPLE !")
+        4 -> label("quadruple", "QUADRUPLE !")
+        else -> label("mega", "MÉGA COMBO") + " x$n"
     }
 
     private fun cutWith(x0: Float, y0: Float, x1: Float, y1: Float, band: Float, r: GardenRenderer): Int {
@@ -387,7 +460,7 @@ internal class GardenGame(val mode: GMode, val tool: GTool, val seedDay: Int, va
         val snapshot = ArrayList(branches)
         for (b in snapshot) {
             if (!b.alive) continue
-            if (mode == GMode.ZEN && (b.structural || bushScale < 1f)) continue
+            if (mode == GMode.ZEN && (b.structural || bushScale < 1f || waterPhase >= 0f || nextBushT >= 0f)) continue
             if (mode == GMode.RUSH && (b.structural || b.grow < 0.2f)) continue
             val aw = worldOf(b.a); val bw = worldOf(b.b)
             if (!r.project(aw, pa) || !r.project(bw, pb)) continue
@@ -395,6 +468,16 @@ internal class GardenGame(val mode: GMode, val tool: GTool, val seedDay: Int, va
             val extra = if (mode == GMode.RUSH) r.viewW * 0.08f else b.r * 400f / max(1f, aw.z - camZ0 + 1f)
             val t = segSegParam(x0, y0, x1, y1, pa[0], pa[1], pb[0], pb[1], band + extra)
             if (t < 0f) continue
+            // grosse pousse (Rush) : il faut DEUX gestes distincts, sauf avec un outil ultime
+            if (b.big && tool.tier < 5) {
+                if (b.strokeHit == strokeId) continue
+                b.strokeHit = strokeId; b.hp -= 1f
+                if (b.hp > 0f) {
+                    ev("chew"); shake = max(shake, 3f); burstChips(bw, 6)
+                    texts.add(GText(bw.copy(), label("again", "Encore !"), 0.7f, 1f, 0.9f, 0.5f)); continue
+                }
+                cutBranch(b, t.coerceIn(0.1f, 0.9f)); n++; continue
+            }
             if (tool.power >= b.r || tool.electric && tool.power * 1.6f >= b.r) { cutBranch(b, t.coerceIn(0.1f, 0.9f)); n++ }
             else {
                 b.hp -= (tool.power / b.r) * 0.55f
@@ -403,44 +486,97 @@ internal class GardenGame(val mode: GMode, val tool: GTool, val seedDay: Int, va
             }
             if (!tool.electric && n > 0 && tool.tier < 4) break
         }
-        if (mode == GMode.SLICE) {
-            val fs = ArrayList(flying)
-            for (f in fs) {
-                val hx = cos(Math.toRadians(f.rot.toDouble())).toFloat() * f.len / 2f; val hy = sin(Math.toRadians(f.rot.toDouble())).toFloat() * f.len / 2f
-                val a = Vec3(f.pos.x - hx, f.pos.y - hy, 0f); val b2 = Vec3(f.pos.x + hx, f.pos.y + hy, 0f)
-                if (!r.project(a, pa) || !r.project(b2, pb)) continue
-                val t = segSegParam(x0, y0, x1, y1, pa[0], pa[1], pb[0], pb[1], band + (if (f.bee) 30f else 14f))
-                if (t < 0f) continue
-                flying.remove(f)
-                if (easy && (f.bee || f.nest)) {
-                    // Facile : tout rapporte, même les abeilles et les nids
-                    val pts = (if (f.bee) 20 else 30) * mult; score += pts; n++
-                    texts.add(GText(f.pos.copy(), "+$pts " + (if (f.bee) "🐝" else "🍯"), 0.9f, 1f, 0.9f, 0.4f)); burstChips(f.pos, 5); ev("cut")
-                }
-                else if (f.bee) { lives--; combo = 0; flash = 0.9f; shake = 14f; ev("sting"); texts.add(GText(f.pos.copy(), "💔", 1.1f, 1f, 0.4f, 0.4f, big = true)); if (lives <= 0) { over = true; ev("dead") } }
-                else if (f.nest) { score = max(0, score - 25); combo = 0; flash = 0.6f; ev("nest"); texts.add(GText(f.pos.copy(), "-25", 1f, 1f, 0.4f, 0.4f)); for (i in 0..3) bees.add(Bee(f.pos.copy(), Vec3((Random.nextFloat() - 0.5f) * 4f, 1f + Random.nextFloat(), -1f))) }
-                else {
-                    // points : 15 (bambou 20), et chaque re-coupe d'un morceau rapporte plus (x2, x3…) -> enchaîner vite paie
-                    val pts = (if (f.bamboo) 20 else 15) * (f.cuts + 1) * mult
-                    score += pts; n++
-                    texts.add(GText(f.pos.copy(), if (f.cuts > 0) "+$pts ✂${f.cuts + 1}" else "+$pts", 0.9f, 1f, 0.95f, 0.5f))
-                    val dir = Vec3(hx, hy, 0f).norm()
-                    val cutAt = a.lerp(b2, t)
-                    val half1 = (cutAt - a).len(); val half2 = (b2 - cutAt).len()
-                    // les deux morceaux RESTENT EN VOL (re-tranchables) tant qu'ils sont assez longs, sinon tombent en débris
-                    fun piece(center: Vec3, len: Float, push: Float) {
-                        val v = Vec3(f.vel.x + dir.x * push + (Random.nextFloat() - 0.5f), max(2.5f, f.vel.y * 0.55f) + 2.2f, 0f)
-                        if (len > 0.42f && f.cuts < 3) flying.add(Flying(center, v, len, f.r, f.leafKind, f.rot, f.rotV * 1.6f + (Random.nextFloat() - 0.5f) * 200f, bamboo = f.bamboo, cuts = f.cuts + 1))
-                        else debris.add(Debris(center, Vec3(v.x, v.y * 0.4f, 0f), len, f.r, if (f.bamboo) -1 else f.leafKind, dir.x, dir.y, 0f))
-                    }
-                    piece(a.lerp(cutAt, 0.5f), half1, -2.5f); piece(cutAt.lerp(b2, 0.5f), half2, 2.5f)
-                    burstLeaves(f.pos, if (f.bamboo) 2 else f.leafKind, if (f.bamboo) 4 else 8); burstChips(f.pos, if (f.bamboo) 8 else 6)
-                    shake = max(shake, 3f)
-                    ev(if (f.bamboo) "bamboo" else "cut")
-                }
+        // HACHE DU TITAN : tout ce qui pousse autour du point d'impact tombe aussi
+        if (tool.id == 5 && n > 0 && mode != GMode.SLICE) {
+            val c = lastCutW
+            if (c != null) for (b in ArrayList(branches)) {
+                if (!b.alive || b.structural || b.nest || (mode == GMode.RUSH && b.grow < 0.2f)) continue
+                if ((worldOf(b.a) - c).len() < (if (mode == GMode.ZEN) 0.9f else 1.4f)) { cutBranch(b, 0.5f); n++ }
             }
         }
+        if (mode == GMode.SLICE) {
+            for (f in ArrayList(flying)) {
+                val (a, b2) = flyEnds(f)
+                if (!r.project(a, pa) || !r.project(b2, pb)) continue
+                val t = segSegParam(x0, y0, x1, y1, pa[0], pa[1], pb[0], pb[1], band + (if (f.bee) 30f else if (f.fruit >= 0) 34f else 14f))
+                if (t < 0f) continue
+                if (sliceFlying(f, t)) n++
+            }
+            // TRONÇONNEUSE NUCLÉAIRE : la première coupe déclenche un laser qui tranche TOUT l'écran
+            // (en classique, il épargne les abeilles et les nids : l'outil ultime ne doit pas punir)
+            if (tool.id == 15 && n > 0 && nukeCd <= 0f) {
+                for (f in ArrayList(flying)) { if (!easy && (f.bee || f.nest)) continue; if (sliceFlying(f, 0.5f, shatter = true)) n++ }
+                fireNuke(x0, y0, x1, y1)
+            }
+        } else if (tool.id == 15 && n > 0 && nukeCd <= 0f) {
+            if (mode == GMode.RUSH) for (b in ArrayList(branches)) if (b.alive && !b.structural && !b.nest && b.grow >= 0.2f) { cutBranch(b, 0.5f); n++ }
+            fireNuke(x0, y0, x1, y1)
+        }
+        if (tool.id == 5 && n > 0 && !strokeTchak) {
+            strokeTchak = true; shake = 26f
+            texts.add(GText((lastCutW ?: Vec3(0f, 2.5f, 0f)).copy(), "TCHAK !", 0.9f, 1f, 0.8f, 0.35f, big = true)); ev("tchak")
+        }
         return n
+    }
+
+    private fun fireNuke(x0: Float, y0: Float, x1: Float, y1: Float) {
+        val first = trail.firstOrNull()
+        laserX0 = first?.get(0) ?: x0; laserY0 = first?.get(1) ?: y0; laserX1 = x1; laserY1 = y1
+        laser = 1f; nukeCd = if (mode == GMode.ZEN) 2.5f else 3.5f; shake = max(shake, 18f)
+        texts.add(GText(Vec3(0f, if (mode == GMode.SLICE) 3.8f else 3.4f, 0f), label("nuke", "NUCLÉAIRE !"), 1.1f, 0.5f, 1f, 0.4f, big = true)); ev("nuke")
+    }
+
+    /** Extrémités (monde) d'un objet volant : segment de la branche, ou petit diamètre horizontal du fruit. */
+    private fun flyEnds(f: Flying): Pair<Vec3, Vec3> {
+        if (f.fruit >= 0) return Pair(Vec3(f.pos.x - 0.32f, f.pos.y, 0f), Vec3(f.pos.x + 0.32f, f.pos.y, 0f))
+        val hx = cos(Math.toRadians(f.rot.toDouble())).toFloat() * f.len / 2f; val hy = sin(Math.toRadians(f.rot.toDouble())).toFloat() * f.len / 2f
+        return Pair(Vec3(f.pos.x - hx, f.pos.y - hy, 0f), Vec3(f.pos.x + hx, f.pos.y + hy, 0f))
+    }
+
+    /** Tranche un objet volant en [t] (0..1 le long de l'objet). Renvoie true si la coupe compte comme réussie.
+     *  [shatter] : les morceaux tombent en débris au lieu de rester re-tranchables (laser nucléaire). */
+    private fun sliceFlying(f: Flying, t: Float, shatter: Boolean = false): Boolean {
+        if (!flying.remove(f)) return false
+        lastCutW = f.pos.copy()
+        if (f.fruit >= 0) {
+            // fruit juteux : +25 et une giclée de jus de sa couleur
+            val pts = 25 * mult; score += pts
+            texts.add(GText(f.pos.copy(), "+$pts", 0.9f, 1f, 0.95f, 0.5f))
+            val (cr, cg, cb) = FRUIT_JUICE[f.fruit]
+            repeat(16) {
+                leaves.add(LeafBurst(f.pos.copy(), Vec3((Random.nextFloat() - 0.5f) * 5f, 1.5f + Random.nextFloat() * 3.5f, (Random.nextFloat() - 0.5f) * 2f),
+                    0, 0.7f + Random.nextFloat() * 0.5f, 0.10f + Random.nextFloat() * 0.12f, chip = true, cr = cr, cg = cg, cb = cb))
+            }
+            shake = max(shake, 4f); ev("splat")
+            return true
+        }
+        if (easy && (f.bee || f.nest)) {
+            // Facile : tout rapporte, même les abeilles et les nids
+            val pts = (if (f.bee) 20 else 30) * mult; score += pts
+            texts.add(GText(f.pos.copy(), "+$pts " + (if (f.bee) "🐝" else "🍯"), 0.9f, 1f, 0.9f, 0.4f)); burstChips(f.pos, 5); ev("cut")
+            return true
+        }
+        if (f.bee) { lives--; combo = 0; flash = 0.9f; shake = 14f; ev("sting"); texts.add(GText(f.pos.copy(), "💔", 1.1f, 1f, 0.4f, 0.4f, big = true)); if (lives <= 0) { over = true; ev("dead") }; return false }
+        if (f.nest) { score = max(0, score - 25); combo = 0; flash = 0.6f; ev("nest"); texts.add(GText(f.pos.copy(), "-25", 1f, 1f, 0.4f, 0.4f)); for (i in 0..3) bees.add(Bee(f.pos.copy(), Vec3((Random.nextFloat() - 0.5f) * 4f, 1f + Random.nextFloat(), -1f))); return false }
+        // points : 15 (bambou 20), et chaque re-coupe d'un morceau rapporte plus (x2, x3…) -> enchaîner vite paie
+        val pts = (if (f.bamboo) 20 else 15) * (f.cuts + 1) * mult
+        score += pts
+        texts.add(GText(f.pos.copy(), if (f.cuts > 0) "+$pts ✂${f.cuts + 1}" else "+$pts", 0.9f, 1f, 0.95f, 0.5f))
+        val (a, b2) = flyEnds(f)
+        val dir = (b2 - a).norm()
+        val cutAt = a.lerp(b2, t)
+        val half1 = (cutAt - a).len(); val half2 = (b2 - cutAt).len()
+        // les deux morceaux RESTENT EN VOL (re-tranchables) tant qu'ils sont assez longs, sinon tombent en débris
+        fun piece(center: Vec3, len: Float, push: Float) {
+            val v = Vec3(f.vel.x + dir.x * push + (Random.nextFloat() - 0.5f), max(2.5f, f.vel.y * 0.55f) + 2.2f, 0f)
+            if (!shatter && len > 0.42f && f.cuts < 3) flying.add(Flying(center, v, len, f.r, f.leafKind, f.rot, f.rotV * 1.6f + (Random.nextFloat() - 0.5f) * 200f, bamboo = f.bamboo, cuts = f.cuts + 1))
+            else debris.add(Debris(center, Vec3(v.x, v.y * 0.4f, 0f), len, f.r, if (f.bamboo) -1 else f.leafKind, dir.x, dir.y, 0f))
+        }
+        piece(a.lerp(cutAt, 0.5f), half1, -2.5f); piece(cutAt.lerp(b2, 0.5f), half2, 2.5f)
+        burstLeaves(f.pos, if (f.bamboo) 2 else f.leafKind, if (f.bamboo) 4 else 8); burstChips(f.pos, if (f.bamboo) 8 else 6)
+        shake = max(shake, 3f)
+        ev(if (f.bamboo) "bamboo" else "cut")
+        return true
     }
 
     private fun worldOf(p: Vec3): Vec3 = if (mode == GMode.ZEN) rotY(p, turntable) else p
@@ -453,6 +589,7 @@ internal class GardenGame(val mode: GMode, val tool: GTool, val seedDay: Int, va
     private fun cutBranch(b: Branch, t: Float) {
         val cut = b.a.lerp(b.b, t)
         val wCut = worldOf(cut); val wB = worldOf(b.b)
+        lastCutW = wCut
         val dir = (wB - wCut).norm()
         debris.add(Debris(wCut.lerp(wB, 0.5f), Vec3(dir.x * 1.2f + (Random.nextFloat() - 0.5f), 1.5f, dir.z * 1.2f + 0.5f), (wB - wCut).len(), b.r, b.leafKind, dir.x, dir.y, dir.z))
         burstLeaves(wB, if (b.leafKind < 0) 0 else b.leafKind, 5); burstChips(wCut, 4)
@@ -466,7 +603,8 @@ internal class GardenGame(val mode: GMode, val tool: GTool, val seedDay: Int, va
         when (mode) {
             GMode.ZEN -> {
                 var goodN = 0; var badN = 0
-                fun account(x: Branch) { if (x.outside) { cutOutside++; goodN++ } else { cutInside++; badN++ }; for (c in x.children) account(c) }
+                fun account(x: Branch) { if (x.counted) return; x.counted = true
+                    if (x.outside) { cutOutside++; goodN++ } else { cutInside++; badN++ }; for (c in x.children) account(c) }
                 account(b)
                 if (badN == 0) { combo++; comboTimer = 3f; val pts = 10 * goodN * mult; score += pts; texts.add(GText(wCut.copy(), "+$pts", 0.9f, 0.6f, 1f, 0.6f)); ev("cut") }
                 else { score = max(0, score - 15 * badN); combo = 0; texts.add(GText(wCut.copy(), "-${15 * badN}", 0.9f, 1f, 0.45f, 0.45f)); ev("oops") }
@@ -474,9 +612,15 @@ internal class GardenGame(val mode: GMode, val tool: GTool, val seedDay: Int, va
             GMode.RUSH -> {
                 lastCutT = elapsed
                 if (b.nest) { score = max(0, score - 25); combo = 0; flash = 0.6f; ev("nest"); texts.add(GText(wB.copy(), "-25", 1f, 1f, 0.4f, 0.4f)); for (i in 0..3) bees.add(Bee(wB.copy(), Vec3((Random.nextFloat() - 0.5f) * 3f, 0.8f + Random.nextFloat(), 0.25f))) }
+                else if (b.gold) {
+                    val pts = 50 * mult; score += pts
+                    texts.add(GText(wB.copy(), label("gold", "Doré !") + " +$pts", 1f, 1f, 0.85f, 0.25f, big = true))
+                    repeat(10) { leaves.add(LeafBurst(wB.copy(), Vec3((Random.nextFloat() - 0.5f) * 3f, 1f + Random.nextFloat() * 2f, 0.6f + Random.nextFloat()), 0, 0.8f, 0.06f + Random.nextFloat() * 0.05f, chip = true, cr = 1f, cg = 0.85f, cb = 0.25f)) }
+                    ev("gold")
+                }
                 else {
                     val quick = b.grow < 0.7f
-                    val pts = ((if (b.flower) 25 else 15) + (if (quick) 10 else 0)) * mult; score += pts
+                    val pts = ((if (b.big) 30 else if (b.flower) 25 else 15) + (if (quick) 10 else 0)) * mult; score += pts
                     texts.add(GText(wB.copy(), (if (quick) label("fast", "Rapide !") + " " else "") + "+$pts", 0.9f, 1f, 0.95f, 0.5f)); ev("cut")
                 }
             }
@@ -550,6 +694,13 @@ internal class GardenGame(val mode: GMode, val tool: GTool, val seedDay: Int, va
                     r.modelBillboard(p - Vec3(0f, sz * 0.5f, 0f), sz, sz)
                     if (t.flower) r.draw(r.card, "gz_flower${t.kind + 1}", 1f, 1f, 1f) else r.draw(r.card, "gz_leaf${t.kind + 1}", t.shade, t.shade, t.shade)
                 }
+                // arrosoir au-dessus de la plante entre deux tailles ; il s'incline quand on maintient le doigt
+                if (waterPhase >= 0f && r.hasTex("gz_watering")) {
+                    val pour = holding || fingerDown
+                    r.identity(); r.translate(1.45f, 3.05f + (if (pour) 0f else sin(elapsed * 4f) * 0.08f), 0.7f)
+                    r.rotate(if (pour) 38f else 8f, 0f, 0f, 1f); r.scale(1.15f, 1.0f, 1f); r.translate(0f, -0.5f, 0f)
+                    r.draw(r.card, "gz_watering", 1f, 1f, 1f, fog = false)
+                }
                 // papillons et oiseau
                 r.depthMask(false)
                 for (c in critters) {
@@ -583,6 +734,11 @@ internal class GardenGame(val mode: GMode, val tool: GTool, val seedDay: Int, va
                 for (i in -2..2) card(r, Vec3(i * 3.2f + 1f, 0f, -4.6f), "gz_flowerbed", 2.4f, 0.9f)
                 card(r, Vec3(5.5f, 0f, -3.5f), "gz_bench", 1.8f, 1.0f); card(r, Vec3(-5.5f, 0f, -3.8f), "gz_stump", 1.2f, 0.8f)
                 for (f in flying) {
+                    if (f.fruit >= 0) {
+                        // fruit : sprite qui tourne sur lui-même autour de son centre
+                        r.identity(); r.translate(f.pos.x, f.pos.y, f.pos.z); r.rotate(f.rot * 0.5f, 0f, 0f, 1f); r.scale(0.95f, 0.95f, 1f); r.translate(0f, -0.5f, 0f)
+                        r.draw(r.card, FRUIT_TEX[f.fruit], 1f, 1f, 1f); continue
+                    }
                     if (f.bee) { r.modelBillboard(f.pos - Vec3(0f, 0.45f, 0f), 0.9f, 0.9f); r.draw(r.card, "gz_bee", 1f, 1f, 1f); continue }
                     val d = Vec3(cos(Math.toRadians(f.rot.toDouble())).toFloat(), sin(Math.toRadians(f.rot.toDouble())).toFloat(), 0f)
                     val a = f.pos - d * (f.len / 2f); val b = f.pos + d * (f.len / 2f)
@@ -607,6 +763,7 @@ internal class GardenGame(val mode: GMode, val tool: GTool, val seedDay: Int, va
         }
         r.depthMask(false)
         for (l in leaves) {
+            if (l.cr >= 0f) { r.modelBillboard(l.pos, l.size, l.size); r.draw(r.card, "gz_disc", l.cr, l.cg, l.cb, a = (l.life / 0.4f).coerceIn(0f, 1f), unlit = true); continue }
             if (l.chip) { r.modelBillboard(l.pos, l.size, l.size); r.rotate(l.life * 400f, 0f, 0f, 1f); r.draw(r.box, "gz_bark", 1f, 0.9f, 0.7f, a = (l.life / 0.4f).coerceIn(0f, 1f)) }
             else { r.modelBillboard(l.pos, l.size, l.size); r.rotate(l.life * 200f, 0f, 0f, 1f); r.draw(r.card, "gz_leaf${(l.kind % 2) + 1}", 1f, 1f, 1f, a = (l.life / 0.8f).coerceIn(0f, 1f)) }
         }
@@ -649,15 +806,24 @@ internal class GardenGame(val mode: GMode, val tool: GTool, val seedDay: Int, va
             val a = worldOf(b.a) * sc; val bb = worldOf(b.b) * sc
             r.modelSegment(a, bb, b.r * sc)
             val dead = mode == GMode.ZEN && b.outside && b.alive
-            if (dead) r.draw(r.cyl, "gz_bark", 0.85f, 0.72f, 0.6f)
+            if (b.gold && b.alive) r.draw(r.cyl, "gz_bark", 1.5f, 1.2f, 0.35f)
+            else if (dead) r.draw(r.cyl, "gz_bark", 0.85f, 0.72f, 0.6f)
             else r.draw(r.cyl, "gz_bark", if (b.alive) 1f else 0.9f, if (b.alive) 1f else 0.8f, if (b.alive) 1f else 0.7f)
             if (!b.alive) { r.modelBillboard(bb - Vec3(0f, b.r * 1.1f, 0f), b.r * 2.2f, b.r * 2.2f); r.draw(r.card, "gz_rings", 1f, 1f, 1f); continue }
             if (b.leafKind >= 0 || b.flower || b.nest) {
-                val tex = when { b.nest -> "gz_nest"; b.flower -> "gz_flower${(b.leafKind % 2) + 1}"; else -> "gz_leaf${(b.leafKind % 2) + 1}" }
+                val tex = when { b.nest -> "gz_nest"; b.gold -> "gz_flower2"; b.flower -> "gz_flower${(b.leafKind % 2) + 1}"; else -> "gz_leaf${(b.leafKind % 2) + 1}" }
                 val sz = (if (b.nest) 0.7f else b.leafSize) * sc
+                if (b.gold) {
+                    // pousse dorée : halo qui pulse derrière la touffe
+                    r.depthMask(false)
+                    r.modelBillboard(bb - Vec3(0f, sz * 0.95f, 0f), sz * 1.9f, sz * 1.9f); r.draw(r.card, "gz_disc", 1f, 0.85f, 0.3f, a = 0.45f + 0.25f * sin(elapsed * 9f), unlit = true)
+                    r.depthMask(true)
+                }
                 r.modelBillboard(bb - Vec3(0f, sz * 0.45f, 0f), sz, sz)
                 // topiaire : les branches mortes ont un feuillage ORANGE/brun bien distinct du vert
-                if (mode == GMode.ZEN && b.outside) r.draw(r.card, tex, 1.45f, 0.62f, 0.12f) else r.draw(r.card, tex, 1f, 1f, 1f)
+                if (mode == GMode.ZEN && b.outside) r.draw(r.card, tex, 1.45f, 0.62f, 0.12f)
+                else if (b.gold) r.draw(r.card, tex, 1.35f, 1.15f, 0.45f)
+                else r.draw(r.card, tex, 1f, 1f, 1f)
             }
         }
     }

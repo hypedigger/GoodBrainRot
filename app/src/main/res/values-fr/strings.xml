@@ -295,4 +295,14 @@
     <string name="crash_title">Rapport de plantage</string>
     <string name="crash_share">Partager</string>
     <string name="crash_clear">Effacer</string>
+    <string name="gz_great">Très bien !</string>
+    <string name="gz_good">Bien !</string>
+    <string name="gz_triple">TRIPLE !</string>
+    <string name="gz_quadruple">QUADRUPLE !</string>
+    <string name="gz_mega">MÉGA COMBO</string>
+    <string name="gz_water_hint">Maintiens le doigt pour arroser !</string>
+    <string name="gz_bloom">Tout fleuri !</string>
+    <string name="gz_nuke">NUCLÉAIRE !</string>
+    <string name="gz_gold">Doré !</string>
+    <string name="gz_again">Encore !</string>
 </resources>
