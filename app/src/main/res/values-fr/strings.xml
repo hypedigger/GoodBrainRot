@@ -255,11 +255,11 @@
     <string name="gz_bees_hint">Attention aux nids d\'abeilles !</string>
     <string name="vroum_difficulty">Difficulté</string>
     <string name="vroum_diff_easy">Facile</string>
-    <string name="vroum_diff_easy_desc">Rien ne peut t\'arrêter</string>
+    <string name="vroum_diff_easy_desc">Les chocs te ralentissent, c\'est tout</string>
     <string name="vroum_diff_medium">Moyen</string>
-    <string name="vroum_diff_medium_desc">Le vrai jeu</string>
+    <string name="vroum_diff_medium_desc">Roule propre pour aller vite</string>
     <string name="vroum_diff_hard">Difficile</string>
-    <string name="vroum_diff_hard_desc">Rapide · pour les grands</string>
+    <string name="vroum_diff_hard_desc">Rapide · aucune erreur permise</string>
     <string name="vroum_time_left">Temps</string>
     <string name="vroum_lanes">VOIES !</string>
     <string name="vroum_theme_night">Forêt de nuit</string>
@@ -272,7 +272,7 @@
     <string name="vroum_race">Course</string>
     <string name="vroum_route">Route</string>
     <string name="vroum_vehicle">Bolide</string>
-    <string name="vroum_mode_race_hint">Arrive au village avant la fin du temps !</string>
+    <string name="vroum_mode_race_hint">Roule proprement pour prendre de la vitesse et arriver au village avant la fin du temps !</string>
     <string name="vroum_mode_arcade_hint">Roule le plus loin possible : ça s\'arrête quand il n\'y a plus d\'essence.</string>
     <string name="vroum_duel">2 joueurs</string>
     <string name="vroum_duel_hint">Chacun sa moitié d\'écran : le premier arrivé au village gagne !</string>
@@ -291,6 +291,11 @@
     <string name="vroum_v_excavator">Pelleteuse</string>
     <string name="vroum_v_bear">Ours</string>
     <string name="vroum_jumped">Sauté !</string>
+    <string name="vroum_near">Frôlé !</string>
+    <string name="vroum_flow_max">À fond !</string>
+    <string name="vroum_res_time">Temps restant : +%1$d</string>
+    <string name="vroum_res_combo">Meilleure série : %1$d</string>
+    <string name="vroum_res_near">Frôlements : %1$d</string>
     <string name="gz_rotate_hint">↔️ Glisse en bas de l\'écran pour tourner la plante</string>
     <string name="crash_title">Rapport de plantage</string>
     <string name="crash_share">Partager</string>

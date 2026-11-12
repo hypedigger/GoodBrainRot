@@ -17,8 +17,8 @@ android {
         applicationId = "com.goodbrainrot.app"
         minSdk = 29
         targetSdk = 35
-        versionCode = 112
-        versionName = "3.92"
+        versionCode = 113
+        versionName = "3.93"
 
         // Date de build injectee dans l'app (visible dans les Options).
         val buildTime = SimpleDateFormat("dd/MM/yyyy HH:mm").apply {
@@ -81,5 +81,7 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.navigation:navigation-compose:2.8.5")
     debugImplementation("androidx.compose.ui:ui-tooling")
+    // tests JVM : banc d'équilibrage du jeu de voiture (robots qui jouent sur le vrai modèle)
+    testImplementation("junit:junit:4.13.2")
     implementation("androidx.compose.ui:ui-tooling-preview")
 }

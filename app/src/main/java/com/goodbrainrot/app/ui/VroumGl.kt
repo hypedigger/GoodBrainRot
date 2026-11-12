@@ -113,7 +113,7 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0); GLES20.glUniform1i(uTex, 0)
         GLES20.glUniform3f(uFogColor, th.fog.r, th.fog.g, th.fog.b)
         // coup de zoom inverse pendant un boost : le champ s'élargit (sensation de vitesse), lissé
-        val wantExtra = game.boostLevel * 7f
+        val wantExtra = game.boostLevel * 6f + game.flow * 6f      // le champ s'ouvre avec l'élan : sensation de vitesse
         fovExtra += (wantExtra - fovExtra) * min(1f, dt * 6f)
         Matrix.perspectiveM(proj, 0, (if (game.wide) 40f else 64f) + fovExtra, aspectRatio, 1.0f, 600f)
         Matrix.scaleM(proj, 0, -1f, 1f, 1f)

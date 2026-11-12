@@ -103,104 +103,8 @@ import kotlin.random.Random
 // Flux : choix du bolide -> choix de la route -> décompte 3-2-1 -> partie.
 // ===========================================================================
 
-private val V_PINK = Color(0xFFFF6FA8)
-private val V_CYAN = Color(0xFF4FC3F7)
-private val V_BLUE = Color(0xFF1E88E5)
-private val V_GOLD = Color(0xFFFFC94D)
-private val V_GREEN = Color(0xFF66D97A)
-private val V_TEAL = Color(0xFF1FA983)
-private val V_ORANGE = Color(0xFFFF9052)
-private val V_RED = Color(0xFFFF5252)
-private val V_INK = Color(0xFF2A2440)
-private val V_CARD = Color(0xF2FFFFFF)
 
 private enum class VPhase { SELECT, LEVEL, PLAYING, DUEL, CLEAR, END }
-internal enum class VItem { FUEL, STAR, ACORN, MUSHROOM, BERRY, TURBO, PUDDLE, PASSENGER, CANNON, SUPERBOOST, HOLE, LOG }
-
-/** Couleur (r,g,b) pour les thèmes. */
-internal class C3(val r: Float, val g: Float, val b: Float)
-/**
- * Thème de circuit : ciel (4 bandes du haut vers l'horizon), astre, relief (montagnes ou skyline de gratte-ciel),
- * couleurs du sol / de la route, décor du bord de route (clé sprite + taille), objets bonus locaux,
- * particules d'ambiance (0 aucune, 1 lucioles, 2 braises, 3 pétales, 4 neige).
- */
-internal class VTheme(
-    val key: String, val nameRes: Int, val card: String,
-    val sky: List<C3>, val sun: C3, val sunR: Float, val stripes: Boolean, val stars: Boolean, val night: Boolean,
-    val mount1: C3, val mount2: C3, val skyline: Boolean, val hills: C3,
-    val grass: C3, val grass2: C3, val road: C3, val road2: C3, val edge: C3, val fog: C3,
-    val decor: List<Pair<String, Float>>, val picks: List<String>, val ambient: Int,
-    // obstacles à sauter propres au thème (décalque au sol / billboard en travers de la voie)
-    val holeTex: String = "vv_hole", val logTex: String = "vv_log"
-)
-internal val THEMES = listOf(
-    VTheme("forest", R.string.vroum_play, "vv_title",
-        listOf(C3(0.06f, 0.03f, 0.14f), C3(0.26f, 0.09f, 0.40f), C3(0.62f, 0.20f, 0.52f), C3(1.0f, 0.76f, 0.45f)), C3(1f, 0.75f, 0.5f), 0.46f, true, true, false,
-        C3(0.36f, 0.20f, 0.50f), C3(0.27f, 0.14f, 0.40f), false, C3(0.09f, 0.23f, 0.13f),
-        C3(0.19f, 0.48f, 0.21f), C3(0.16f, 0.43f, 0.19f), C3(0.24f, 0.21f, 0.33f), C3(0.27f, 0.24f, 0.37f), C3(0.88f, 0.28f, 0.25f), C3(1.0f, 0.76f, 0.55f),
-        listOf("tree1" to 2.6f, "tree2" to 2.9f, "tree3" to 2.5f, "tree1" to 2.6f, "tree2" to 2.9f, "bush" to 1.1f, "rock" to 1.0f, "sign" to 0.9f),
-        listOf("vv_acorn", "vv_mushroom", "vv_berry"), 0),
-    VTheme("night", R.string.vroum_theme_night, "vv_night",
-        listOf(C3(0.01f, 0.01f, 0.05f), C3(0.03f, 0.03f, 0.12f), C3(0.06f, 0.06f, 0.22f), C3(0.12f, 0.10f, 0.30f)), C3(0.92f, 0.94f, 1f), 0.22f, false, true, true,
-        C3(0.10f, 0.08f, 0.20f), C3(0.07f, 0.06f, 0.15f), false, C3(0.04f, 0.09f, 0.06f),
-        C3(0.07f, 0.19f, 0.10f), C3(0.06f, 0.16f, 0.09f), C3(0.14f, 0.13f, 0.22f), C3(0.16f, 0.15f, 0.25f), C3(0.75f, 0.25f, 0.22f), C3(0.08f, 0.07f, 0.18f),
-        listOf("tree1" to 2.6f, "lamp" to 2.4f, "tree3" to 2.5f, "owl_tree" to 2.6f, "tree2" to 2.9f, "bush" to 1.1f, "lamp" to 2.4f, "rock" to 1.0f),
-        listOf("vv_acorn", "vv_mushroom", "vv_berry"), 5),   // 5 = pluie (plus de flaques aussi)
-    VTheme("volcano", R.string.vroum_theme_volcano, "vv_volcano",
-        listOf(C3(0.10f, 0.02f, 0.03f), C3(0.30f, 0.06f, 0.05f), C3(0.65f, 0.18f, 0.06f), C3(1.0f, 0.55f, 0.15f)), C3(1f, 0.35f, 0.1f), 0.40f, true, false, false,
-        C3(0.16f, 0.06f, 0.05f), C3(0.10f, 0.04f, 0.04f), false, C3(0.12f, 0.05f, 0.04f),
-        C3(0.22f, 0.13f, 0.10f), C3(0.19f, 0.11f, 0.09f), C3(0.16f, 0.14f, 0.14f), C3(0.19f, 0.16f, 0.16f), C3(1.0f, 0.45f, 0.1f), C3(0.55f, 0.18f, 0.08f),
-        listOf("vol_rock1" to 1.4f, "vol_rock2" to 1.6f, "vol_geyser" to 1.5f, "vol_tree" to 2.4f, "vol_crystal" to 1.2f, "vol_rock1" to 1.4f, "vol_sign" to 0.9f, "vol_rock2" to 1.6f),
-        listOf("vv_vol_p1", "vv_vol_p2", "vv_vol_p3"), 2, holeTex = "vv_vol_lava", logTex = "vv_vol_ridge"),
-    VTheme("tokyo", R.string.vroum_theme_tokyo, "vv_tokyo",
-        listOf(C3(0.02f, 0.01f, 0.08f), C3(0.08f, 0.03f, 0.22f), C3(0.30f, 0.08f, 0.45f), C3(0.85f, 0.25f, 0.55f)), C3(0.95f, 0.95f, 1f), 0.20f, false, true, true,
-        C3(0.09f, 0.05f, 0.18f), C3(0.06f, 0.03f, 0.13f), true, C3(0.08f, 0.06f, 0.14f),
-        C3(0.17f, 0.17f, 0.21f), C3(0.15f, 0.15f, 0.19f), C3(0.11f, 0.11f, 0.15f), C3(0.13f, 0.13f, 0.17f), C3(0.2f, 0.9f, 1.0f), C3(0.30f, 0.10f, 0.40f),
-        listOf("tk_bld1" to 4.2f, "tk_bld2" to 2.6f, "tk_bld3" to 4.0f, "tk_torii" to 2.4f, "tk_lantern" to 2.2f, "tk_sakura" to 2.6f, "tk_bld2" to 2.6f, "tk_lantern" to 2.2f),
-        listOf("vv_tk_p1", "vv_tk_p2", "vv_tk_p3"), 3, logTex = "vv_tk_cat"),
-    VTheme("snow", R.string.vroum_theme_snow, "vv_snow",
-        listOf(C3(0.45f, 0.62f, 0.90f), C3(0.62f, 0.76f, 0.95f), C3(0.80f, 0.88f, 0.98f), C3(0.98f, 0.92f, 0.85f)), C3(1f, 0.97f, 0.85f), 0.26f, false, false, false,
-        C3(0.86f, 0.90f, 0.98f), C3(0.72f, 0.80f, 0.94f), false, C3(0.90f, 0.94f, 1.0f),
-        C3(0.90f, 0.94f, 1.0f), C3(0.84f, 0.90f, 0.98f), C3(0.30f, 0.32f, 0.40f), C3(0.33f, 0.35f, 0.43f), C3(0.35f, 0.65f, 0.95f), C3(0.85f, 0.90f, 1.0f),
-        listOf("sn_pine" to 2.8f, "sn_snowman" to 1.5f, "sn_pine" to 2.8f, "sn_gift" to 1.4f, "sn_santa" to 1.9f, "sn_cabin" to 2.8f, "sn_reindeer" to 1.6f, "sn_pine" to 2.6f),
-        listOf("vv_sn_p1", "vv_sn_p2", "vv_sn_p3"), 4, holeTex = "vv_sn_ice", logTex = "vv_sn_drift"),
-)
-
-/** 0..3 étoiles d'une partie (même barème que l'écran de fin). */
-internal fun vroumStarCount(endless: Boolean, cleared: Boolean, score: Int, dist: Int): Int = when {
-    endless -> when { dist >= 2500 -> 3; dist >= 1200 -> 2; else -> 1 }
-    cleared -> when { score >= 1500 -> 3; score >= 700 -> 2; else -> 1 }
-    else -> when { dist >= 1500 -> 2; dist >= 600 -> 1; else -> 0 }
-}
-
-internal data class VVehicle(val key: String, val nameRes: Int)
-internal val VEHICLES = listOf(
-    VVehicle("car", R.string.vroum_v_car), VVehicle("monster", R.string.vroum_v_monster),
-    VVehicle("firetruck", R.string.vroum_v_firetruck), VVehicle("moto", R.string.vroum_v_moto),
-    VVehicle("tank", R.string.vroum_v_tank), VVehicle("dragon", R.string.vroum_v_dragon),
-    VVehicle("lion", R.string.vroum_v_lion), VVehicle("trex", R.string.vroum_v_trex),
-    VVehicle("rocket", R.string.vroum_v_rocket), VVehicle("tractor", R.string.vroum_v_tractor),
-    VVehicle("excavator", R.string.vroum_v_excavator), VVehicle("bear", R.string.vroum_v_bear)
-)
-/** Familles d'animation / de son : créatures qui courent, dragon qui vole, fusée qui flotte. */
-internal val WALKER_KEYS = setOf("lion", "trex", "bear")
-internal val CREATURE_KEYS = setOf("dragon", "lion", "trex", "bear")
-internal val ENEMY_KEYS = listOf("en_car1", "en_car2", "en_truck", "en_bus", "en_van")
-internal val PASSENGER_KEYS = listOf("pass_rabbit", "pass_owl", "pass_fox")
-internal val CHEER_KEYS = listOf("cheer_rabbit", "cheer_squirrel", "cheer_owl")
-internal class VEnemy(var lane: Int, var z: Float, val kind: Int, val mps: Float) { var crushed = -1f; var bounce = 0f }
-internal class VPick(var lane: Int, var z: Float, val type: VItem, val variant: Int) {
-    var t = 0f
-    // obstacle MOBILE (chat de Tokyo, rocher du Volcan) : voie flottante qui traverse la route
-    var fLane = -999f; var fDir = 0
-}
-internal class VShot(var z: Float, val lane: Int)
-internal class VPart(var x: Float, var y: Float, var z: Float, var vx: Float, var vy: Float, var life: Float, val maxLife: Float,
-                     val r: Float, val g: Float, val b: Float, val size: Float, val floaty: Boolean = false, val streak: Float = 0f)
-internal class VText(var x: Float, var y: Float, val z: Float, val text: String, var life: Float, val color: Color, val big: Boolean = false) {
-    @Volatile var sx = -1000f; @Volatile var sy = -1000f
-}
-internal class VDecor(var z: Float, var lateral: Float, val kind: Int, val cheer: Int = -1, val flag: Boolean = false) { var arms = 0f }
 
 private class VSprites(private val ctx: android.content.Context) {
     private fun load(name: String): ImageBitmap? {
@@ -210,526 +114,6 @@ private class VSprites(private val ctx: android.content.Context) {
     val vehicles = VEHICLES.map { load("vr_${it.key}") ?: load("vv_${it.key}") }
     val title = load("vv_title"); val village = load("vv_village"); val empty = load("vv_empty")
     val cards = THEMES.map { load(it.card) }
-}
-
-// ---------------------------------------------------------------------------
-// Modèle de jeu
-// ---------------------------------------------------------------------------
-
-/** [diff] : 0 = Facile (invincible, pas d'essence), 1 = Moyen, 2 = Difficile. [duel] : course à deux, ni chrono ni fantôme. */
-internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, val theme: VTheme, val trickLabel: String, val cannonLabel: String, val duel: Boolean = false) {
-    companion object {
-        const val LANE_M = 3.2f
-        const val Z_FAR = 300f
-        const val PLAYER_Z = 18f
-        const val LEVEL_LEN = 2000f
-        const val INTRO_DUR = 3.6f
-    }
-    fun groundY(zw: Float): Float = 1.6f * sin(zw * 0.030f) + 0.8f * sin(zw * 0.071f + 1f)
-    fun xCenter(z: Float): Float = curve * z * z * 0.0012f
-    var curve = 0f; private var curveTarget = 0f; private var nextCurveAt = 120f
-
-    var introT = INTRO_DUR          // décompte 3-2-1-GO (caméra qui descend)
-    private var introStep = 3
-    // ---- voies : 3 au départ ; en PAYSAGE (tablette) la route s'élargit à 5 à mi-course, 7 loin en sans fin
-    @Volatile var wide = false      // écran plus large que haut (posé par le renderer)
-    var lanes = 3
-    var oldLanes = 3
-    var widenStart = -1f            // z monde où la route commence à s'élargir (-1 = jamais)
-    fun roadHalfFor(n: Int) = n * LANE_M / 2f + 0.9f
-    fun roadHalfAt(zw: Float): Float {
-        if (widenStart < 0f) return roadHalfFor(lanes)
-        val k = ((zw - widenStart) / 30f).coerceIn(0f, 1f)
-        return roadHalfFor(oldLanes) + (roadHalfFor(lanes) - roadHalfFor(oldLanes)) * k
-    }
-    fun lanesAt(zw: Float): Int = if (widenStart >= 0f && zw < widenStart) oldLanes else lanes
-    /** largeur maximale possible pour ce niveau (décor posé hors de la route future) */
-    val decorHalf: Float get() = roadHalfFor(if (wide) (if (endless) 7 else 5) else 3) + 0.4f
-    /** voies accessibles au joueur : les nouvelles seulement une fois l'élargissement arrivé sous les roues */
-    private val laneLo: Int get() = if (widenStart >= 0f && dist + PLAYER_Z < widenStart + 30f) (lanes - oldLanes) / 2 else 0
-    private val laneHi: Int get() = if (widenStart >= 0f && dist + PLAYER_Z < widenStart + 30f) lanes - 1 - (lanes - oldLanes) / 2 else lanes - 1
-    fun laneX(lane: Int) = (lane - (lanes - 1) / 2f) * LANE_M
-    var lane = 1
-    var lx = 0f
-    var jumpT = -1f
-    val JUMP_DUR = 0.9f
-    var landedT = 0f                // écrasement à l'atterrissage (s restantes)
-    var blastT = 0f                 // onde de choc d'atterrissage (s restantes)
-    private var trickDone = false
-    var giant = 0; var giantT = 0f
-    var cannonT = 0f; private var cannonCd = 0f
-    var invuln = 0f
-    var slideT = 0f; var slideDir = 0
-    var turboT = 0f
-    var superT = 0f                 // SUPER boost (6 s, x2.1, musique spéciale)
-    var jumpCd = 0f                 // délai entre deux sauts
-    val JUMP_CD = 3.2f
-    var passengerT = 0f; var passengerKind = -1
-    var fuel = 100f
-    // Course (défaut) : au CHRONO — arriver au village (2 000 m) avant la fin du temps ; Arcade (endless) : à l'ESSENCE
-    val timeLimit = if (!endless && !duel) (when (diff) { 0 -> 130f; 2 -> 80f; else -> 105f }) else -1f
-    var timeLeft = timeLimit
-    var timeUp = false
-    var score = 0; var combo = 0; var comboTimer = 0f
-    val mult: Int get() = (1 + combo / 4).coerceAtMost(8)
-    var dist = 0f
-    var elapsed = 0f
-    var nextFlag = 500f
-    var sputter = -1f
-    var over = false; var cleared = false
-    var shake = 0f
-    var hornCd = 0f
-    var startGrace = 0.8f            // les premiers ennemis arrivent vite : pas de début « vide »
-    @Volatile var frame = 0
-    var leanDeg = 0f            // inclinaison latérale (changement de file), degrés
-    private var prevLx = 0f
-    private var fxCd = 0f
-
-    val enemies = ArrayList<VEnemy>()
-    val picks = ArrayList<VPick>()
-    val shots = ArrayList<VShot>()
-    val parts = ArrayList<VPart>()
-    val texts = ArrayList<VText>()
-    @Volatile var textSnap: List<VText> = emptyList()
-    val decor = ArrayList<VDecor>()
-    private var spawnCd = 0.3f
-    private var fuelSince = 0f; private var starSince = 9f; private var passengerSince = 10f; private var cannonSince = 12f; private var cheerCd = 3f
-    private var superSince = 14f; private var ambientCd = 0f
-    private var hazardSince = 0f
-    var jumpedLabel = "Sauté !"
-    /** Obstacles à sauter (trous, troncs) : 2e moitié d'une Course, après 20 s en Arcade. */
-    private val hazardsOn: Boolean get() = if (endless) elapsed > INTRO_DUR + 20f else dist > LEVEL_LEN * 0.5f
-    val events = ConcurrentLinkedQueue<String>()
-    private fun ev(s: String) { events.add(s) }
-
-    init {
-        // la route n'est pas vide au décompte : quelques objets et un ennemi déjà posés devant
-        for (i in 0 until 5) picks.add(VPick(Random.nextInt(lanes), 60f + i * 22f, listOf(VItem.ACORN, VItem.MUSHROOM, VItem.BERRY, VItem.TURBO, VItem.ACORN)[i], Random.nextInt(3)))
-        enemies.add(VEnemy(Random.nextInt(lanes), 130f, Random.nextInt(ENEMY_KEYS.size), 7f))
-        var z = 8f
-        while (z < Z_FAR + 40f) {
-            for (side in listOf(-1f, 1f)) {
-                val k = Random.nextInt(theme.decor.size)
-                decor.add(VDecor(z + Random.nextFloat() * 6f, side * (roadHalfFor(3) + 1.5f + Random.nextFloat() * 7f), k))
-            }
-            z += 11f
-        }
-    }
-
-    /** Passage à [n] voies : la route s'élargit 40 m devant, les entités existantes gardent leur position (ré-indexation). */
-    private fun widenTo(n: Int) {
-        val shift = (n - lanes) / 2
-        oldLanes = lanes; lanes = n
-        widenStart = dist + 40f
-        lane += shift
-        for (e in enemies) e.lane += shift
-        for (p in picks) { p.lane += shift; if (p.fDir != 0) p.fLane += shift }
-        shots.clear()
-        // les arbres trop proches de la future route sont repoussés
-        val half = roadHalfFor(n)
-        for (d in decor) if (d.cheer < 0 && !d.flag && abs(d.lateral) < half + 1.2f) d.lateral = (if (d.lateral < 0) -1f else 1f) * (half + 1.2f + Random.nextFloat() * 4f)
-        texts.add(VText(0f, 4.5f, 40f, "$n ${lanesLabel}", 2.0f, V_CYAN, big = true))
-        ev("widen")
-    }
-    var lanesLabel = "voies"
-    var superLabel = "SUPER BOOST!"
-
-    // ---- FANTÔME : rejoue le meilleur temps de ce circuit (Course). Échantillons (dist en dm, voie) toutes les 0,25 s.
-    var ghostD: IntArray? = null; var ghostL: IntArray? = null
-    var ghostVeh = -1; var ghostTime = 0f
-    val raceT: Float get() = (elapsed - INTRO_DUR).coerceAtLeast(0f)
-    fun ghostDist(): Float {
-        val d = ghostD ?: return -1f
-        val t = raceT / 0.25f; val i = t.toInt()
-        if (i >= d.size - 1) return d.last() / 10f
-        val f = t - i; return (d[i] * (1f - f) + d[i + 1] * f) / 10f
-    }
-    fun ghostLane(): Int { val l = ghostL ?: return 1; val i = (raceT / 0.25f).toInt(); return if (i < l.size) l[i] else l.last() }
-    val ghostFrac: Float get() = if (ghostD == null) -1f else (ghostDist() / LEVEL_LEN).coerceIn(0f, 1f)
-    // enregistrement de MA course (pour devenir le prochain fantôme si je bats le temps)
-    private val recD = ArrayList<Int>(); private val recL = ArrayList<Int>(); private var recAcc = 0f
-    fun ghostRecording(): Triple<IntArray, IntArray, Float> = Triple(recD.toIntArray(), recL.toIntArray(), raceT)
-    /** Couleur arc-en-ciel cyclique. */
-    fun rainbow(t: Float): Triple<Float, Float, Float> {
-        val h = ((t % 1f) + 1f) % 1f * 6f; val i = h.toInt(); val f = h - i
-        return when (i) { 0 -> Triple(1f, f, 0f); 1 -> Triple(1f - f, 1f, 0f); 2 -> Triple(0f, 1f, f); 3 -> Triple(0f, 1f - f, 1f); 4 -> Triple(f, 0f, 1f); else -> Triple(1f, 0f, 1f - f) }
-    }
-
-    val inIntro: Boolean get() = introT > 0f
-    val mps: Float get() {
-        if (sputter >= 0f) return max(0f, 18f * (1f - sputter / 2.6f))
-        val base = when (diff) {
-            0 -> 16f
-            2 -> 24f + min(10f, dist / 500f)
-            else -> if (endless) 18f + min(14f, dist / 600f) else 18f
-        }
-        val intro = if (inIntro) 0.25f + 0.75f * (1f - (introT / INTRO_DUR).coerceIn(0f, 1f)) else 1f
-        // boost : super ×2,1 > turbo ×1,7 > géant ×1,45 (pendant toute la transformation)
-        return base * intro * (if (superT > 0f) 2.1f else if (turboT > 0f) 1.7f else if (giant > 0) 1.45f else 1f)
-    }
-    /** Intensité du boost pour les effets (0 rien, 1 turbo, 2 super). */
-    val boostLevel: Int get() = if (superT > 0f) 2 else if (turboT > 0f) 1 else 0
-    val speedFactor: Float get() = mps / 18f
-
-    fun coveredLanes(): IntRange = when (giant) {
-        0 -> lane..lane
-        1 -> if (lane < lanes - 1) lane..lane + 1 else lane - 1..lane
-        else -> if (lanes <= 3) 0..2 else (lane - 1).coerceAtLeast(0)..(lane + 1).coerceAtMost(lanes - 1)
-    }
-    private val targetLateral: Float get() { val r = coveredLanes(); return (r.first + r.last) / 2f - (lanes - 1) / 2f }
-    val jumping: Boolean get() = jumpT >= 0f
-    val jumpFrac: Float get() = if (jumping) sin(PI.toFloat() * (jumpT / JUMP_DUR).coerceIn(0f, 1f)) else 0f
-    private val airborne: Boolean get() = jumping && jumpT > JUMP_DUR * 0.14f && jumpT < JUMP_DUR * 0.86f
-
-    fun moveLane(d: Int) {
-        if (over || sputter >= 0f || inIntro) return
-        val n = (lane + d).coerceIn(laneLo, laneHi)
-        if (n != lane) { lane = n; ev("lane") }
-    }
-    fun jump() { if (over || jumping || sputter >= 0f || inIntro || jumpCd > 0f) return; jumpT = 0f; jumpCd = JUMP_CD; trickDone = false; ev("jump") }
-    fun horn() { if (hornCd <= 0f) { hornCd = 1.2f; ev("horn") } }
-
-    fun update(dt: Float) {
-        elapsed += dt
-        if (hornCd > 0f) hornCd -= dt
-        if (shake > 0f) shake = max(0f, shake - dt * 60f)
-        if (invuln > 0f) invuln -= dt
-        if (landedT > 0f) landedT -= dt
-        if (blastT > 0f) blastT -= dt
-        if (introT > 0f) {
-            introT -= dt
-            val step = kotlin.math.ceil(introT.toDouble()).toInt()
-            if (step < introStep && step >= 1) { introStep = step; ev("count") }
-            if (introT <= 0f) { introT = 0f; ev("go") }
-        } else if (startGrace > 0f) startGrace -= dt
-        val sp = mps
-        val dz = sp * dt
-        if (!over && sputter < 0f) dist += dz
-        // trace de la course (fantôme) : un point (dist, voie) toutes les 0,25 s après le départ (Course ET Arcade)
-        if (!duel && !inIntro && !over && !cleared) {
-            recAcc += dt
-            while (recAcc >= 0.25f) { recAcc -= 0.25f; recD.add((dist * 10f).toInt()); recL.add(lane) }
-        }
-
-        if (dist > nextCurveAt) {
-            nextCurveAt = dist + 220f + Random.nextFloat() * 260f
-            curveTarget = if (Random.nextFloat() < 0.35f) 0f else (Random.nextFloat() * 1.6f - 0.8f)
-        }
-        curve += (curveTarget - curve) * min(1f, dt * 0.5f)
-
-        var target = targetLateral
-        if (slideT > 0f) { slideT -= dt; target += slideDir * 0.22f * sin(slideT * 18f) }
-        lx += (target - lx) * min(1f, dt * 9f)
-        // inclinaison proportionnelle à la vitesse latérale (lissée)
-        val lxVel = if (dt > 0f) (lx - prevLx) / dt else 0f
-        prevLx = lx
-        leanDeg += ((lxVel * 9f).coerceIn(-16f, 16f) - leanDeg) * min(1f, dt * 8f)
-        // effets continus : poussière derrière les roues / fumée / flammes de la fusée
-        fxCd -= dt
-        if (fxCd <= 0f && sp > 2f && !over && parts.size < 140) {
-            fxCd = 0.06f
-            val x = lx * LANE_M; val gy = groundY(dist + PLAYER_Z)
-            when (vehicle) {
-                8 -> parts.add(VPart(x + (Random.nextFloat() - 0.5f) * 0.4f, gy + 0.3f, PLAYER_Z - 0.4f, (Random.nextFloat() - 0.5f) * 1.5f, -1f, 0.25f, 0.3f, 0.35f, 0.75f, 1f, 0.22f))
-                5, 6, 7, 11 -> if (Random.nextFloat() < 0.6f) parts.add(VPart(x + (Random.nextFloat() - 0.5f) * 1.6f, gy + 0.1f, PLAYER_Z - 0.8f, (Random.nextFloat() - 0.5f) * 1.2f, 1.2f + Random.nextFloat(), 0.4f, 0.5f, 0.6f, 0.5f, 0.35f, 0.16f))
-                else -> {
-                    parts.add(VPart(x + (if (Random.nextBoolean()) -0.9f else 0.9f), gy + 0.05f, PLAYER_Z - 0.9f, (Random.nextFloat() - 0.5f) * 1.5f, 0.8f + Random.nextFloat(), 0.35f, 0.45f, 0.62f, 0.55f, 0.42f, 0.14f))
-                    if (Random.nextFloat() < 0.35f) parts.add(VPart(x + 0.5f, gy + 0.7f, PLAYER_Z - 1.0f, 0.3f, 1.4f, 0.5f, 0.6f, 0.75f, 0.75f, 0.78f, 0.2f))
-                }
-            }
-        }
-
-        if (jumping) { jumpT += dt; if (jumpT >= JUMP_DUR) { jumpT = -1f; land() } }
-        if (jumpCd > 0f) jumpCd -= dt
-        if (turboT > 0f) turboT -= dt
-        if (superT > 0f) { superT -= dt; if (superT <= 0f) { superT = 0f; ev("boostEnd") } }
-        // traînée de feu pendant un boost (turbo : cyan/orange, super : arc-en-ciel)
-        if (boostLevel > 0 && !over && parts.size < 170 && sp > 2f) {
-            val x = lx * LANE_M; val gy = groundY(dist + PLAYER_Z)
-            repeat(if (boostLevel == 2) 3 else 2) {
-                val k = Random.nextFloat()
-                val (cr, cg, cb) = if (boostLevel == 2) rainbow(elapsed * 3f + k) else Triple(0.3f + 0.7f * k, 0.6f + 0.3f * k, 1f)
-                parts.add(VPart(x + (Random.nextFloat() - 0.5f) * 1.4f, gy + 0.3f + Random.nextFloat() * 0.8f, PLAYER_Z - 1.2f, (Random.nextFloat() - 0.5f) * 2f, 1.5f + Random.nextFloat() * 2f, 0.3f + Random.nextFloat() * 0.25f, 0.5f, cr, cg, cb, 0.3f + Random.nextFloat() * 0.35f, floaty = true))
-            }
-        }
-        // particules d'ambiance du thème
-        ambientCd -= dt
-        if (ambientCd <= 0f && parts.size < 150 && theme.ambient != 0) {
-            ambientCd = if (theme.ambient == 4) 0.03f else 0.08f
-            val ax = (Random.nextFloat() - 0.5f) * 30f; val az = 10f + Random.nextFloat() * 90f
-            val gy = groundY(dist + az)
-            when (theme.ambient) {
-                1 -> parts.add(VPart(ax, gy + 0.4f + Random.nextFloat() * 2f, az, (Random.nextFloat() - 0.5f) * 0.6f, (Random.nextFloat() - 0.3f) * 0.5f, 2.5f + Random.nextFloat() * 2f, 4f, 1f, 0.95f, 0.45f, 0.14f, floaty = true))
-                2 -> parts.add(VPart(ax, gy + Random.nextFloat() * 1.5f, az, (Random.nextFloat() - 0.5f) * 0.8f, 1.2f + Random.nextFloat() * 1.5f, 1.8f + Random.nextFloat() * 1.5f, 3f, 1f, 0.55f + 0.3f * Random.nextFloat(), 0.15f, 0.12f, floaty = true))
-                3 -> parts.add(VPart(ax, gy + 5f + Random.nextFloat() * 4f, az, 1.2f + Random.nextFloat(), -0.8f - Random.nextFloat() * 0.6f, 4f, 4f, 1f, 0.72f, 0.82f, 0.22f, floaty = true))
-                // neige avec RAFALES de vent : dérive latérale qui oscille lentement
-                4 -> parts.add(VPart(ax, gy + 6f + Random.nextFloat() * 5f, az, sin(elapsed * 0.7f) * 2.4f + (Random.nextFloat() - 0.5f) * 0.8f, -1.2f - Random.nextFloat() * 1.2f, 5f, 5f, 1f, 1f, 1f, 0.16f + Random.nextFloat() * 0.12f, floaty = true))
-                // pluie (forêt de nuit) : gouttes fines et rapides
-                5 -> {
-                    // gouttes = traînées étirées, surtout près de la caméra pour qu'on les voie bien
-                    repeat(4) {
-                        val rz = 12f + Random.nextFloat() * 40f
-                        parts.add(VPart((Random.nextFloat() - 0.5f) * 16f, groundY(dist + rz) + 2f + Random.nextFloat() * 6f, rz, 1.2f, -16f, 0.6f, 0.6f, 0.75f, 0.85f, 1f, 0.04f, floaty = true, streak = 16f))
-                    }
-                    // quelques lucioles restent sous la pluie
-                    if (Random.nextFloat() < 0.25f) parts.add(VPart(ax, gy + 0.4f + Random.nextFloat() * 2f, az, (Random.nextFloat() - 0.5f) * 0.6f, (Random.nextFloat() - 0.3f) * 0.5f, 2.5f + Random.nextFloat() * 2f, 4f, 1f, 0.95f, 0.45f, 0.14f, floaty = true))
-                }
-            }
-        }
-        if (passengerT > 0f) { passengerT -= dt; if (passengerT <= 0f) passengerKind = -1 }
-        if (giantT > 0f) { giantT -= dt; if (giantT <= 0f) endGiant() }
-        if (comboTimer > 0f) { comboTimer -= dt; if (comboTimer <= 0f) combo = 0 }
-        if (cannonT > 0f) {
-            cannonT -= dt; cannonCd -= dt
-            if (cannonCd <= 0f && !over) {
-                cannonCd = 0.16f
-                for (l in coveredLanes()) shots.add(VShot(PLAYER_Z + 1.5f, l))
-                ev("shot")
-            }
-        }
-
-        if (!over && sputter < 0f && !cleared && !inIntro) {
-            if (timeLimit > 0f) {
-                timeLeft -= dt
-                if (timeLeft <= 0f) { timeLeft = 0f; timeUp = true; over = true; ev("timeup") }
-            } else if (diff != 0) {
-                fuel -= dt * (if (diff == 2) 1.9f else 1.35f) * (if (turboT > 0f) 1.3f else 1f)
-                if (fuel <= 0f) { fuel = 0f; sputter = 0f; ev("sputter"); if (giant > 0) endGiant() }
-            }
-        }
-        if (sputter >= 0f) { sputter += dt; if (sputter > 2.8f && !over) { over = true; ev("over") } }
-        if (!endless && !cleared && dist >= LEVEL_LEN) { cleared = true; ev("clear") }
-        // paysage : 3 voies -> 5 à mi-course (700 m en sans fin), -> 7 loin en sans fin
-        if (wide && !over && !cleared) {
-            if (lanes == 3 && dist >= (if (endless) 700f else LEVEL_LEN / 2f)) widenTo(5)
-            else if (lanes == 5 && endless && dist >= 2500f) widenTo(7)
-        }
-
-        if (dist >= nextFlag && !cleared) {
-            decor.add(VDecor(120f, -(decorHalf + 0.8f), 0, flag = true)); decor.add(VDecor(120f, decorHalf + 0.8f, 0, flag = true))
-            texts.add(VText(0f, 4.5f, 30f, "${nextFlag.toInt()} m", 1.8f, V_GOLD, big = true))
-            for (d in decor) if (d.cheer >= 0) d.arms = 2.2f
-            ev("flag"); nextFlag += 500f
-        }
-
-        if (!over && sputter < 0f && !cleared && !inIntro) {
-            spawnCd -= dt * speedFactor
-            fuelSince += dt; starSince += dt; passengerSince += dt; cannonSince += dt; superSince += dt; hazardSince += dt; cheerCd -= dt
-            // cadence soutenue dès le départ (~1 chose toutes les 0,7 s à 18 m/s), puis un peu plus dense encore
-            if (spawnCd <= 0f) { spawnCd = (if (endless) 0.62f else 0.72f) - min(0.2f, dist / 8000f); spawnOne() }
-            if (cheerCd <= 0f) {
-                cheerCd = 2.5f + Random.nextFloat() * 3f
-                val side = if (Random.nextBoolean()) -1f else 1f
-                decor.add(VDecor(Z_FAR, side * (decorHalf + 1.0f), -1, cheer = Random.nextInt(CHEER_KEYS.size)))
-            }
-        }
-
-        // tirs de canons : avancent, détruisent ennemis et flaques
-        val sit = shots.iterator()
-        while (sit.hasNext()) {
-            val sh = sit.next(); sh.z += 70f * dt
-            if (sh.z > 220f) { sit.remove(); continue }
-            var hit = false
-            for (e in enemies) if (e.crushed < 0f && e.lane == sh.lane && abs(e.z - sh.z) < 2.5f) {
-                e.crushed = 0f; combo++; comboTimer = 2.6f
-                addScore(50, laneX(e.lane), e.z, V_ORANGE); burst(laneX(e.lane), e.z, 1f, 0.6f, 0.2f, 12)
-                ev("shotHit"); hit = true; break
-            }
-            if (!hit) { val pit0 = picks.iterator(); while (pit0.hasNext()) { val p = pit0.next(); if (p.type == VItem.PUDDLE && p.lane == sh.lane && abs(p.z - sh.z) < 2.5f) { pit0.remove(); burst(laneX(p.lane), p.z, 0.55f, 0.35f, 0.17f, 8); hit = true; break } } }
-            if (hit) sit.remove()
-        }
-
-        val eit = enemies.iterator()
-        while (eit.hasNext()) {
-            val e = eit.next()
-            e.z -= (sp - e.mps) * dt
-            if (e.bounce > 0f) { e.bounce -= dt; e.z += 14f * dt }
-            if (e.crushed >= 0f) { e.crushed += dt; if (e.crushed > 0.55f) { eit.remove(); continue } }
-            if (e.z < 0.5f || e.z > Z_FAR + 60f) { eit.remove(); continue }
-            if (e.crushed < 0f && e.z > PLAYER_Z - 1.6f && e.z < PLAYER_Z + 2.0f && e.lane in coveredLanes()) {
-                if (giant > 0) crush(e)
-                else if (airborne) { if (!trickDone) { trickDone = true; addScore(25, lx * LANE_M, PLAYER_Z, V_CYAN); texts.add(VText(lx * LANE_M, 4f, PLAYER_Z, trickLabel, 1.0f, V_CYAN, big = true)); ev("trick") } }
-                else if (invuln <= 0f) bump(e)
-            }
-        }
-        val pit = picks.iterator()
-        while (pit.hasNext()) {
-            val p = pit.next()
-            p.z -= dz; p.t += dt
-            // obstacle mobile (chat / rocher) : traverse la route, sort par l'autre côté
-            // il attend sur le bas-côté puis traverse quand il arrive à ~75 m, pour croiser le joueur
-            if (p.fDir != 0) {
-                if (p.z < 75f) p.fLane += p.fDir * dt * lanes / 3.2f
-                p.lane = Math.round(p.fLane)
-                if (p.fLane < -0.95f || p.fLane > lanes - 0.05f) { pit.remove(); continue }
-            }
-            if (p.z < 0.5f) { pit.remove(); continue }
-            if (p.z > PLAYER_Z - 1.4f && p.z < PLAYER_Z + 1.6f && p.lane in coveredLanes()) {
-                val ground = p.type == VItem.PUDDLE || p.type == VItem.TURBO
-                if (ground && airborne) continue
-                collect(p); pit.remove()
-            }
-        }
-        val dit = decor.iterator()
-        while (dit.hasNext()) {
-            val d = dit.next(); d.z -= dz
-            if (d.arms > 0f) d.arms -= dt
-            if (d.z < -3f) { if (d.kind >= 0 && d.cheer < 0 && !d.flag) d.z += Z_FAR + 40f + Random.nextFloat() * 8f else dit.remove() }
-        }
-        val prt = parts.iterator()
-        while (prt.hasNext()) {
-            val p = prt.next(); p.life -= dt
-            p.x += p.vx * dt; p.y += p.vy * dt; if (!p.floaty) p.vy -= 9f * dt; p.z -= dz * (if (p.floaty) 1f else 0.2f)
-            if (p.life <= 0f) prt.remove()
-        }
-        val tit = texts.iterator()
-        while (tit.hasNext()) { val t = tit.next(); t.life -= dt; t.y += 1.2f * dt; if (t.life <= 0f) tit.remove() }
-        textSnap = if (texts.isEmpty()) emptyList() else ArrayList(texts)
-    }
-
-    /** Atterrissage façon Mario Kart : écrasement, onde de choc qui détruit tout autour (sans points). */
-    private fun land() {
-        landedT = 0.25f; blastT = 0.5f; shake = max(shake, 14f); invuln = max(invuln, 0.6f)
-        var any = false
-        for (e in enemies) if (e.crushed < 0f && abs(e.z - PLAYER_Z) < 10f) { e.crushed = 0f; any = true; burst(laneX(e.lane), e.z, 1f, 0.85f, 0.4f, 8) }
-        val pit = picks.iterator()
-        while (pit.hasNext()) { val p = pit.next(); if (p.type == VItem.PUDDLE && abs(p.z - PLAYER_Z) < 10f) { pit.remove(); burst(laneX(p.lane), p.z, 0.55f, 0.35f, 0.17f, 6) } }
-        // nuage de poussière bas et large (pas de « boule de feu ») : particules terre + herbe qui roulent
-        val x = lx * LANE_M
-        if (parts.size < 150) repeat(26) {
-            val a = Random.nextFloat() * 2f * PI.toFloat(); val s = 3f + Random.nextFloat() * 5f
-            val gy = groundY(dist + PLAYER_Z) + 0.15f
-            val k = Random.nextFloat()
-            parts.add(VPart(x + cos(a) * 0.8f, gy, PLAYER_Z + sin(a) * 0.8f, cos(a) * s, 0.8f + Random.nextFloat() * 1.6f, 0.45f + Random.nextFloat() * 0.35f, 0.8f,
-                0.55f + 0.2f * k, 0.45f + 0.25f * k, 0.3f + 0.15f * k, 0.35f + Random.nextFloat() * 0.35f))
-        }
-        ev(if (any) "landBlast" else "land")
-    }
-
-    private fun spawnOne() {
-        val lane = Random.nextInt(lanes)
-        val z = 160f
-        val wantEnemy = startGrace <= 0f && Random.nextFloat() < (when (diff) { 0 -> 0.34f; 2 -> 0.62f; else -> 0.5f })
-        if (wantEnemy) {
-            val near = enemies.count { abs(it.z - z) < 18f }
-            if (near <= 1 && enemies.none { it.lane == lane && abs(it.z - z) < 26f }) {
-                enemies.add(VEnemy(lane, z, Random.nextInt(ENEMY_KEYS.size), 6f + Random.nextFloat() * 5f)); return
-            }
-        }
-        val type = when {
-            fuel < 30f && fuelSince > 3.5f -> VItem.FUEL
-            starSince > 16f && Random.nextFloat() < 0.35f -> VItem.STAR
-            cannonSince > 20f && cannonT <= 0f && Random.nextFloat() < 0.35f -> VItem.CANNON
-            superSince > 22f && superT <= 0f && Random.nextFloat() < 0.4f -> VItem.SUPERBOOST
-            hazardsOn && hazardSince > (if (diff == 2) 2.5f else 4f) && Random.nextFloat() < 0.45f -> { hazardSince = 0f; if (Random.nextBoolean()) VItem.HOLE else VItem.LOG }
-            passengerKind < 0 && passengerSince > 18f && Random.nextFloat() < 0.4f -> VItem.PASSENGER
-            else -> {
-                val r = Random.nextFloat()
-                val puddleCut = if (theme.ambient == 5) 0.80f else 0.88f   // nuit pluvieuse : deux fois plus de flaques
-                when {
-                    r < 0.26f -> VItem.ACORN
-                    r < 0.42f -> VItem.MUSHROOM
-                    r < 0.54f -> VItem.BERRY
-                    r < 0.66f && fuelSince > 6f -> VItem.FUEL
-                    r < puddleCut -> VItem.TURBO       // boosts nettement plus fréquents
-                    else -> VItem.PUDDLE
-                }
-            }
-        }
-        if (type == VItem.FUEL) fuelSince = 0f
-        if (type == VItem.STAR) starSince = 0f
-        if (type == VItem.SUPERBOOST) superSince = 0f
-        if (type == VItem.CANNON) cannonSince = 0f
-        if (type == VItem.PASSENGER) passengerSince = 0f
-        if (picks.none { it.lane == lane && abs(it.z - z) < 12f }) {
-            val p = VPick(lane, z, type, Random.nextInt(3))
-            // à Tokyo (chat) et au Volcan (rocher), l'obstacle « tronc » TRAVERSE la route
-            if (type == VItem.LOG && (theme.key == "tokyo" || theme.key == "volcano")) {
-                p.fDir = if (Random.nextBoolean()) 1 else -1
-                p.fLane = if (p.fDir > 0) -0.9f else lanes - 0.1f
-                p.lane = Math.round(p.fLane)
-            }
-            picks.add(p)
-        }
-    }
-
-    private fun addScore(n: Int, x: Float, z: Float, col: Color) {
-        val v = n * mult * (if (passengerKind >= 0) 2 else 1)
-        score += v
-        texts.add(VText(x, 2.2f, z, "+$v", 0.9f, col))
-    }
-
-    private fun collect(p: VPick) {
-        val x = laneX(p.lane); val z = p.z
-        when (p.type) {
-            VItem.FUEL -> { fuel = min(100f, fuel + 35f); ev("fuel"); burst(x, z, 1f, 0.25f, 0.25f, 10); texts.add(VText(x, 2.2f, z, "+35", 0.9f, V_GREEN)) }
-            VItem.STAR -> { startGiant(); addScore(50, x, z, V_GOLD); burst(x, z, 1f, 0.82f, 0.3f, 24) }
-            VItem.CANNON -> { cannonT = 8f; cannonCd = 0f; ev("cannon"); texts.add(VText(x, 2.6f, z, cannonLabel, 1.2f, V_CYAN, big = true)); burst(x, z, 0.3f, 0.85f, 1f, 16) }
-            VItem.ACORN -> { addScore(10, x, z, V_GOLD); ev("pick1"); burst(x, z, 0.75f, 0.5f, 0.25f, 6) }
-            VItem.MUSHROOM -> { addScore(20, x, z, V_GOLD); ev("pick2"); burst(x, z, 1f, 0.25f, 0.25f, 6) }
-            VItem.BERRY -> { addScore(30, x, z, V_GOLD); ev("pick3"); burst(x, z, 0.42f, 0.49f, 1f, 6) }
-            VItem.TURBO -> { turboT = max(turboT, 3f); ev("turbo"); texts.add(VText(x, 2.2f, z, "TURBO!", 1.0f, V_CYAN)); shake = max(shake, 6f) }
-            VItem.SUPERBOOST -> { superT = 6f; turboT = max(turboT, 6f); ev("superboost"); texts.add(VText(x, 3.0f, z, superLabel, 1.6f, V_GOLD, big = true)); burst(x, z, 1f, 0.85f, 0.2f, 30); shake = max(shake, 12f); invuln = max(invuln, 6f) }
-            VItem.HOLE, VItem.LOG -> {
-                if (airborne || jumping) { addScore(20, x, z, V_CYAN); texts.add(VText(x, 3.2f, z, jumpedLabel, 1.0f, V_CYAN, big = true)); ev("trick") }
-                else if (giant > 0) { burst(x, z, 0.6f, 0.4f, 0.25f, 12); ev("crush") }
-                else if (invuln <= 0f) {
-                    // tombé dans le trou / heurté le tronc : gros cahot, on perd du temps (Course) ou de l'essence (Arcade)
-                    if (diff != 0) { if (timeLimit > 0f) timeLeft = max(0.5f, timeLeft - (if (diff == 2) 5f else 3f)) else fuel = max(0f, fuel - (if (diff == 2) 25f else 15f)); combo = 0; comboTimer = 0f }
-                    invuln = 1.2f; shake = max(shake, 14f); slideT = 0.5f; slideDir = if (Random.nextBoolean()) 1 else -1
-                    burst(x, z, 0.5f, 0.4f, 0.3f, 14); ev("bump")
-                }
-            }
-            VItem.PUDDLE -> if (giant == 0) {
-                slideT = 0.7f; slideDir = if (lane <= laneLo) 1 else if (lane >= laneHi) -1 else (if (Random.nextBoolean()) 1 else -1)
-                lane = (lane + slideDir).coerceIn(laneLo, laneHi)
-                ev("splash"); burst(x, z, 0.55f, 0.35f, 0.17f, 10)
-            }
-            VItem.PASSENGER -> {
-                passengerKind = p.variant % PASSENGER_KEYS.size; passengerT = 10f
-                ev("passenger"); texts.add(VText(x, 2.4f, z, "x2!", 1.1f, V_PINK, big = true)); burst(x, z, 1f, 0.36f, 0.64f, 12)
-            }
-        }
-    }
-
-    private fun startGiant() {
-        if (giant == 0) { giant = 1; giantT = 8f; ev("giant1") } else { giant = 2; giantT = max(giantT, 6f) + 3f; ev("giant2") }
-        invuln = max(invuln, 0.5f); shake = max(shake, 10f)
-    }
-    private fun endGiant() {
-        if (giant == 0) return
-        giant = 0; giantT = 0f
-        val x = lx * LANE_M
-        burst(x, PLAYER_Z, 1f, 0.82f, 0.3f, 40); burst(x, PLAYER_Z, 1f, 0.36f, 0.64f, 30); burst(x, PLAYER_Z, 0.29f, 0.88f, 1f, 30)
-        shake = 16f; invuln = 1.2f
-        ev("giantEnd")
-    }
-    private fun crush(e: VEnemy) {
-        e.crushed = 0f; combo++; comboTimer = 2.6f
-        addScore(100, laneX(e.lane), e.z, V_PINK); burst(laneX(e.lane), e.z, 1f, 0.82f, 0.3f, 14)
-        shake = max(shake, 7f); ev("crush")
-        if (combo % 5 == 0) { ev("cheer"); for (d in decor) if (d.cheer >= 0) d.arms = 1.8f }
-    }
-    private fun bump(e: VEnemy) {
-        // Facile : invincible -> simple rebond, rien perdu. Sinon : du TEMPS en Course, de l'ESSENCE en Arcade.
-        if (diff != 0) {
-            if (timeLimit > 0f) timeLeft = max(0.5f, timeLeft - (if (diff == 2) 5f else 3f))
-            else fuel = max(0f, fuel - (if (diff == 2) 25f else 15f))
-            combo = 0; comboTimer = 0f
-        }
-        invuln = 1.1f; e.bounce = 0.6f
-        shake = max(shake, 9f)
-        burst(laneX(e.lane), e.z, 1f, 1f, 1f, 8)
-        ev("bump")
-    }
-    private fun burst(x: Float, z: Float, r: Float, g: Float, b: Float, n: Int) {
-        if (parts.size > 160) return
-        val gy = groundY(dist + z) + 1f
-        repeat(n) {
-            val a = Random.nextFloat() * 2f * PI.toFloat(); val s = 2f + Random.nextFloat() * 4f
-            parts.add(VPart(x, gy, z, cos(a) * s, abs(sin(a)) * s + 2f, 0.5f + Random.nextFloat() * 0.4f, 0.9f, r, g, b, 0.18f + Random.nextFloat() * 0.2f))
-        }
-    }
 }
 
 // ---------------------------------------------------------------------------
@@ -759,10 +143,11 @@ fun VroumScreen(onBack: () -> Unit) {
     val trickLabel = stringResource(R.string.vroum_trick); val cannonLabel = stringResource(R.string.vroum_cannons)
     val lanesLabel = stringResource(R.string.vroum_lanes); val superLabel = stringResource(R.string.vroum_superboost)
     val jumpedLabel = stringResource(R.string.vroum_jumped)
+    val nearLabel = stringResource(R.string.vroum_near); val maxLabel = stringResource(R.string.vroum_flow_max)
     val game = remember(runToken) {
         if (phase != VPhase.PLAYING) null
         else VroumGame(endless, vehicle, diff, THEMES[themeIdx], trickLabel, cannonLabel).also { g ->
-            g.lanesLabel = lanesLabel; g.superLabel = superLabel; g.jumpedLabel = jumpedLabel
+            g.lanesLabel = lanesLabel; g.superLabel = superLabel; g.jumpedLabel = jumpedLabel; g.nearLabel = nearLabel; g.maxLabel = maxLabel
             // charge le fantôme pour ce circuit / cette difficulté : meilleur temps en Course, distance max en Arcade
             Settings.vroumGhost(if (endless) "${THEMES[themeIdx].key}_a$diff" else "${THEMES[themeIdx].key}_$diff")?.let { s ->
                 val p = s.split(";")
@@ -813,7 +198,7 @@ fun VroumScreen(onBack: () -> Unit) {
         resRecord = g.diff >= 1 && g.score > 0 && g.score > best
         if (g.diff >= 1) HighScores.record(gameKey, g.score)
         // étoiles mémorisées par circuit + mode + difficulté (affichées sur les cartes)
-        Settings.setVroumStars("${g.theme.key}_${if (g.endless) "a" else "c"}${g.diff}", vroumStarCount(g.endless, cleared, g.score, g.dist.toInt()))
+        Settings.setVroumStars("${g.theme.key}_${if (g.endless) "a" else "c"}${g.diff}", vroumStarCount(g.endless, cleared, g.score, g.dist.toInt(), g.diff))
         // fantôme : en Course ma trace remplace l'ancienne si je finis plus vite ; en Arcade si je vais plus loin
         if (!g.endless && cleared) {
             val key = "${g.theme.key}_${g.diff}"
@@ -873,6 +258,9 @@ fun VroumScreen(onBack: () -> Unit) {
                         "land" -> SoundEngine.playLand()
                         "landBlast" -> { SoundEngine.playBoom(); SoundEngine.playVvYahoo(); Haptics.tap(ctx) }
                         "trick" -> SoundEngine.playVvCoin()
+                        // frôlement : petit « ding » aigu + vibration courte ; élan au maximum : fanfare brève
+                        "near" -> { SoundEngine.playVvTick(1.5f); SoundEngine.playVvCoin(); Haptics.tap(ctx) }
+                        "flowMax" -> SoundEngine.playVvSuccess()
                         "horn" -> hornFor(g.vehicle)
                         "bump" -> { SoundEngine.playBump(); Haptics.tap(ctx) }
                         "crush" -> { SoundEngine.playCrush(); Haptics.tap(ctx) }
@@ -901,7 +289,7 @@ fun VroumScreen(onBack: () -> Unit) {
                 }
                 if (countdown == 0 && g.introT <= 0f && g.elapsed > VroumGame.INTRO_DUR + 1.1f) countdown = -1
                 engineCd -= 1f / 60f
-                if (engine != 0 && engineCd <= 0f) { engineCd = 0.15f; Sfx.setStreamRate(engine, 0.85f + 0.55f * g.speedFactor + (if (g.turboT > 0f) 0.3f else 0f)) }
+                if (engine != 0 && engineCd <= 0f) { engineCd = 0.15f; Sfx.setStreamRate(engine, 0.75f + g.mps / 34f + (if (g.turboT > 0f) 0.15f else 0f)) }   // le moteur monte dans les tours avec l'élan
                 tick++
                 if (phase != VPhase.PLAYING) break
             }
@@ -1134,7 +522,7 @@ private fun CountdownOverlay(count: Int) {
 @Composable
 private fun ResultScreen(spr: VSprites, cleared: Boolean, score: Int, dist: Int, record: Boolean, endless: Boolean, diff: Int, timeUp: Boolean, vehicleImg: ImageBitmap?, best: Int, bg: ImageBitmap?,
                          onReplay: () -> Unit, onOther: () -> Unit, onVehicle: () -> Unit) {
-    val stars = vroumStarCount(endless, cleared, score, dist)
+    val stars = vroumStarCount(endless, cleared, score, dist, diff)
     var t by remember { mutableStateOf(0f) }
     LaunchedEffect(Unit) { var last = 0L; while (t < 30f) { val now = withFrameNanos { it }; if (last != 0L) t += (now - last) / 1e9f; last = now } }
     val shownScore = (score * (t / 1.4f).coerceIn(0f, 1f)).toInt()
@@ -1288,8 +676,10 @@ private fun DuelScreen(themeIdx: Int, vehicle: Int, onBack: () -> Unit) {
     val trickLabel = stringResource(R.string.vroum_trick); val cannonLabel = stringResource(R.string.vroum_cannons)
     // joueur 2 : un bolide différent de celui du joueur 1, au hasard
     val veh2 = remember(runToken) { (vehicle + 1 + Random.nextInt(VEHICLES.size - 1)) % VEHICLES.size }
-    val g1 = remember(runToken) { VroumGame(false, vehicle, 0, THEMES[themeIdx], trickLabel, cannonLabel, duel = true) }
-    val g2 = remember(runToken) { VroumGame(false, veh2, 0, THEMES[themeIdx], trickLabel, cannonLabel, duel = true) }
+    // même graine : les deux joueurs ont exactement la même route, c'est la conduite qui fait la différence
+    val seed = remember(runToken) { Random.nextLong() }
+    val g1 = remember(runToken) { VroumGame(false, vehicle, 0, THEMES[themeIdx], trickLabel, cannonLabel, duel = true, seed = seed) }
+    val g2 = remember(runToken) { VroumGame(false, veh2, 0, THEMES[themeIdx], trickLabel, cannonLabel, duel = true, seed = seed) }
     val v1 = remember(g1) { VroumGlView(ctx, g1) }
     val v2 = remember(g2) { VroumGlView(ctx, g2) }
     DisposableEffect(v1, v2) { onDispose { v1.onPause(); v2.onPause() } }
@@ -1499,15 +889,26 @@ private fun VroumHud(g: VroumGame, frame: Int) {
                 }
             }
         }
-        if (g.combo > 0) {
-            Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.clip(RoundedCornerShape(14.dp)).background(V_PINK).padding(horizontal = 10.dp, vertical = 2.dp)) {
-                    Text("x${g.mult}", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
+        // ÉLAN : compteur de vitesse (km/h) + jauge qui se remplit quand on roule proprement et se vide sur un choc ;
+        // à droite la SÉRIE (multiplicateur de points) quand elle est lancée.
+        Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            val hot = g.flow >= 0.999f
+            Row(Modifier.width(150.dp).height(30.dp).clip(RoundedCornerShape(15.dp)).background(Color(0x77000000)).padding(start = 8.dp, end = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("⚡", fontSize = 14.sp, modifier = Modifier.padding(end = 5.dp))
+                Box(Modifier.weight(1f).height(10.dp).clip(RoundedCornerShape(5.dp)).background(Color(0x55FFFFFF))) {
+                    Box(Modifier.fillMaxWidth(g.flow.coerceIn(0.02f, 1f)).fillMaxHeight().background(
+                        if (hot && (g.elapsed * 6f).toInt() % 2 == 0) Brush.horizontalGradient(listOf(Color.White, V_GOLD)) else Brush.horizontalGradient(listOf(V_CYAN, V_GOLD, V_ORANGE))))
                 }
-                Box(Modifier.padding(start = 8.dp).weight(1f).height(12.dp).clip(RoundedCornerShape(6.dp)).background(Color(0x55000000))) {
-                    Box(Modifier.fillMaxWidth((g.comboTimer / 2.6f).coerceIn(0f, 1f)).height(12.dp).background(Brush.horizontalGradient(listOf(V_PINK, V_GOLD))))
+                Text("${g.kmh}", color = if (hot) V_GOLD else Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 14.sp, modifier = Modifier.padding(start = 6.dp))
+            }
+            if (g.combo > 0) {
+                Box(Modifier.padding(start = 8.dp).clip(RoundedCornerShape(14.dp)).background(if (g.mult > 1) V_PINK else Color(0x77000000)).padding(horizontal = 10.dp, vertical = 2.dp)) {
+                    Text("x${g.mult}", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = (15 + g.mult).sp)
                 }
-                Text(" ${g.combo}", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                Box(Modifier.padding(start = 6.dp).weight(1f).height(10.dp).clip(RoundedCornerShape(5.dp)).background(Color(0x55000000))) {
+                    Box(Modifier.fillMaxWidth((g.comboTimer / VroumGame.COMBO_T).coerceIn(0f, 1f)).height(10.dp).background(Brush.horizontalGradient(listOf(V_PINK, V_GOLD))))
+                }
+                Text(" ${g.combo}", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
             }
         }
     }

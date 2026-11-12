@@ -255,11 +255,11 @@
     <string name="gz_bees_hint">Осторожно, осиные гнёзда!</string>
     <string name="vroum_difficulty">Сложность</string>
     <string name="vroum_diff_easy">Легко</string>
-    <string name="vroum_diff_easy_desc">Тебя ничто не остановит</string>
+    <string name="vroum_diff_easy_desc">Удары только замедляют</string>
     <string name="vroum_diff_medium">Средне</string>
-    <string name="vroum_diff_medium_desc">Настоящая игра</string>
+    <string name="vroum_diff_medium_desc">Езжай чисто — будешь быстрее</string>
     <string name="vroum_diff_hard">Сложно</string>
-    <string name="vroum_diff_hard_desc">Быстро · для взрослых</string>
+    <string name="vroum_diff_hard_desc">Быстро · без права на ошибку</string>
     <string name="vroum_time_left">Время</string>
     <string name="vroum_lanes">ПОЛОСЫ!</string>
     <string name="vroum_theme_night">Ночной лес</string>
@@ -272,7 +272,7 @@
     <string name="vroum_race">Гонка</string>
     <string name="vroum_route">Трасса</string>
     <string name="vroum_vehicle">Машина</string>
-    <string name="vroum_mode_race_hint">Доберись до деревни, пока не вышло время!</string>
+    <string name="vroum_mode_race_hint">Езжай чисто, набирай скорость и доберись до деревни, пока не вышло время!</string>
     <string name="vroum_mode_arcade_hint">Проезжай как можно дальше: игра кончается, когда кончается бензин.</string>
     <string name="vroum_duel">2 игрока</string>
     <string name="vroum_duel_hint">У каждого своя половина экрана: побеждает тот, кто первым доедет до деревни!</string>
@@ -291,6 +291,11 @@
     <string name="vroum_v_excavator">Экскаватор</string>
     <string name="vroum_v_bear">Медведь</string>
     <string name="vroum_jumped">Перепрыгнул!</string>
+    <string name="vroum_near">Впритирку!</string>
+    <string name="vroum_flow_max">Полный газ!</string>
+    <string name="vroum_res_time">Остаток времени: +%1$d</string>
+    <string name="vroum_res_combo">Лучшая серия: %1$d</string>
+    <string name="vroum_res_near">Впритирку: %1$d</string>
     <string name="gz_rotate_hint">↔️ Проведи внизу экрана, чтобы повернуть растение</string>
     <string name="crash_title">Отчёт о сбое</string>
     <string name="crash_share">Поделиться</string>

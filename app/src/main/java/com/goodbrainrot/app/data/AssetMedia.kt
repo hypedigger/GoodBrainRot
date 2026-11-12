@@ -28,10 +28,28 @@ fun loadBabyImage(context: Context, key: String): ImageBitmap? =
 fun loadContentImage(context: Context, folder: String, key: String): ImageBitmap? =
     loadAssetImage(context, folder, key)
 
+private val folderListing = HashMap<String, List<String>>()
+
+/**
+ * Fichiers image d'une clé : `<key>.<ext>` plus d'éventuelles variantes `<key>__2.<ext>`, `<key>__3.<ext>`…
+ * (plusieurs photos d'un même mot, tirées au hasard à chaque affichage).
+ */
+private fun imageVariants(context: Context, folder: String, key: String): List<String> {
+    val files = synchronized(folderListing) {
+        folderListing.getOrPut(folder) {
+            try { (context.assets.list(folder) ?: emptyArray()).toList() } catch (_: Exception) { emptyList() }
+        }
+    }
+    return files.filter { f ->
+        val base = f.substringBeforeLast('.')
+        f.substringAfterLast('.').lowercase() in IMAGE_EXTENSIONS && (base == key || base.startsWith("${key}__"))
+    }
+}
+
 private fun loadAssetImage(context: Context, folder: String, key: String): ImageBitmap? {
-    for (ext in IMAGE_EXTENSIONS) {
+    for (f in imageVariants(context, folder, key).shuffled()) {
         try {
-            context.assets.open("$folder/$key.$ext").use { input ->
+            context.assets.open("$folder/$f").use { input ->
                 BitmapFactory.decodeStream(input)?.let { return it.asImageBitmap() }
             }
         } catch (_: Exception) {

@@ -12,7 +12,7 @@ Instruments, picture quizzes, mini-games and drawing, wrapped in a colorful hub 
 - 🖼️ **Recognize** — guess the animal (~200 of them), vehicle or dinosaur from a photo, plus 24 hand-drawn flags and 18 jobs; names in FR/EN/IT/ES/RU from Wikidata, photos from Wikipedia/Commons (fully credited in [`CREDITS-ASSETS.md`](CREDITS-ASSETS.md)).
 - 🔤 **Guess** — letters, numbers, colors, shapes, counting.
 - 👂 **Listen** — animal cries, vehicle sounds and "which instrument is playing?" quizzes; every quiz has a spaced-repetition review mode.
-- 🎮 **Games** — bubble popping, star rain, a cute shmup (with score attack and boss rush), a 3D race (5 tracks with weather, ghost racer, 2-player split screen), a zen gardener — plus a trophy wall gathering stars and dated records.
+- 🎮 **Games** — bubble popping, star rain, a cute shmup (with score attack and boss rush), a 3D race (5 tracks with weather, hand-designed road patterns, momentum that builds when you drive clean, close-call bonuses, ghost racer, 2-player split screen), a zen gardener — plus a trophy wall gathering stars and dated records.
 - 🎨 **Create** — finger drawing.
 - 👨‍👩‍👧 **Parent corner** (behind a 3-second gate): screen-time view, per-category mastery, "classic → exotic" spaced introduction of new items.
 - 👶 **Baby mode** pins the screen so random taps can't leave the app.

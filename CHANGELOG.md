@@ -1,5 +1,14 @@
 # Nouveautés — GoodBrainRot
 
+## 3.93 — 2026-11-13
+- **Vroum — refonte du cœur du jeu : l'ÉLAN.** Avant, la vitesse était constante : bien ou mal conduire ne changeait presque rien. Maintenant, **rouler proprement fait accélérer** (jauge ⚡ + compteur en km/h, le moteur monte dans les tours, le champ de vision s'ouvre) et **un choc fait retomber la vitesse**. Plus de « −3 secondes » abstraites : la punition, c'est l'élan perdu.
+- **Route composée à la main** au lieu d'objets tirés au hasard : ~30 motifs (lignes de pièces qui montrent le chemin, voiture à contourner, mur avec un passage, slalom, convoi, tronc à sauter, pièce en or cachée derrière une voiture…) enchaînés selon une courbe d'intensité : échauffement → montée → moment fort → respiration → sprint final. Le temps de réaction reste le même quand on va plus vite.
+- **Bonus placés au bon moment** : passager ×2 avant une zone riche en pièces, étoile géante suivie d'une file de voitures à écraser, canons devant un embouteillage, super boost pour le sprint final. Les bidons d'essence n'apparaissent plus en Course (ils n'y servaient à rien).
+- **« Frôlé ! »** : rester derrière une voiture jusqu'au dernier moment puis l'esquiver rapporte des points et de l'élan. **Série** : chaque pièce ramassée, voiture écrasée ou frôlement fait monter le multiplicateur (jusqu'à ×5) ; un choc la casse.
+- **Difficultés recalibrées par simulation** (des robots « enfant », « moyen » et « expert » jouent des centaines de parties) : **Facile** se finit toujours (~1 min 20, les chocs ne font que ralentir) ; **Moyen** demande de rouler propre (chrono 74 s) ; **Difficile** ne pardonne presque rien (chrono 60 s). Étoiles : 1 = arrivé, 2 et 3 selon le score (pièces + série + temps restant).
+- **Arcade** : la vitesse maximale monte avec la distance, les bidons s'espacent à chaque vague ; l'Arcade Facile avait un bug (aucune fin possible), il se termine maintenant en douceur.
+- **2 joueurs** : les deux ont exactement la même route, et comme la vitesse dépend de la conduite, c'est enfin une vraie course.
+- Technique : moteur du jeu séparé de l'écran (`VroumGame.kt`), banc d'équilibrage `VroumBalanceTest`. Les images de contenu acceptent plusieurs variantes par mot (`voiture.jpg`, `voiture__2.jpg`… tirées au hasard).
 ## 3.92 — 2026-11-05
 - **Sons des véhicules refaits entièrement** : les 36 anciens enregistrements (pris au hasard : musique pour la voiture, sifflet de train pour le tracteur…) sont remplacés par **24 enregistrements choisis un par un** et vérifiés (Wikimedia Commons, licences libres) : moteur et klaxon de voiture, sirènes de pompiers / police / ambulance, klaxons de train et de bateau, avion à réaction, hélicoptère, sonnettes de vélo, bus, tracteur, moto.
 - **La fusée** a enfin un vrai son : décollages de la navette Discovery et d'Artemis II (NASA, domaine public) au lieu de la petite musique synthétique.

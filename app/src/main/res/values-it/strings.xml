@@ -255,11 +255,11 @@
     <string name="gz_bees_hint">Attenzione ai nidi di api!</string>
     <string name="vroum_difficulty">Difficoltà</string>
     <string name="vroum_diff_easy">Facile</string>
-    <string name="vroum_diff_easy_desc">Niente può fermarti</string>
+    <string name="vroum_diff_easy_desc">Gli urti ti rallentano e basta</string>
     <string name="vroum_diff_medium">Medio</string>
-    <string name="vroum_diff_medium_desc">Il vero gioco</string>
+    <string name="vroum_diff_medium_desc">Guida pulito per andare veloce</string>
     <string name="vroum_diff_hard">Difficile</string>
-    <string name="vroum_diff_hard_desc">Veloce · per i grandi</string>
+    <string name="vroum_diff_hard_desc">Veloce · nessun errore concesso</string>
     <string name="vroum_time_left">Tempo</string>
     <string name="vroum_lanes">CORSIE!</string>
     <string name="vroum_theme_night">Foresta di notte</string>
@@ -272,7 +272,7 @@
     <string name="vroum_race">Gara</string>
     <string name="vroum_route">Percorso</string>
     <string name="vroum_vehicle">Bolide</string>
-    <string name="vroum_mode_race_hint">Arriva al villaggio prima che finisca il tempo!</string>
+    <string name="vroum_mode_race_hint">Guida pulito per prendere velocità e arriva al villaggio prima che finisca il tempo!</string>
     <string name="vroum_mode_arcade_hint">Guida più lontano possibile: finisce quando non c\'è più benzina.</string>
     <string name="vroum_duel">2 giocatori</string>
     <string name="vroum_duel_hint">Metà schermo a testa: vince chi arriva primo al villaggio!</string>
@@ -291,6 +291,11 @@
     <string name="vroum_v_excavator">Scavatrice</string>
     <string name="vroum_v_bear">Orso</string>
     <string name="vroum_jumped">Saltato!</string>
+    <string name="vroum_near">Sfiorato!</string>
+    <string name="vroum_flow_max">A tutta!</string>
+    <string name="vroum_res_time">Tempo rimasto: +%1$d</string>
+    <string name="vroum_res_combo">Serie migliore: %1$d</string>
+    <string name="vroum_res_near">Sfiorate: %1$d</string>
     <string name="gz_rotate_hint">↔️ Scorri in basso per girare la pianta</string>
     <string name="crash_title">Rapporto di arresto</string>
     <string name="crash_share">Condividi</string>

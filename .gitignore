@@ -21,6 +21,7 @@ _Lauch/qr.html
 # infra perso (lanceur reseau local, serveur d'APK, acces distant) et docs de travail
 _Lauch/
 scripts/apk_server.ps1
+scripts/web/
 scripts/setup_remote.ps1
 docs/VIBE_CODING_MOBILE.md
 TUTORIEL.md

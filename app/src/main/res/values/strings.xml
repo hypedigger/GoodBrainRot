@@ -264,11 +264,11 @@
     <string name="gz_bees_hint">Watch out for bee nests!</string>
     <string name="vroum_difficulty">Difficulty</string>
     <string name="vroum_diff_easy">Easy</string>
-    <string name="vroum_diff_easy_desc">Nothing can hurt you</string>
+    <string name="vroum_diff_easy_desc">Bumps only slow you down</string>
     <string name="vroum_diff_medium">Medium</string>
-    <string name="vroum_diff_medium_desc">The real deal</string>
+    <string name="vroum_diff_medium_desc">Drive clean to go fast</string>
     <string name="vroum_diff_hard">Hard</string>
-    <string name="vroum_diff_hard_desc">Fast · for grown-ups</string>
+    <string name="vroum_diff_hard_desc">Fast · no mistakes allowed</string>
     <string name="vroum_time_left">Time</string>
     <string name="vroum_lanes">LANES!</string>
     <string name="vroum_theme_night">Night forest</string>
@@ -281,7 +281,7 @@
     <string name="vroum_race">Race</string>
     <string name="vroum_route">Route</string>
     <string name="vroum_vehicle">Ride</string>
-    <string name="vroum_mode_race_hint">Reach the village before time runs out!</string>
+    <string name="vroum_mode_race_hint">Drive clean to build speed and reach the village before time runs out!</string>
     <string name="vroum_mode_arcade_hint">Drive as far as you can: it ends when the fuel is gone.</string>
     <string name="vroum_duel">2 players</string>
     <string name="vroum_duel_hint">Half the screen each: first to reach the village wins!</string>
@@ -300,6 +300,11 @@
     <string name="vroum_v_excavator">Digger</string>
     <string name="vroum_v_bear">Bear</string>
     <string name="vroum_jumped">Jumped!</string>
+    <string name="vroum_near">Close call!</string>
+    <string name="vroum_flow_max">Full speed!</string>
+    <string name="vroum_res_time">Time left: +%1$d</string>
+    <string name="vroum_res_combo">Best streak: %1$d</string>
+    <string name="vroum_res_near">Close calls: %1$d</string>
     <string name="gz_rotate_hint">↔️ Slide at the bottom to turn the plant</string>
     <string name="crash_title">Crash report</string>
     <string name="crash_share">Share</string>
