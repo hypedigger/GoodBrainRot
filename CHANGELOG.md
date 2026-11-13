@@ -1,5 +1,9 @@
 # Nouveautés — GoodBrainRot
 
+## 4.07 — 2026-11-13
+- **Vroum — figures en l'air.** Sur un ressort, un anneau doré s'allume autour du bouton SAUT : le retaper pendant le vol fait une **VRILLE** (le bolide tourne deux fois sur lui-même) qui remplit plus d'un demi-segment de boost. Une figure par saut.
+- **Vroum — ralenti sur les gros coups.** Un takedown ×3, un strike, une revanche ou une vrille déclenchent un court ralenti avec deux bandes de cinéma (au plus un toutes les 4 secondes).
+- **Vroum — statistiques par bolide.** Chaque bolide a trois notes sur 5, affichées dans le garage : **vitesse** (plafond de vitesse), **accélération** (l'élan monte plus vite) et **poids** (on garde plus d'élan après un choc et en percutant). La moto et la fusée sont rapides et fragiles, le monster truck, le char et la pelleteuse lents et costauds.
 ## 4.06 — 2026-11-13
 - **Vroum — trois missions par circuit.** Chaque circuit a ses missions (finir sur le podium ou gagner, un nombre de takedowns, et un défi d'adresse qui change : pièces, aspirations, rebonds, aucun accident, frôlements, départ canon, série). Elles s'affichent sur l'écran du circuit et se cochent à l'arrivée ; chacune rapporte 30 pièces.
 - **Vroum — coffre surprise.** À la fin de chaque coupe, un coffre à toucher : il s'ouvre sur un autocollant (le plus souvent) ou un tas de pièces.

@@ -228,6 +228,28 @@ class VroumBalanceTest {
     }
 
     @Test
+    fun tapping_jump_again_on_a_spring_jump_does_one_spin() {
+        val g = emptyRoad()
+        g.picks.add(VPick(1, VroumGame.PLAYER_Z + 6f, VItem.RAMP, 0))
+        var seen = false
+        run(g, 0.6f) { if (!seen && it.canTrick) { seen = true; it.jump(); it.jump() } }      // deux tapes : une seule figure
+        org.junit.Assert.assertTrue("ressort pris, figure possible", seen)
+        org.junit.Assert.assertEquals(1, g.flips)
+    }
+
+    @Test
+    fun heavy_rides_keep_more_momentum_after_a_crash() {
+        fun crash(vehicle: Int): Float {
+            val g = VroumGame(false, vehicle, 1, THEMES[0], "T", "C", seed = 42L, cast = intArrayOf())
+            repeat(60 * 14) { g.update(1f / 60f); g.enemies.clear(); g.picks.clear() }
+            val before = g.flow
+            g.enemies.add(VEnemy(1, VroumGame.PLAYER_Z + 8f, 0, -20f).also { it.oncoming = true })
+            repeat(60) { g.update(1f / 60f); g.picks.clear() }
+            return g.flow / before
+        }
+        org.junit.Assert.assertTrue("le monster truck (poids 5) garde plus d'élan que la moto (poids 1)", crash(1) > crash(3) + 0.05f)
+    }
+    @Test
     fun balance() {
         val n = 120
         val sb = StringBuilder("\n=== VROUM — équilibrage ($n parties par case) ===\n")

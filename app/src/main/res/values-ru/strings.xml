@@ -519,4 +519,8 @@
     <string name="vroum_album_circuits_how">Выполни 3 задания на трассе</string>
     <string name="vroum_album_cups_how">Выиграй кубок</string>
     <string name="vroum_album_surprise_how">Спрятаны в сундуке в конце каждого кубка</string>
+    <string name="vroum_flip">ВРАЩЕНИЕ!</string>
+    <string name="vroum_stat_speed">Скорость</string>
+    <string name="vroum_stat_accel">Разгон</string>
+    <string name="vroum_stat_weight">Вес</string>
 </resources>

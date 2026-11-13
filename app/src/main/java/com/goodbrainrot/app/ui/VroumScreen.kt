@@ -173,13 +173,13 @@ fun VroumScreen(onBack: () -> Unit) {
     val jumpedLabel = stringResource(R.string.vroum_jumped)
     val nearLabel = stringResource(R.string.vroum_near); val maxLabel = stringResource(R.string.vroum_flow_max)
     val vLabels = listOf(R.string.vroum_takedown, R.string.vroum_strike, R.string.vroum_revenge, R.string.vroum_stomp, R.string.vroum_crash, R.string.vroum_shove,
-        R.string.vroum_ghost, R.string.vroum_wind, R.string.vroum_w_bomb, R.string.vroum_w_laser, R.string.vroum_w_flame, R.string.vroum_w_magnet, R.string.vroum_w_shield, R.string.vroum_rocket, R.string.vroum_finish, R.string.vroum_draft, R.string.vroum_final_stretch).map { stringResource(it) }
+        R.string.vroum_ghost, R.string.vroum_wind, R.string.vroum_w_bomb, R.string.vroum_w_laser, R.string.vroum_w_flame, R.string.vroum_w_magnet, R.string.vroum_w_shield, R.string.vroum_rocket, R.string.vroum_finish, R.string.vroum_draft, R.string.vroum_final_stretch, R.string.vroum_flip).map { stringResource(it) }
     // tous les libellés traduits d'une partie (solo comme duel)
     val applyLabels: (VroumGame) -> Unit = { g ->
         g.lanesLabel = lanesLabel; g.superLabel = superLabel; g.jumpedLabel = jumpedLabel; g.nearLabel = nearLabel; g.maxLabel = maxLabel
         g.takedownLabel = vLabels[0]; g.strikeLabel = vLabels[1]; g.revengeLabel = vLabels[2]; g.stompLabel = vLabels[3]; g.crashLabel = vLabels[4]
         g.shoveLabel = vLabels[5]; g.ghostLabel = vLabels[6]; g.windLabel = vLabels[7]; g.weaponLabels = vLabels.subList(8, 13); g.rocketLabel = vLabels[13]
-        g.finishLabel = vLabels[14]; g.draftLabel = vLabels[15]; g.stretchLabel = vLabels[16]
+        g.finishLabel = vLabels[14]; g.draftLabel = vLabels[15]; g.stretchLabel = vLabels[16]; g.flipLabel = vLabels[17]
     }
     val game = remember(runToken) {
         if (phase != VPhase.PLAYING) null
@@ -349,6 +349,7 @@ fun VroumScreen(onBack: () -> Unit) {
                         "land" -> SoundEngine.playLand()
                         "landBlast" -> { SoundEngine.playBoom(); SoundEngine.playVvYahoo(); Haptics.tap(ctx) }
                         "trick" -> SoundEngine.playVvCoin()
+                        "flip" -> { SoundEngine.playVvYahoo(); SoundEngine.playVvSuccess(); Haptics.tap(ctx) }
                         // frôlement : petit « ding » aigu + vibration courte ; élan au maximum : fanfare brève
                         "near" -> { SoundEngine.playVvTick(1.5f); SoundEngine.playVvCoin(); Haptics.tap(ctx) }
                         "flowMax" -> SoundEngine.playVvSuccess()
@@ -520,6 +521,8 @@ fun VroumScreen(onBack: () -> Unit) {
                         if (g.giant > 0) drawRect(V_GOLD.copy(alpha = 0.25f + 0.2f * sin(g.elapsed * 10f)), size = size, style = Stroke(u * 1.6f))
                         // éclair blanc de la bombe ; voile de sable pendant la tempête ; rafale de vent annoncée
                         if (g.flash > 0f) drawRect(Color.White.copy(alpha = (g.flash * 0.85f).coerceIn(0f, 1f)), size = size)
+            // ralenti : deux bandes de cinéma glissent en haut et en bas
+            if (g.slowT > 0f) { val bh = size.height * 0.055f * (g.slowT / 0.12f).coerceIn(0f, 1f); drawRect(Color.Black, size = Size(size.width, bh)); drawRect(Color.Black, Offset(0f, size.height - bh), Size(size.width, bh)) }
                         if (g.storm > 0.05f) drawRect(Color(0xFFE8C98A).copy(alpha = 0.30f * g.storm), size = size)
                         if (g.windT > 0f) for (i in 0 until 9) { val yy = size.height * (0.2f + 0.07f * i); val ph = ((g.elapsed * 2.2f + i * 0.31f) % 1f)
                             val x0 = if (g.windDir > 0) size.width * (ph - 0.2f) else size.width * (1.2f - ph)
@@ -535,7 +538,11 @@ fun VroumScreen(onBack: () -> Unit) {
                         BoostBar(g, tick, Modifier.padding(bottom = 10.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(26.dp), verticalAlignment = Alignment.CenterVertically) {
                             BoostButton(g, tick) { g.tapBoost() }
-                            JumpButton(cooldown = (g.jumpCd / g.JUMP_CD).coerceIn(0f, 1f), frame = tick) { glView.queueEvent { g.jump() } }
+                            Box(contentAlignment = Alignment.Center) {
+                                JumpButton(cooldown = (g.jumpCd / g.JUMP_CD).coerceIn(0f, 1f), frame = tick) { glView.queueEvent { g.jump() } }
+                                // en l'air sur un ressort : l'anneau doré dit « retape pour faire une figure »
+                                if (g.canTrick) Canvas(Modifier.size(104.dp)) { drawCircle(V_GOLD, size.minDimension / 2f * (0.88f + 0.1f * sin(g.elapsed * 22f)), style = androidx.compose.ui.graphics.drawscope.Stroke(5.dp.toPx())) }
+                            }
                         }
                     }
                     ItemSlot(g, spr.items, tick, Modifier.align(Alignment.CenterStart).padding(start = 12.dp).offset(y = if (g.wide) 14.dp else (-40).dp))
@@ -1004,6 +1011,8 @@ private fun DuelHalf(player: Int, g: VroumGame, v: VroumGlView, tick: Int, spr: 
             @Suppress("UNUSED_EXPRESSION") tick
             fx.draw(this, g, null)
             if (g.flash > 0f) drawRect(Color.White.copy(alpha = (g.flash * 0.85f).coerceIn(0f, 1f)), size = size)
+            // ralenti : deux bandes de cinéma glissent en haut et en bas
+            if (g.slowT > 0f) { val bh = size.height * 0.055f * (g.slowT / 0.12f).coerceIn(0f, 1f); drawRect(Color.Black, size = Size(size.width, bh)); drawRect(Color.Black, Offset(0f, size.height - bh), Size(size.width, bh)) }
         }
         // commandes : BOOST (une tape = un segment) et SAUT, la jauge au-dessus ; objet à gauche, takedowns à droite
         Column(Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {

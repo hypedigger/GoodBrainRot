@@ -519,4 +519,8 @@
     <string name="vroum_album_circuits_how">Completa las 3 misiones de un circuito</string>
     <string name="vroum_album_cups_how">Gana la copa</string>
     <string name="vroum_album_surprise_how">Escondidas en el cofre al final de cada copa</string>
+    <string name="vroum_flip">¡GIRO!</string>
+    <string name="vroum_stat_speed">Velocidad</string>
+    <string name="vroum_stat_accel">Aceleración</string>
+    <string name="vroum_stat_weight">Peso</string>
 </resources>

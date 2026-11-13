@@ -528,4 +528,8 @@
     <string name="vroum_album_circuits_how">Complete the 3 missions of a circuit</string>
     <string name="vroum_album_cups_how">Win the cup</string>
     <string name="vroum_album_surprise_how">Hidden in the chest at the end of each cup</string>
+    <string name="vroum_flip">SPIN!</string>
+    <string name="vroum_stat_speed">Speed</string>
+    <string name="vroum_stat_accel">Acceleration</string>
+    <string name="vroum_stat_weight">Weight</string>
 </resources>

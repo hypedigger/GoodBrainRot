@@ -202,3 +202,18 @@ internal fun GarageLook(vehicle: Int, baseColor: Color, onBought: () -> Unit, on
         }
     }
 }
+
+/** Les trois statistiques du bolide (1 à 5) : vitesse, accélération, poids. */
+@Composable
+internal fun StatBars(v: VVehicle, modifier: Modifier = Modifier) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(3.dp)) {
+        for ((res, n, col) in listOf(Triple(R.string.vroum_stat_speed, v.speed, Color(0xFFFF6FA8)), Triple(R.string.vroum_stat_accel, v.accel, Color(0xFFFFC94D)), Triple(R.string.vroum_stat_weight, v.weight, Color(0xFF4FC3F7)))) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.width(96.dp), contentAlignment = Alignment.CenterEnd) { FitText(stringResource(res).uppercase(), 11f, color = Color.White.copy(alpha = 0.85f), weight = FontWeight.Black) }
+                Row(Modifier.padding(start = 8.dp), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                    for (k in 1..5) Box(Modifier.size(width = 22.dp, height = 8.dp).clip(RoundedCornerShape(4.dp)).background(if (k <= n) col else Color.White.copy(alpha = 0.18f)))
+                }
+            }
+        }
+    }
+}

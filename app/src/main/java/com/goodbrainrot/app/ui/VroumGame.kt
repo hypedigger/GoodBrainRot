@@ -60,14 +60,15 @@ internal fun vroumStarCount(endless: Boolean, cleared: Boolean, score: Int, dist
     }
 }
 
-internal data class VVehicle(val key: String, val nameRes: Int)
+/** [speed], [accel], [weight] : 1 à 5. Vitesse = plafond ; accélération = l'élan monte plus vite ; poids = on encaisse mieux les chocs. */
+internal data class VVehicle(val key: String, val nameRes: Int, val speed: Int = 3, val accel: Int = 3, val weight: Int = 3)
 internal val VEHICLES = listOf(
-    VVehicle("car", com.goodbrainrot.app.R.string.vroum_v_car), VVehicle("monster", com.goodbrainrot.app.R.string.vroum_v_monster),
-    VVehicle("firetruck", com.goodbrainrot.app.R.string.vroum_v_firetruck), VVehicle("moto", com.goodbrainrot.app.R.string.vroum_v_moto),
-    VVehicle("tank", com.goodbrainrot.app.R.string.vroum_v_tank), VVehicle("dragon", com.goodbrainrot.app.R.string.vroum_v_dragon),
-    VVehicle("lion", com.goodbrainrot.app.R.string.vroum_v_lion), VVehicle("trex", com.goodbrainrot.app.R.string.vroum_v_trex),
-    VVehicle("rocket", com.goodbrainrot.app.R.string.vroum_v_rocket), VVehicle("tractor", com.goodbrainrot.app.R.string.vroum_v_tractor),
-    VVehicle("excavator", com.goodbrainrot.app.R.string.vroum_v_excavator), VVehicle("bear", com.goodbrainrot.app.R.string.vroum_v_bear)
+    VVehicle("car", com.goodbrainrot.app.R.string.vroum_v_car, 4, 3, 2), VVehicle("monster", com.goodbrainrot.app.R.string.vroum_v_monster, 2, 3, 5),
+    VVehicle("firetruck", com.goodbrainrot.app.R.string.vroum_v_firetruck, 3, 2, 5), VVehicle("moto", com.goodbrainrot.app.R.string.vroum_v_moto, 5, 4, 1),
+    VVehicle("tank", com.goodbrainrot.app.R.string.vroum_v_tank, 1, 3, 5), VVehicle("dragon", com.goodbrainrot.app.R.string.vroum_v_dragon, 4, 4, 2),
+    VVehicle("lion", com.goodbrainrot.app.R.string.vroum_v_lion, 3, 5, 2), VVehicle("trex", com.goodbrainrot.app.R.string.vroum_v_trex, 3, 2, 5),
+    VVehicle("rocket", com.goodbrainrot.app.R.string.vroum_v_rocket, 5, 4, 2), VVehicle("tractor", com.goodbrainrot.app.R.string.vroum_v_tractor, 2, 4, 4),
+    VVehicle("excavator", com.goodbrainrot.app.R.string.vroum_v_excavator, 2, 2, 5), VVehicle("bear", com.goodbrainrot.app.R.string.vroum_v_bear, 3, 4, 3)
 )
 /** Familles d'animation / de son : créatures qui courent, dragon qui vole, fusée qui flotte. */
 internal val WALKER_KEYS = setOf("lion", "trex", "bear")
@@ -243,6 +244,7 @@ internal object VPatterns {
 internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, val theme: VTheme, val trickLabel: String, val cannonLabel: String,
                          val duel: Boolean = false, seed: Long = Random.nextLong(), val cast: IntArray? = null, val rivalBoost: Float = 1f) {
     companion object {
+        const val FLIP_DUR = 0.5f
         const val LANE_M = 3.2f
         const val Z_FAR = 300f
         const val PLAYER_Z = 18f
@@ -264,6 +266,12 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         const val STRETCH = 320f           // longueur de la dernière ligne droite (m)
     }
     val tune = VTUNES[diff.coerceIn(0, 2)]
+    // caractère du bolide (la Voiture de course, 4-3-2, est la référence du calibrage)
+    private val vstat = VEHICLES[vehicle]
+    private val speedMul = 1f + 0.015f * (vstat.speed - 4)
+    private val flowTimeV = tune.flowTime * (1f - 0.1f * (vstat.accel - 3))
+    private val keepV = (tune.bumpKeep + 0.05f * (vstat.weight - 2)).coerceAtMost(0.9f)
+    private val ramKeep = 0.90f + 0.02f * (vstat.weight - 2)
     val trait = theme.trait
 
     // ---- PELOTON (Course) : 7 concurrents, on part dernier. La place remplace le chrono : on finit toujours, reste à finir DEVANT.
@@ -381,6 +389,9 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
     var shake = 0f
     var hornCd = 0f
     var hitStop = 0f                // micro-gel à l'impact (s) : le coup « claque »
+    // RALENTI cinématique sur les gros coups (takedown ×3, strike, revanche, vrille) : au plus un toutes les 4 secondes
+    @Volatile var slowT = 0f; private var lastSlow = -9f
+    private fun slowMo(d: Float) { if (elapsed - lastSlow > 4f) { lastSlow = elapsed; slowT = d } }
     var flash = 0f                  // éclair blanc d'écran (bombe)
     @Volatile var frame = 0
     var leanDeg = 0f            // inclinaison latérale (changement de file), degrés
@@ -391,7 +402,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
     var flow = 0f
     private var spd = tune.floor            // vitesse réelle lissée (m/s)
     private var flowMaxSaid = false
-    private val ceilNow: Float get() = (tune.ceil + (if (endless) min(tune.ceilGrow, dist / 700f) else 0f)) * trait.ceilMul
+    private val ceilNow: Float get() = (tune.ceil + (if (endless) min(tune.ceilGrow, dist / 700f) else 0f)) * trait.ceilMul * speedMul
     /** vitesse de croisière (hors bonus) que donne l'élan actuel */
     val cruise: Float get() = tune.floor + (ceilNow - tune.floor) * flow
 
@@ -549,8 +560,21 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         if (!jumping) for (e in enemies) if (e.rival && e.alive && e.lane == n && abs(e.z - PLAYER_Z) < 3.4f) shove(e, d)
         lane = n; ev("lane")
     }
+    // ---- FIGURE : en l'air sur un ressort, retaper SAUT fait une VRILLE (une par saut) qui remplit le boost
+    var flipT = -1f; private var flipDone = false; var flips = 0; var flipLabel = "VRILLE !"
+    val canTrick: Boolean get() = jumping && rampJump && !flipDone && jumpT > JUMP_DUR * 0.08f && jumpT < JUMP_DUR * 0.74f
     fun jump() {
-        if (over || jumping || sputter >= 0f || inIntro || jumpCd > 0f) return
+        if (over || sputter >= 0f || inIntro) return
+        if (jumping) {
+            if (canTrick) {
+                flipDone = true; flipT = 0f; flips++
+                chain(2); gainBoost(0.6f); gainFlow(0.08f); addScore(150, lx * LANE_M, PLAYER_Z, V_GOLD)
+                texts.add(VText(lx * LANE_M, 4.6f, PLAYER_Z, flipLabel, 1.1f, V_GOLD, big = true).also { it.style = 1 })
+                slowMo(0.3f); ev("flip")
+            }
+            return
+        }
+        if (jumpCd > 0f) return
         jumpT = 0f; JUMP_DUR = baseJump; jumpH = 2.3f; trickDone = false; rampJump = false; ev("jump")
     }
     fun horn() { if (hornCd <= 0f) { hornCd = 1.2f; ev("horn") } }
@@ -566,6 +590,8 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         // micro-gel à l'impact : le temps ralentit très fort pendant quelques images
         var dt = dtRaw
         if (hitStop > 0f) { hitStop -= dtRaw; dt = dtRaw * 0.12f }
+        else if (slowT > 0f) { slowT -= dtRaw; dt = dtRaw * 0.38f }
+        if (flipT >= 0f) { flipT += dt; if (flipT >= FLIP_DUR) flipT = -1f }
         elapsed += dt
         if (hornCd > 0f) hornCd -= dt
         if (shake > 0f) shake = max(0f, shake - dtRaw * 60f)
@@ -592,7 +618,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         val racing = !over && sputter < 0f && !cleared && !inIntro
         // élan : monte tout seul ; la vitesse rejoint la croisière (accélère vite, ralentit doucement après un boost)
         if (racing) {
-            gainFlow(dt / tune.flowTime)
+            gainFlow(dt / flowTimeV)
             if (flow >= 1f && !flowMaxSaid) { flowMaxSaid = true; texts.add(VText(lx * LANE_M, 4.2f, PLAYER_Z, maxLabel, 1.3f, V_GOLD, big = true)); ev("flowMax") }
             if (flow < 0.7f) flowMaxSaid = false
         }
@@ -1067,6 +1093,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         addScore(pts, x, e.z, if (how == 4) V_GOLD else V_PINK)
         if (label.isNotEmpty()) {
             tdChain = if (elapsed - tdChainAt < 2.5f) tdChain + 1 else 1
+            if (tdChain == 3 || how == 4 || label == revengeLabel) slowMo(0.55f)
             tdChainAt = elapsed
             val shownLabel = if (tdChain > 1 && label != revengeLabel) "$label ×$tdChain" else label
             val last = lastImpact
@@ -1079,7 +1106,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         // la jauge s'allonge : un segment de plus tous les deux takedowns « francs » (pas ceux des armes)
         if (how == 1 || how == 2 || how == 4 || how == 5) { segProgress += if (e.rival) 3 else 1; if (segProgress >= 3 && boostSeg < MAX_SEG) { segProgress = 0; boostSeg++; ev("segUp") } }
         // premier contact au ralenti : ça claque
-        if (how == 0 || how == 1 || how == 5) { hitStop = max(hitStop, if (big) 0.09f else 0.05f); if (how == 0 && !powered) { flow *= 0.90f; spd *= 0.95f } }
+        if (how == 0 || how == 1 || how == 5) { hitStop = max(hitStop, if (big) 0.09f else 0.05f); if (how == 0 && !powered) { flow *= ramKeep; spd *= 0.95f } }
         shake = max(shake, if (big) 12f else 7f)
         burst(x, e.z, 1f, 0.75f, 0.3f, if (big) 18 else 10)
         if (parts.size < 170) repeat(6) { parts.add(VPart(x, groundY(dist + e.z) + 1f, e.z, (Random.nextFloat() - 0.5f) * 8f, 3f + Random.nextFloat() * 4f, 0.5f, 0.5f, 0.3f, 0.3f, 0.32f, 0.22f)) }
@@ -1093,7 +1120,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         bumpCount++
         e.hit = true
         if (fuelOn && diff != 0) fuel = max(0f, fuel - (if (diff == 2) 25f else 15f))
-        breakChain(); loseFlow(tune.bumpKeep)
+        breakChain(); loseFlow(keepV)
         if (diff != 0 && boostSeg > 1) { boostSeg--; segProgress = 0 }
         boost = min(boost, boostSeg.toFloat()) * (if (diff == 0) 1f else 0.5f)
         invuln = 1.1f; if (!e.oncoming && !e.boulder) e.bounce = 0.6f
@@ -1438,7 +1465,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
             VItem.SUPERBOOST -> superBoost(x, z)
             VItem.ITEMBOX -> { openBox(); gainBoost(0.10f); burst(x, z, 1f, 0.9f, 0.4f, 16); ev("box") }
             // tremplin : grand saut gratuit (plus long), sans pause derrière
-            VItem.RAMP -> if (!jumping) { jumpT = 0f; JUMP_DUR = longJump * 1.05f; jumpH = 3.5f; trickDone = false; rampJump = true; gainBoost(0.15f); ev("ramp") }
+            VItem.RAMP -> if (!jumping) { jumpT = 0f; JUMP_DUR = longJump * 1.05f; jumpH = 3.5f; trickDone = false; rampJump = true; flipDone = false; gainBoost(0.15f); ev("ramp") }
             VItem.HOLE, VItem.LOG -> {
                 if (airborne || jumping) { chain(); gainFlow(0.05f); gainBoost(0.15f); addScore(20, x, z, V_CYAN); texts.add(VText(x, 3.2f, z, jumpedLabel, 1.0f, V_CYAN, big = true)); ev("trick") }
                 else if (giant > 0 || superT > 0f) { burst(x, z, 0.6f, 0.4f, 0.25f, 12); ev("crush") }
@@ -1447,7 +1474,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
                     // tombé dans le trou / heurté l'obstacle : gros cahot, l'élan retombe (et de l'essence en Arcade)
                     bumpCount++
                     if (fuelOn && diff != 0) fuel = max(0f, fuel - (if (diff == 2) 25f else 15f))
-                    breakChain(); loseFlow(tune.bumpKeep)
+                    breakChain(); loseFlow(keepV)
                     if (diff != 0 && boostSeg > 1) { boostSeg--; segProgress = 0 }
                     boost = min(boost, boostSeg.toFloat()) * (if (diff == 0) 1f else 0.5f)
                     invuln = 1.2f; shake = max(shake, 14f); slideT = 0.5f; slideDir = if (Random.nextBoolean()) 1 else -1

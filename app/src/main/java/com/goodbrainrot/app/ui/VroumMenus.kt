@@ -233,6 +233,7 @@ internal fun GarageScreen(spr: VSprites, vehicle: Int, colors: List<Color>, onBa
         Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             FitText(stringResource(VEHICLES[cur].nameRes).uppercase(), 32f, weight = FontWeight.Black, italic = true, spacing = 1f, shadow = TITLE_SHADOW)
             Box(Modifier.padding(top = 4.dp).size(width = 86.dp, height = 6.dp).clip(CircleShape).background(Brush.horizontalGradient(listOf(colors[cur], V_GOLD))))
+            StatBars(VEHICLES[cur], Modifier.padding(top = 7.dp))
             // à moi : peintures et traînées de boost ; sinon son prix
             if (curOwned) GarageLook(cur, spr.paintBase[cur], onBought = { SoundEngine.playVroumUi() }, onRefused = { SoundEngine.playVvTick(0.5f) }, modifier = Modifier.padding(top = 8.dp))
             else CoinChip(curPrice, Modifier.padding(top = 10.dp, bottom = 6.dp))

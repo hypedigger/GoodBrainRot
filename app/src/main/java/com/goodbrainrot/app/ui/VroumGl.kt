@@ -627,7 +627,10 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
                 }
                 val by = gy + lift + bob
                 val stride = if (moving) sin(ph) else 0f
+                // VRILLE : le sprite entier pivote autour de son axe vertical (largeur en cosinus), deux tours
+                val spin = if (g.flipT >= 0f) abs(cos(g.flipT / VroumGame.FLIP_DUR * 2f * 3.1416f * 2f)).coerceAtLeast(0.07f) else 1f
                 when {
+                    spin < 1f -> bills.add(Bill(z - 0.02f, x, by, pw * spin, vt, 1f, cr, cg, cb, squash = sq / spin, rot = lean))
                     walker -> {
                         // jambes (bas du sprite) cisaillées en opposition de phase : la jambe gauche avance quand la droite recule
                         // (les deux pièces se chevauchent au centre pour ne jamais laisser de fente à l'entrejambe)
