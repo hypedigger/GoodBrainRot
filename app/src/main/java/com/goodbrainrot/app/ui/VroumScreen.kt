@@ -600,7 +600,7 @@ private fun BoostOverlay(g: VroumGame, frame: Int) {
 @Composable
 private fun LaneHints(modifier: Modifier = Modifier) {
     val pulse = rememberInfiniteTransition(label = "hint").animateFloat(
-        initialValue = 0.28f, targetValue = 0.55f, animationSpec = infiniteRepeatable(tween(900, easing = FastOutSlowInEasing), RepeatMode.Reverse), label = "p"
+        initialValue = 0.45f, targetValue = 0.8f, animationSpec = infiniteRepeatable(tween(900, easing = FastOutSlowInEasing), RepeatMode.Reverse), label = "p"
     ).value
     Row(modifier = modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 34.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Chevron(left = true, alpha = pulse); Chevron(left = false, alpha = pulse)
@@ -609,7 +609,8 @@ private fun LaneHints(modifier: Modifier = Modifier) {
 
 @Composable
 private fun Chevron(left: Boolean, alpha: Float) {
-    Box(Modifier.size(64.dp).alpha(alpha).clip(RoundedCornerShape(22.dp)).background(Color.White.copy(alpha = 0.35f)), contentAlignment = Alignment.Center) {
+    // (fond sombre translucide : le repère se voit aussi sur les circuits très clairs — neige, nuages, plage)
+    Box(Modifier.size(64.dp).alpha(alpha).clip(RoundedCornerShape(22.dp)).background(Color(0xFF1B1630).copy(alpha = 0.42f)), contentAlignment = Alignment.Center) {
         Canvas(Modifier.size(34.dp)) {
             val w = size.width; val h = size.height
             val p = Path()
