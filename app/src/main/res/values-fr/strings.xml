@@ -498,4 +498,25 @@
     <string name="vroum_licence">Permis de pilote</string>
     <string name="vroum_unlock">Débloquer  %1$d</string>
     <string name="vroum_missing">Il manque %1$d</string>
+    <string name="vroum_album">Album d\'autocollants</string>
+    <string name="vroum_album_short">Album</string>
+    <string name="vroum_album_circuits">Cartes postales</string>
+    <string name="vroum_album_cups">Trophées</string>
+    <string name="vroum_album_surprise">Surprises</string>
+    <string name="vroum_chest_tap">Touche le coffre !</string>
+    <string name="vroum_chest_sticker">Nouvel autocollant !</string>
+    <string name="vroum_chest_coins">Trésor !</string>
+    <string name="vroum_mis_podium">Finis sur le podium</string>
+    <string name="vroum_mis_win">Gagne la course</string>
+    <string name="vroum_mis_takedowns">%1$d takedowns</string>
+    <string name="vroum_mis_clean">Aucun accident</string>
+    <string name="vroum_mis_draft">%1$d aspirations</string>
+    <string name="vroum_mis_bounce">%1$d rebonds d\'affilée</string>
+    <string name="vroum_mis_near">%1$d frôlements</string>
+    <string name="vroum_mis_rocket">Départ canon</string>
+    <string name="vroum_mis_coins">Ramasse %1$d pièces</string>
+    <string name="vroum_mis_combo">Série de %1$d</string>
+    <string name="vroum_album_circuits_how">Réussis les 3 missions d\'un circuit</string>
+    <string name="vroum_album_cups_how">Gagne la coupe</string>
+    <string name="vroum_album_surprise_how">Cachées dans le coffre à la fin de chaque coupe</string>
 </resources>

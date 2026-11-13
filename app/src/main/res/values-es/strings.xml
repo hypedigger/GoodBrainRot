@@ -498,4 +498,25 @@
     <string name="vroum_licence">Carné de piloto</string>
     <string name="vroum_unlock">Desbloquear  %1$d</string>
     <string name="vroum_missing">Faltan %1$d</string>
+    <string name="vroum_album">Álbum de pegatinas</string>
+    <string name="vroum_album_short">Álbum</string>
+    <string name="vroum_album_circuits">Postales</string>
+    <string name="vroum_album_cups">Trofeos</string>
+    <string name="vroum_album_surprise">Sorpresas</string>
+    <string name="vroum_chest_tap">¡Toca el cofre!</string>
+    <string name="vroum_chest_sticker">¡Nueva pegatina!</string>
+    <string name="vroum_chest_coins">¡Tesoro!</string>
+    <string name="vroum_mis_podium">Termina en el podio</string>
+    <string name="vroum_mis_win">Gana la carrera</string>
+    <string name="vroum_mis_takedowns">%1$d takedowns</string>
+    <string name="vroum_mis_clean">Ningún choque</string>
+    <string name="vroum_mis_draft">%1$d rebufos</string>
+    <string name="vroum_mis_bounce">%1$d rebotes seguidos</string>
+    <string name="vroum_mis_near">%1$d roces</string>
+    <string name="vroum_mis_rocket">Salida cohete</string>
+    <string name="vroum_mis_coins">Recoge %1$d monedas</string>
+    <string name="vroum_mis_combo">Racha de %1$d</string>
+    <string name="vroum_album_circuits_how">Completa las 3 misiones de un circuito</string>
+    <string name="vroum_album_cups_how">Gana la copa</string>
+    <string name="vroum_album_surprise_how">Escondidas en el cofre al final de cada copa</string>
 </resources>

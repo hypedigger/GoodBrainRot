@@ -1,5 +1,10 @@
 # Nouveautés — GoodBrainRot
 
+## 4.06 — 2026-11-13
+- **Vroum — trois missions par circuit.** Chaque circuit a ses missions (finir sur le podium ou gagner, un nombre de takedowns, et un défi d'adresse qui change : pièces, aspirations, rebonds, aucun accident, frôlements, départ canon, série). Elles s'affichent sur l'écran du circuit et se cochent à l'arrivée ; chacune rapporte 30 pièces.
+- **Vroum — coffre surprise.** À la fin de chaque coupe, un coffre à toucher : il s'ouvre sur un autocollant (le plus souvent) ou un tas de pièces.
+- **Vroum — album d'autocollants.** 71 autocollants à collectionner : les **cartes postales** des 20 circuits (3 missions réussies), les **trophées** des 5 coupes (coupe gagnée) et 46 **surprises** des coffres (bolides, public, animaux, ressorts). L'album s'ouvre en touchant le permis de pilote.
+- Le bouton retour d'Android revient maintenant d'une étape dans les menus de Vroum au lieu de quitter le jeu ; la peinture du bolide se voit aussi sur le podium.
 ## 4.05 — 2026-11-13
 - **Vroum — garage à débloquer.** Les pièces ramassées en course (plus une prime selon la place) remplissent un **porte-monnaie**. Quatre bolides sont offerts ; les huit autres s'achètent (de 150 à 1 300 pièces) : dans le garage, un bolide verrouillé apparaît en silhouette avec son cadenas et son prix. Cadeau de bienvenue : 100 pièces, plus 20 par étoile déjà gagnée.
 - **Vroum — peintures et traînées.** Sous le nom du bolide, deux rangées de pastilles : six **peintures** (le bolide change de teinte dans le garage, en course et sur le podium) et cinq **traînées de boost** (feu, toxique, bonbon, or, arc-en-ciel).

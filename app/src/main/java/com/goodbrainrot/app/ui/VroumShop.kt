@@ -129,7 +129,7 @@ internal fun CoinChip(amount: Int, modifier: Modifier = Modifier, plus: Boolean 
  * PERMIS DE PILOTE : carte illustrée (bolide favori, rang, progression vers le rang suivant, pièces en poche).
  */
 @Composable
-internal fun LicenceCard(spr: VSprites, vehicle: Int, modifier: Modifier = Modifier, height: Dp = 74.dp) {
+internal fun LicenceCard(spr: VSprites, vehicle: Int, modifier: Modifier = Modifier, height: Dp = 74.dp, onClick: () -> Unit = {}) {
     val total by Settings.vroumCoinsTotal
     val coins by Settings.vroumCoins
     val look by Settings.vroumLook
@@ -137,7 +137,8 @@ internal fun LicenceCard(spr: VSprites, vehicle: Int, modifier: Modifier = Modif
     val col = VROUM_RANK_COLORS[rank]
     val next = VROUM_RANKS.getOrNull(rank + 1)
     val frac = if (next == null) 1f else ((total - VROUM_RANKS[rank]).toFloat() / (next - VROUM_RANKS[rank])).coerceIn(0f, 1f)
-    Row(modifier.height(height).shadow(8.dp, RoundedCornerShape(20.dp), clip = false).clip(RoundedCornerShape(20.dp))
+    val stickers by Settings.vroumStickers
+    Row(modifier.height(height).shadow(8.dp, RoundedCornerShape(20.dp), clip = false).clip(RoundedCornerShape(20.dp)).clickableNoRipple(onClick)
         .background(Brush.horizontalGradient(listOf(Color(0xF2FFFFFF), Color(0xE6EDE8FF)))).border(2.5.dp, col, RoundedCornerShape(20.dp)).padding(horizontal = 10.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically) {
         // photo d'identité : le bolide sur fond de la couleur du rang
@@ -147,7 +148,7 @@ internal fun LicenceCard(spr: VSprites, vehicle: Int, modifier: Modifier = Modif
             }
         }
         Column(Modifier.weight(1f).padding(start = 10.dp)) {
-            Text(stringResource(R.string.vroum_licence).uppercase(), color = V_INK.copy(alpha = 0.5f), fontWeight = FontWeight.Black, fontSize = 9.sp, letterSpacing = 1.5.sp, maxLines = 1, style = TextStyle(fontFamily = VROUM_FONT))
+            Text(stringResource(R.string.vroum_licence).uppercase() + "  ·  " + stringResource(R.string.vroum_album_short).uppercase() + " ${stickers.size}/$VROUM_STICKER_TOTAL", color = V_INK.copy(alpha = 0.5f), fontWeight = FontWeight.Black, fontSize = 9.sp, letterSpacing = 1.5.sp, maxLines = 1, style = TextStyle(fontFamily = VROUM_FONT))
             FitText(stringResource(VROUM_RANK_NAMES[rank]), 19f, color = V_INK, weight = FontWeight.Black, italic = true)
             Box(Modifier.padding(top = 3.dp).fillMaxWidth().height(7.dp).clip(CircleShape).background(Color(0x22000000))) {
                 Box(Modifier.fillMaxWidth(frac.coerceAtLeast(0.03f)).fillMaxHeight().clip(CircleShape).background(Brush.horizontalGradient(listOf(col, V_GOLD))))

@@ -498,4 +498,25 @@
     <string name="vroum_licence">Права пилота</string>
     <string name="vroum_unlock">Открыть  %1$d</string>
     <string name="vroum_missing">Не хватает %1$d</string>
+    <string name="vroum_album">Альбом наклеек</string>
+    <string name="vroum_album_short">Альбом</string>
+    <string name="vroum_album_circuits">Открытки</string>
+    <string name="vroum_album_cups">Кубки</string>
+    <string name="vroum_album_surprise">Сюрпризы</string>
+    <string name="vroum_chest_tap">Нажми на сундук!</string>
+    <string name="vroum_chest_sticker">Новая наклейка!</string>
+    <string name="vroum_chest_coins">Сокровище!</string>
+    <string name="vroum_mis_podium">Финишируй на подиуме</string>
+    <string name="vroum_mis_win">Выиграй гонку</string>
+    <string name="vroum_mis_takedowns">Таранов: %1$d</string>
+    <string name="vroum_mis_clean">Без аварий</string>
+    <string name="vroum_mis_draft">Слипстримов: %1$d</string>
+    <string name="vroum_mis_bounce">Отскоков подряд: %1$d</string>
+    <string name="vroum_mis_near">Опасных обгонов: %1$d</string>
+    <string name="vroum_mis_rocket">Ракетный старт</string>
+    <string name="vroum_mis_coins">Собери %1$d монет</string>
+    <string name="vroum_mis_combo">Серия из %1$d</string>
+    <string name="vroum_album_circuits_how">Выполни 3 задания на трассе</string>
+    <string name="vroum_album_cups_how">Выиграй кубок</string>
+    <string name="vroum_album_surprise_how">Спрятаны в сундуке в конце каждого кубка</string>
 </resources>

@@ -101,7 +101,7 @@ private val TITLE_SHADOW = Shadow(Color(0x99000000), Offset(0f, 4f), 10f)
 
 /** Fond des menus : illustration floue et assombrie (fondu quand on change), bandes diagonales qui défilent. */
 @Composable
-private fun MenuBackdrop(art: ImageBitmap?, glow: Color) {
+internal fun MenuBackdrop(art: ImageBitmap?, glow: Color) {
     Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF1A1247), Color(0xFF2E1A66))))) {
         Crossfade(targetState = art, animationSpec = tween(400), label = "bg") { a ->
             if (a != null) Image(BitmapPainter(a), null, Modifier.fillMaxSize().blur(22.dp), contentScale = ContentScale.Crop, alpha = 0.6f)
@@ -414,11 +414,13 @@ private fun CircuitPager(spr: VSprites, pager: PagerState, endless: Boolean, due
 }
 
 @Composable
-private fun RaceOptions(diff: Int, endless: Boolean, duel: Boolean, themeKey: String, starsMap: Map<String, Int>, unlocked: Boolean,
+private fun RaceOptions(diff: Int, endless: Boolean, duel: Boolean, themeKey: String, themeIdx: Int, starsMap: Map<String, Int>, unlocked: Boolean,
                         onDiff: (Int) -> Unit, onEndless: (Boolean) -> Unit, onDuel: (Boolean) -> Unit, modifier: Modifier) {
     Column(modifier) {
         // une phrase qui dit ce qu'on va faire (hauteur fixe : rien ne saute quand on change de mode)
-        Box(Modifier.fillMaxWidth().height(40.dp).padding(top = 5.dp), contentAlignment = Alignment.Center) {
+        // Course : les trois MISSIONS du circuit (cochées quand elles sont réussies) ; sinon la phrase du mode
+        if (!duel && !endless) Box(Modifier.fillMaxWidth().height(66.dp).padding(top = 5.dp), contentAlignment = Alignment.Center) { MissionList(themeIdx) }
+        else Box(Modifier.fillMaxWidth().height(40.dp).padding(top = 5.dp), contentAlignment = Alignment.Center) {
             Text(if (duel) stringResource(R.string.vroum_duel_hint) else if (endless) stringResource(R.string.vroum_mode_arcade_hint)
                  else if (!unlocked) stringResource(R.string.vroum_mode_race_hint) + "  " + stringResource(R.string.vroum_endless_locked) else stringResource(R.string.vroum_mode_race_hint),
                 color = Color.White.copy(alpha = 0.85f), fontWeight = FontWeight.Medium, fontSize = 12.sp, lineHeight = 14.sp, textAlign = TextAlign.Center, maxLines = 4, overflow = TextOverflow.Ellipsis)
@@ -464,7 +466,7 @@ internal fun RaceSetupScreen(spr: VSprites, vehicle: Int, themeIdx: Int, diff: I
                 Row(Modifier.fillMaxSize().padding(start = 12.dp, end = 20.dp, bottom = 14.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                     CircuitPager(spr, pager, endless, duel, diff, starsMap, Modifier.weight(1.15f).fillMaxHeight())
                     Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.Center) {
-                        RaceOptions(diff, endless, duel, THEMES[cur].key, starsMap, unlocked, onDiff, onEndless, onDuel, Modifier.fillMaxWidth())
+                        RaceOptions(diff, endless, duel, THEMES[cur].key, cur, starsMap, unlocked, onDiff, onEndless, onDuel, Modifier.fillMaxWidth())
                         Spacer(Modifier.height(12.dp))
                         go(Modifier.fillMaxWidth())
                     }
@@ -473,7 +475,7 @@ internal fun RaceSetupScreen(spr: VSprites, vehicle: Int, themeIdx: Int, diff: I
                 header()
                 Spacer(Modifier.height(10.dp))
                 CircuitPager(spr, pager, endless, duel, diff, starsMap, Modifier.fillMaxWidth().weight(1f))
-                RaceOptions(diff, endless, duel, THEMES[cur].key, starsMap, unlocked, onDiff, onEndless, onDuel, Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp))
+                RaceOptions(diff, endless, duel, THEMES[cur].key, cur, starsMap, unlocked, onDiff, onEndless, onDuel, Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp))
                 go(Modifier.fillMaxWidth().padding(start = 22.dp, end = 22.dp, top = 12.dp, bottom = 18.dp))
             }
         }
@@ -542,7 +544,7 @@ private fun PlayersButton(n: Int, label: String, selected: Boolean, enabled: Boo
 }
 
 @Composable
-internal fun ModeSelectScreen(spr: VSprites, vehicle: Int, mode: VMode, players: Int, onMode: (VMode) -> Unit, onPlayers: (Int) -> Unit, onBack: () -> Unit, onNext: () -> Unit) {
+internal fun ModeSelectScreen(spr: VSprites, vehicle: Int, mode: VMode, players: Int, onMode: (VMode) -> Unit, onPlayers: (Int) -> Unit, onBack: () -> Unit, onAlbum: () -> Unit, onNext: () -> Unit) {
     val unlocked by Settings.vroumEndlessUnlocked
     val glow = when (mode) { VMode.CUP -> V_GOLD; VMode.RACE -> V_PINK; VMode.ARCADE -> V_CYAN }
     Box(Modifier.fillMaxSize()) {
@@ -571,11 +573,11 @@ internal fun ModeSelectScreen(spr: VSprites, vehicle: Int, mode: VMode, players:
                 MenuHeader(stringResource(R.string.vroum_pick_mode), 1, onBack)
                 Row(Modifier.fillMaxSize().padding(start = 16.dp, end = 20.dp, bottom = 14.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     cards(Modifier.weight(1.2f).fillMaxHeight())
-                    Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.Center) { LicenceCard(spr, vehicle, Modifier.fillMaxWidth().padding(bottom = 14.dp)); bottom(Modifier.fillMaxWidth()) }
+                    Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.Center) { LicenceCard(spr, vehicle, Modifier.fillMaxWidth().padding(bottom = 14.dp), onClick = onAlbum); bottom(Modifier.fillMaxWidth()) }
                 }
             } else Column(Modifier.fillMaxSize()) {
                 MenuHeader(stringResource(R.string.vroum_pick_mode), 1, onBack)
-                LicenceCard(spr, vehicle, Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 10.dp))
+                LicenceCard(spr, vehicle, Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 10.dp), onClick = onAlbum)
                 cards(Modifier.fillMaxWidth().weight(1f).padding(start = 16.dp, end = 16.dp, top = 12.dp))
                 bottom(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 18.dp))
             }
@@ -686,8 +688,10 @@ internal fun CupSelectScreen(spr: VSprites, vehicle: Int, cupIdx: Int, diff: Int
 
 /** Fin de coupe : le trophée, les quatre courses avec leurs étoiles, le total, et la NOTE GLOBALE qui s'affiche en grand. */
 @Composable
-internal fun CupResultScreen(spr: VSprites, cupIdx: Int, stars: IntArray, scores: IntArray, rows: List<VStandRow>, onAgain: () -> Unit, onOther: () -> Unit) {
+internal fun CupResultScreen(spr: VSprites, cupIdx: Int, stars: IntArray, scores: IntArray, rows: List<VStandRow>, onAgain: () -> Unit, onOther: () -> Unit,
+                             chest: VChest? = null, onChestOpen: () -> Unit = {}) {
     val cup = CUPS[cupIdx]
+    var chestShown by remember { mutableStateOf(chest != null) }
     val rank = rows.indexOfFirst { it.me } + 1
     val sum = stars.sum(); val global = if (rank > 0) cupRankStars(rank) else cupGlobalStars(sum)
     var t by remember { mutableStateOf(0f) }
@@ -758,6 +762,8 @@ internal fun CupResultScreen(spr: VSprites, cupIdx: Int, stars: IntArray, scores
                 buttons(Modifier.fillMaxWidth().padding(top = 14.dp))
             }
         }
+        // le coffre surprise passe devant le classement tant qu'on ne l'a pas ouvert et refermé
+        if (chestShown && chest != null) ChestOverlay(spr, chest, onOpen = onChestOpen, onDone = { chestShown = false })
     }
 }
 

@@ -507,4 +507,25 @@
     <string name="vroum_licence">Driver\'s licence</string>
     <string name="vroum_unlock">Unlock  %1$d</string>
     <string name="vroum_missing">%1$d more to go</string>
+    <string name="vroum_album">Sticker album</string>
+    <string name="vroum_album_short">Album</string>
+    <string name="vroum_album_circuits">Postcards</string>
+    <string name="vroum_album_cups">Trophies</string>
+    <string name="vroum_album_surprise">Surprises</string>
+    <string name="vroum_chest_tap">Tap the chest!</string>
+    <string name="vroum_chest_sticker">New sticker!</string>
+    <string name="vroum_chest_coins">Treasure!</string>
+    <string name="vroum_mis_podium">Finish on the podium</string>
+    <string name="vroum_mis_win">Win the race</string>
+    <string name="vroum_mis_takedowns">%1$d takedowns</string>
+    <string name="vroum_mis_clean">No crash at all</string>
+    <string name="vroum_mis_draft">%1$d slipstreams</string>
+    <string name="vroum_mis_bounce">Bounce chain of %1$d</string>
+    <string name="vroum_mis_near">%1$d near misses</string>
+    <string name="vroum_mis_rocket">Rocket start</string>
+    <string name="vroum_mis_coins">Grab %1$d coins</string>
+    <string name="vroum_mis_combo">Streak of %1$d</string>
+    <string name="vroum_album_circuits_how">Complete the 3 missions of a circuit</string>
+    <string name="vroum_album_cups_how">Win the cup</string>
+    <string name="vroum_album_surprise_how">Hidden in the chest at the end of each cup</string>
 </resources>

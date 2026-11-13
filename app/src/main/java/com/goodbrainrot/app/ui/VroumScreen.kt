@@ -108,7 +108,7 @@ import kotlin.random.Random
 // ===========================================================================
 
 
-private enum class VPhase { MODE, SELECT, LEVEL, PLAYING, DUEL, CLEAR, END, CUP_END }
+private enum class VPhase { MODE, SELECT, LEVEL, PLAYING, DUEL, CLEAR, END, CUP_END, ALBUM }
 
 internal class VSprites(private val ctx: android.content.Context) {
     private fun load(name: String): ImageBitmap? {
@@ -126,6 +126,9 @@ internal class VSprites(private val ctx: android.content.Context) {
     val cards = THEMES.map { load(it.card) }
     /** trophées des coupes du Championnat */
     val cups = CUPS.map { load("vv_cup_${it.key}") }
+    /** images de l'album d'autocollants, chargées à la demande */
+    private val stickerCache = HashMap<String, ImageBitmap?>()
+    fun sticker(name: String): ImageBitmap? = stickerCache.getOrPut(name) { load(name) }
 }
 
 // ---------------------------------------------------------------------------
@@ -236,6 +239,18 @@ fun VroumScreen(onBack: () -> Unit) {
     var resPlace by remember { mutableIntStateOf(0) }
     var resCoins by remember { mutableIntStateOf(0) }
     var resRankUp by remember { mutableIntStateOf(-1) }
+    var resFresh by remember { mutableStateOf<List<Int>>(emptyList()) }       // missions réussies à l'instant
+    var cupChest by remember { mutableStateOf<VChest?>(null) }
+    // retour Android : une étape en arrière, comme le bouton à l'écran (on ne quitte le jeu que depuis l'écran des modes)
+    androidx.activity.compose.BackHandler(enabled = phase != VPhase.MODE) {
+        when (phase) {
+            VPhase.ALBUM -> phase = VPhase.MODE
+            VPhase.SELECT -> if (garageStep == 2) garageStep = 1 else phase = VPhase.MODE
+            VPhase.LEVEL -> { garageStep = if (duelMode) 2 else 1; phase = VPhase.SELECT }
+            VPhase.PLAYING -> { GameMusic.stop(); phase = VPhase.LEVEL }
+            else -> phase = VPhase.LEVEL
+        }
+    }
     var resResults by remember { mutableStateOf<List<VResult>>(emptyList()) }
     fun startCupField() {
         cupCast = VEHICLES.indices.filter { it != vehicle }.shuffled(Random(cupIdx * 131L + vehicle * 7L + diff)).take(7).toIntArray()
@@ -248,6 +263,14 @@ fun VroumScreen(onBack: () -> Unit) {
         resPlace = if (raced) g.place else 0; resResults = if (raced) g.raceResults() else emptyList()
         // pièces de la course : ramassées + prime de place ; elles alimentent le garage et le rang de pilote
         resCoins = vroumRaceCoins(g.coins, resPlace, g.endless, g.dist.toInt())
+        // missions du circuit : celles réussies pour la première fois rapportent des pièces ; les trois = la carte postale du circuit
+        resFresh = emptyList()
+        if (raced) {
+            val fresh = ArrayList<Int>()
+            vroumMissions(themeIdx).forEachIndexed { i, m -> val key = "${g.theme.key}_$i"; if (key !in Settings.vroumMissions.value && missionDone(m, g, resPlace)) { Settings.addVroumMission(key); fresh.add(i) } }
+            resFresh = fresh; resCoins += MISSION_COINS * fresh.size
+            if (fresh.isNotEmpty() && (0..2).all { "${g.theme.key}_$it" in Settings.vroumMissions.value }) Settings.addVroumSticker("c_${g.theme.key}")
+        }
         val rankBefore = vroumRank(Settings.vroumCoinsTotal.intValue)
         Settings.addVroumCoins(resCoins)
         resRankUp = vroumRank(Settings.vroumCoinsTotal.intValue).let { if (it > rankBefore) it else -1 }
@@ -412,7 +435,7 @@ fun VroumScreen(onBack: () -> Unit) {
         when (phase) {
             VPhase.MODE -> ModeSelectScreen(spr, vehicle, mode, players,
                 onMode = { SoundEngine.playVroumUi(); mode = it; if (it != VMode.RACE) players = 1 },
-                onPlayers = { SoundEngine.playVroumUi(); players = it }, onBack = onBack,
+                onPlayers = { SoundEngine.playVroumUi(); players = it }, onBack = onBack, onAlbum = { SoundEngine.playVroumUi(); phase = VPhase.ALBUM },
                 onNext = { SoundEngine.playVroumUi(); endless = mode == VMode.ARCADE; duelMode = mode == VMode.RACE && players == 2; garageStep = 1; phase = VPhase.SELECT })
             VPhase.SELECT -> androidx.compose.runtime.key(garageStep) {
                 if (garageStep == 1) GarageScreen(spr, vehicle, VEHICLE_COLORS, onBack = { phase = VPhase.MODE }, onPick = { vehicle = it; hornFor(it) },
@@ -429,7 +452,9 @@ fun VroumScreen(onBack: () -> Unit) {
             VPhase.DUEL -> DuelScreen(themeIdx, vehicle, vehicle2, spr, applyLabels, onBack = { phase = VPhase.LEVEL })
             VPhase.CUP_END -> CupResultScreen(spr, cupIdx, cupStars, cupScores, cupRows.map { VStandRow(it.veh, it.me, 0, it.total, it.rival) },
                 onAgain = { SoundEngine.playVroumUi(); cupRace = 0; cupStars.fill(0); cupScores.fill(0); startCupField(); themeIdx = cupThemeIdx(CUPS[cupIdx], 0); phase = VPhase.PLAYING; runToken++ },
-                onOther = { SoundEngine.playVroumUi(); phase = VPhase.LEVEL })
+                onOther = { SoundEngine.playVroumUi(); phase = VPhase.LEVEL },
+                chest = cupChest, onChestOpen = { SoundEngine.playVvFanfare(); SoundEngine.playVvYahoo(); Haptics.success(ctx) })
+            VPhase.ALBUM -> AlbumScreen(spr, onBack = { phase = VPhase.MODE })
             VPhase.PLAYING -> {
                 val g = game
                 if (g != null && glView != null) {
@@ -523,13 +548,13 @@ fun VroumScreen(onBack: () -> Unit) {
             }
             VPhase.CLEAR, VPhase.END -> {
                 ResultScreen(spr, cleared = resCleared, score = resScore, dist = resDist, record = resRecord, endless = endless, diff = diff, timeUp = resTimeUp, takedowns = resTakedowns,
-                    place = resPlace, results = resResults, coins = resCoins, wallet = Settings.vroumCoins.intValue, rankUp = resRankUp, standings = if (mode == VMode.CUP && cupRows.isNotEmpty()) cupRows else null,
+                    place = resPlace, results = resResults, coins = resCoins, wallet = Settings.vroumCoins.intValue, rankUp = resRankUp, themeIdx = themeIdx, fresh = resFresh, standings = if (mode == VMode.CUP && cupRows.isNotEmpty()) cupRows else null,
                     vehicleImg = spr.vehicles.getOrNull(vehicle), frontImg = spr.fronts.getOrNull(vehicle), best = HighScores.best(gameKey), bg = if (themeIdx == 0) spr.village else spr.cards.getOrNull(themeIdx),
                     onReplay = {
                         SoundEngine.playVroumUi()
                         if (mode != VMode.CUP) { phase = VPhase.PLAYING; runToken++ }
                         else if (cupRace < 3) { cupRace++; themeIdx = cupThemeIdx(CUPS[cupIdx], cupRace); phase = VPhase.PLAYING; runToken++ }
-                        else { Settings.setVroumStars("cup_${CUPS[cupIdx].key}_$diff", if (cupRows.isNotEmpty()) cupRankStars(cupRows.indexOfFirst { it.me } + 1) else cupGlobalStars(cupStars.sum())); phase = VPhase.CUP_END }
+                        else { Settings.setVroumStars("cup_${CUPS[cupIdx].key}_$diff", if (cupRows.isNotEmpty()) cupRankStars(cupRows.indexOfFirst { it.me } + 1) else cupGlobalStars(cupStars.sum())); if (cupRows.indexOfFirst { it.me } == 0) Settings.addVroumSticker("t_${CUPS[cupIdx].key}"); cupChest = rollChest(); phase = VPhase.CUP_END }
                     },
                     onOther = { SoundEngine.playVroumUi(); phase = VPhase.LEVEL },
                     onVehicle = { SoundEngine.playVroumUi(); garageStep = 1; phase = VPhase.SELECT },
@@ -713,7 +738,7 @@ private fun CountdownOverlay(count: Int, hint: Boolean = false, rocket: Boolean 
 private fun ResultScreen(spr: VSprites, cleared: Boolean, score: Int, dist: Int, record: Boolean, endless: Boolean, diff: Int, timeUp: Boolean, takedowns: Int, vehicleImg: ImageBitmap?, frontImg: ImageBitmap?, best: Int, bg: ImageBitmap?,
                          onReplay: () -> Unit, onOther: () -> Unit, onVehicle: () -> Unit, cupLine: String? = null, nextLabel: String? = null,
                          place: Int = 0, results: List<VResult> = emptyList(), standings: List<VStandRow>? = null,
-                         coins: Int = 0, wallet: Int = 0, rankUp: Int = -1) {
+                         coins: Int = 0, wallet: Int = 0, rankUp: Int = -1, themeIdx: Int = 0, fresh: List<Int> = emptyList()) {
     val stars = vroumStarCount(endless, cleared, score, dist, diff, place)
     var t by remember { mutableStateOf(0f) }
     LaunchedEffect(Unit) { var last = 0L; while (t < 30f) { val now = withFrameNanos { it }; if (last != 0L) t += (now - last) / 1e9f; last = now } }
@@ -789,6 +814,7 @@ private fun ResultScreen(spr: VSprites, cleared: Boolean, score: Int, dist: Int,
             }
             Spacer(Modifier.height(6.dp))
             // carte de score « verre » : une seule colonne, tout centré, largeur fixe
+            if (place > 0 && standings == null) Box(Modifier.padding(bottom = 8.dp).clip(RoundedCornerShape(18.dp)).background(Color(0xAA120C2E)).padding(horizontal = 16.dp, vertical = 8.dp)) { MissionList(themeIdx, fresh = fresh, t = t) }
             if (standings != null) StandingsCard(spr, standings, t, Modifier.padding(bottom = 10.dp).fillMaxWidth(0.9f))
             else Box(Modifier.fillMaxWidth(0.82f).shadow(12.dp, RoundedCornerShape(28.dp), clip = false).clip(RoundedCornerShape(28.dp))
                 .background(Brush.verticalGradient(listOf(Color(0xF7FFFFFF), Color(0xE6F4F1FF)))).padding(horizontal = 22.dp, vertical = if (place > 0) 8.dp else 16.dp)) {
@@ -818,6 +844,11 @@ private fun ResultScreen(spr: VSprites, cleared: Boolean, score: Int, dist: Int,
             }
             }
             Spacer(Modifier.height(6.dp))
+        }
+        if (standings != null && fresh.isNotEmpty() && t > 1.2f) Row(Modifier.align(Alignment.TopStart).padding(top = 12.dp, start = 12.dp).scale(1f + 0.4f * (1f - ((t - 1.2f) / 0.3f).coerceIn(0f, 1f)))
+            .clip(RoundedCornerShape(14.dp)).background(Color(0xCC120C2E)).padding(horizontal = 9.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
+            VIcon(VIc.CHECK, 18.dp)
+            Text(" ×${fresh.size}", color = Color.White, fontWeight = FontWeight.Black, fontSize = 15.sp, style = androidx.compose.ui.text.TextStyle(fontFamily = VROUM_FONT))
         }
         // porte-monnaie : les pièces de la course roulent dans le total ; un nouveau rang de pilote s'annonce dessous
         if (coins > 0) Column(Modifier.align(Alignment.TopEnd).padding(top = 12.dp, end = 12.dp), horizontalAlignment = Alignment.End) {

@@ -294,6 +294,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         return l.sortedBy { it.time }
     }
     // ---- ASPIRATION : une seconde dans le sillage d'un concurrent = coup de vitesse
+    var draftCount = 0
     var draft = 0f; var draftT = 0f; var draftLabel = "ASPIRATION !"
     // ---- DERNIÈRE LIGNE DROITE : les 300 derniers mètres (musique accélérée, public déchaîné)
     var finalStretch = false; var stretchLabel = "DERNIÈRE LIGNE DROITE !"
@@ -695,7 +696,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
                 if (parts.size < 170) parts.add(VPart(lx * LANE_M + (Random.nextFloat() - 0.5f) * 2f, groundY(dist + PLAYER_Z) + 0.4f + Random.nextFloat() * 1.5f, PLAYER_Z + 5f + Random.nextFloat() * 14f,
                     0f, 0f, 0.3f, 0.3f, 0.65f, 0.95f, 1f, 0.10f + 0.08f * draft, floaty = true, vz = -14f))
                 if (draft >= 1f) {
-                    draft = 0f; draftT = 1.7f; gainBoost(0.25f); gainFlow(0.05f); chain(); shake = max(shake, 5f)
+                    draft = 0f; draftT = 1.7f; draftCount++; gainBoost(0.25f); gainFlow(0.05f); chain(); shake = max(shake, 5f)
                     texts.add(VText(lx * LANE_M, 4.2f, PLAYER_Z, draftLabel, 1.2f, V_CYAN, big = true)); ev("draft")
                 }
             } else draft = max(0f, draft - dt * 1.6f)

@@ -119,7 +119,8 @@ internal fun Podium(spr: VSprites, results: List<VResult>, t: Float, modifier: M
                 if (r != null) {
                     Box(Modifier.graphicsLayer { alpha = k; translationY = (-(1f - k) * 46f - joy) * density; val s = 0.7f + 0.3f * k; scaleX = s; scaleY = s }, contentAlignment = Alignment.TopCenter) {
                         val img = spr.fronts.getOrNull(r.veh) ?: spr.vehicles.getOrNull(r.veh)
-                        img?.let { Image(BitmapPainter(it), null, Modifier.padding(top = if (r.me) 12.dp else 0.dp).size(if (idx == 0) 84.dp else 68.dp), contentScale = ContentScale.Fit) }
+                        img?.let { Image(BitmapPainter(it), null, Modifier.padding(top = if (r.me) 12.dp else 0.dp).size(if (idx == 0) 84.dp else 68.dp), contentScale = ContentScale.Fit,
+                            colorFilter = if (r.me) paintFilter(vroumPaintOf(r.veh, com.goodbrainrot.app.Settings.vroumLook.value)) else null) }
                         // flèche dorée au-dessus du joueur
                         if (r.me) Canvas(Modifier.size(22.dp, 16.dp)) {
                             val p = Path().apply { moveTo(0f, 0f); lineTo(size.width, 0f); lineTo(size.width / 2f, size.height); close() }
@@ -153,7 +154,8 @@ internal fun StandingsCard(spr: VSprites, rows: List<VStandRow>, t: Float, modif
                 val ink = if (r.me) Color.White else V_INK
                 Text("${i + 1}", color = if (r.me) Color.White else if (i < 3) Color(0xFFD08A00) else V_INK.copy(alpha = 0.55f), fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic,
                     fontSize = 16.sp, maxLines = 1, modifier = Modifier.width(20.dp), style = TextStyle(fontFamily = VROUM_FONT))
-                spr.vehicles.getOrNull(r.veh)?.let { Image(BitmapPainter(it), null, Modifier.padding(end = 6.dp).fillMaxHeight().width(rowH), contentScale = ContentScale.Fit) }
+                spr.vehicles.getOrNull(r.veh)?.let { Image(BitmapPainter(it), null, Modifier.padding(end = 6.dp).fillMaxHeight().width(rowH), contentScale = ContentScale.Fit,
+                    colorFilter = if (r.me) paintFilter(vroumPaintOf(r.veh, com.goodbrainrot.app.Settings.vroumLook.value)) else null) }
                 Box(Modifier.weight(1f)) { FitText(stringResource(VEHICLES[r.veh].nameRes), 14f, color = ink, weight = FontWeight.ExtraBold) }
                 if (r.rival) Box(Modifier.padding(horizontal = 4.dp).clip(RoundedCornerShape(6.dp)).background(Color(0xFFD63A3A)).padding(horizontal = 5.dp)) {
                     Text(stringResource(R.string.vroum_rival), color = Color.White, fontWeight = FontWeight.Black, fontSize = 9.sp, maxLines = 1, style = TextStyle(fontFamily = VROUM_FONT))
