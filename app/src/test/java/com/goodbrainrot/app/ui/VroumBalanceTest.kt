@@ -179,6 +179,18 @@ class VroumBalanceTest {
     }
 
     @Test
+    fun pressing_boost_right_before_go_gives_a_rocket_start() {
+        fun run(pressAt: Float): VroumGame {
+            val g = VroumGame(false, 0, 1, THEMES[0], "T", "C", seed = 42L)
+            while (g.inIntro) { if (g.introT <= pressAt) g.boostHeld = true; g.update(1f / 60f) }
+            return g
+        }
+        org.junit.Assert.assertTrue("bon timing", run(0.3f).rocketStart)
+        org.junit.Assert.assertFalse("trop tôt", run(2.0f).rocketStart)
+        org.junit.Assert.assertFalse("sans appuyer", run(-1f).rocketStart)
+    }
+
+    @Test
     fun every_circuit_can_be_finished_on_easy() {
         for (th in THEMES) {
             val r = play(false, 0, bots[0], 7L, th)

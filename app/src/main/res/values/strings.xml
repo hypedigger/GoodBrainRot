@@ -335,6 +335,8 @@
     <string name="vroum_tip_works">Ramps everywhere</string>
     <string name="vroum_tip_sky">Wind gusts push you sideways</string>
     <string name="vroum_tip_cyber">Laser gates to jump in rhythm</string>
+    <string name="vroum_rocket">ROCKET START!</string>
+    <string name="vroum_rocket_hint">Hit BOOST right on GO!</string>
     <string name="vroum_takedown">TAKEDOWN!</string>
     <string name="vroum_strike">STRIKE!</string>
     <string name="vroum_revenge">REVENGE!</string>

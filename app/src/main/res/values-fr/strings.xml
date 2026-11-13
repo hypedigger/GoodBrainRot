@@ -326,6 +326,8 @@
     <string name="vroum_tip_works">Des tremplins partout</string>
     <string name="vroum_tip_sky">Des rafales de vent te poussent</string>
     <string name="vroum_tip_cyber">Portiques laser à sauter en rythme</string>
+    <string name="vroum_rocket">DÉPART CANON !</string>
+    <string name="vroum_rocket_hint">Appuie sur BOOST pile au GO !</string>
     <string name="vroum_takedown">TAKEDOWN !</string>
     <string name="vroum_strike">STRIKE !</string>
     <string name="vroum_revenge">REVANCHE !</string>

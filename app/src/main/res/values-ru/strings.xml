@@ -326,6 +326,8 @@
     <string name="vroum_tip_works">Всюду трамплины</string>
     <string name="vroum_tip_sky">Порывы ветра сдувают вбок</string>
     <string name="vroum_tip_cyber">Лазерные ворота: прыгай в ритм</string>
+    <string name="vroum_rocket">РАКЕТНЫЙ СТАРТ!</string>
+    <string name="vroum_rocket_hint">Жми BOOST точно на старте!</string>
     <string name="vroum_takedown">ТАРАН!</string>
     <string name="vroum_strike">СТРАЙК!</string>
     <string name="vroum_revenge">РЕВАНШ!</string>

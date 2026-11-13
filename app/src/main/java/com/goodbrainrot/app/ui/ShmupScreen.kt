@@ -48,6 +48,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -195,6 +197,9 @@ private class Enemy(
     var cannon = false     // gros canon fixe qui tire tout droit vers le bas (destructible)
     var anchorY = 0f       // position verticale d'arrêt (canon)
     var phaseSeen = 0      // vague C : dernière phase de boss annoncée (0/1/2)
+    var atk = 0            // boss : attaque en cours dans sa rotation
+    var atkT = 0f          // boss : temps écoulé dans l'attaque en cours
+    var atkCycle = 0       // boss : nombre d'attaques déjà enchaînées (décale les couloirs, alterne les sens)
     // --- ESCADRONS : vol sur trajectoire (courbe passant par des points), en file derrière un meneur ---
     var path: FloatArray? = null   // points de passage (x0,y0,x1,y1…) en pixels monde ; null = comportement classique
     var pathDur = 1f       // secondes pour parcourir la trajectoire
@@ -1336,6 +1341,54 @@ private class ShmupGame(
         }
     }
 
+    /** Anneau « fleur » : la vitesse ondule autour de l'anneau, les balles dessinent des pétales qui s'ouvrent. */
+    private fun fireFlower(e: Enemy, n: Int, petals: Int, sp: Float, color: Color, spin: Float = 0f) {
+        for (i in 0 until n) {
+            val a = (i.toFloat() / n) * 6.2832f + spin
+            val v = sp * (0.72f + 0.28f * cos((a - spin) * petals))
+            eBullets.add(Bullet(e.x, e.y, cos(a) * v, sin(a) * v, u * 1.5f, false, color))
+        }
+    }
+    /** Anneau à PORTE : un secteur vide par où se faufiler. `shift` = 0 : la porte s'ouvre sur le joueur (il suffit de
+     *  ne pas paniquer) ; sinon elle est décalée de `shift` radians vers le centre de l'écran : il faut aller la chercher. */
+    private fun fireGateRing(e: Enemy, n: Int, sp: Float, color: Color, gate: Float, shift: Float = 0f) {
+        val to = atan2(py - e.y, px - e.x) + (if (px < w / 2f) -shift else shift)
+        for (i in 0 until n) {
+            val a = (i.toFloat() / n) * 6.2832f
+            var d = a - to
+            while (d > 3.1416f) d -= 6.2832f
+            while (d < -3.1416f) d += 6.2832f
+            if (kotlin.math.abs(d) < gate) continue
+            eBullets.add(Bullet(e.x, e.y, cos(a) * sp, sin(a) * sp, u * 1.6f, false, color))
+        }
+    }
+    /** Essuie-glace : un petit éventail dont l'axe balaie de gauche à droite (phase = où en est le balayage). */
+    private fun fireSweep(e: Enemy, count: Int, spread: Float, sp: Float, color: Color, phase: Float, amp: Float) {
+        val c = 1.5708f + sin(phase) * amp
+        for (k in 0 until count) {
+            val a = c + (k - (count - 1) / 2f) * spread
+            eBullets.add(Bullet(e.x, e.y, cos(a) * sp, sin(a) * sp, u * 1.6f, false, color))
+        }
+    }
+    /** Double hélice : deux spirales de couleurs différentes qui tournent en sens inverse. */
+    private fun fireHelix(e: Enemy, arms: Int, sp: Float, c1: Color, c2: Color) {
+        val base = e.atkT * 2.6f
+        for (k in 0 until arms) {
+            val a = base + k * (6.2832f / arms)
+            eBullets.add(Bullet(e.x, e.y, cos(a) * sp, sin(a) * sp, u * 1.5f, false, c1))
+            val b = -base + k * (6.2832f / arms) + 3.1416f / arms
+            eBullets.add(Bullet(e.x, e.y, cos(b) * sp, sin(b) * sp, u * 1.5f, false, c2))
+        }
+    }
+    /** Couloirs de pluie : des filets verticaux tombent du haut en laissant des couloirs libres (décalés par `shift`). */
+    private fun fireLanes(sp: Float, color: Color, shift: Int) {
+        val cols = 6
+        for (c in 0 until cols) {
+            if ((c + shift) % 3 == 0) continue
+            eBullets.add(Bullet(w * (c + 0.5f) / cols, h * 0.10f, 0f, sp * 0.8f, u * 1.5f, false, color))
+        }
+    }
+
     private fun updateBoss(e: Enemy, dt: Float) {
         if (e.entering) {
             e.y += h * 0.12f * dt
@@ -1359,6 +1412,18 @@ private class ShmupGame(
         // le boss balaie plus vite à chaque phase
         e.x = w / 2f + sin(e.t * (0.5f + e.phaseSeen * 0.18f)) * w * 0.26f
         val rage = frac < 0.4f
+        // ROTATION D'ATTAQUES : une attaque dure quelques secondes, puis respiration + anneau d'annonce, puis la suivante.
+        // (la 3e attaque n'apparaît qu'une fois le boss abîmé ; le boss final caché garde son tir « tout à la fois »)
+        if (!e.trueLast) {
+            e.atkT += dt
+            if (e.atkT > (if (level == 1) 5.5f else 4.6f)) {
+                e.atk = (e.atk + 1) % (if (e.phaseSeen >= 1) 3 else 2)
+                e.atkT = 0f; e.atkCycle++
+                e.patCd = max(e.patCd, 1.0f)
+                blasts.add(Blast(e.x, e.y, u * 18f, Color.White, 0.45f, thick = 1.2f))
+                blasts.add(Blast(e.x, e.y, u * 11f, GOLD, 0.35f))
+            }
+        }
         e.patCd -= dt * diffFire
         if (e.patCd > 0f) return
         if (eBullets.size > 420) { e.patCd = 0.25f; return } // garde-fou anti-surcharge
@@ -1377,41 +1442,67 @@ private class ShmupGame(
             return
         }
 
-        // Un motif d'attaque distinct par niveau
+        // Chaque boss garde son attaque « signature » (0) et en enchaîne deux autres.
+        val dir = if (e.atkCycle % 2 == 0) 1f else -1f
         when (level) {
-            1 -> { // salves visées ESPACÉES (1er boss = apprentissage), petit anneau en rage
-                e.patCd = if (rage) 1.0f else 1.4f
-                fireAimed(e, 3, 0.24f, sp * 0.9f, PINK)
-                if (rage) fireRing(e, wn(10), sp * 0.8f, CRIM)
+            1 -> when (e.atk) { // 1er boss = apprentissage : tout est lent et espacé
+                0 -> { e.patCd = if (rage) 1.0f else 1.4f      // salves visées
+                    fireAimed(e, 3, 0.24f, sp * 0.9f, PINK)
+                    if (rage) fireRing(e, wn(10), sp * 0.8f, CRIM) }
+                1 -> { e.patCd = if (rage) 0.24f else 0.30f    // essuie-glace : on se glisse derrière le balayage
+                    fireSweep(e, 2, 0.20f, sp * 0.8f, PINK, e.atkT * 1.5f * dir, 0.75f) }
+                else -> { e.patCd = if (rage) 1.3f else 1.6f   // anneau à porte : passer par l'ouverture
+                    fireGateRing(e, wn(16), sp * 0.7f, CRIM, 0.55f) }
             }
-            2 -> { // spirale toxique + salves de DENTS DE SERPENT visées
-                e.patCd = if (e.volley < 2) 0.55f else if (rage) 0.16f else 0.24f
-                fireSpiral(e, if (rage) 4 else 3, sp, E_GRN)
-                // une salve de crochets sur ~1 volée sur 3 (plus dense en rage)
-                if (e.volley % 3 == 0) fireFangs(e, if (rage) 5 else 3, 0.16f, sp * 1.15f, Color(0xFFEAF3B0))
+            2 -> when (e.atk) { // serpent toxique
+                0 -> { e.patCd = if (e.volley < 2) 0.55f else if (rage) 0.16f else 0.24f   // spirale + crochets
+                    fireSpiral(e, if (rage) 4 else 3, sp, E_GRN)
+                    if (e.volley % 3 == 0) fireFangs(e, if (rage) 5 else 3, 0.16f, sp * 1.15f, Color(0xFFEAF3B0)) }
+                1 -> { e.patCd = if (rage) 0.17f else 0.22f    // double hélice (deux serpents qui se croisent)
+                    fireHelix(e, 2, sp * 0.85f, E_GRN, Color(0xFFEAF3B0)) }
+                else -> { e.patCd = if (rage) 0.55f else 0.7f  // morsures en rafale + fleur de venin
+                    fireFangs(e, 5, 0.15f, sp * 1.15f, Color(0xFFEAF3B0))
+                    if (e.volley % 3 == 1) fireFlower(e, wn(16), 4, sp * 0.8f, E_GRN, e.t) }
             }
-            3 -> { // murs de glace troués
-                e.patCd = if (rage) 0.9f else 1.3f
-                fireWall(e, sp * 0.9f, E_ICE)
-                if (rage) fireAimed(e, 3, 0.10f, sp, E_ICEW)
+            3 -> when (e.atk) { // glace
+                0 -> { e.patCd = if (rage) 0.9f else 1.3f      // murs troués
+                    fireWall(e, sp * 0.9f, E_ICE)
+                    if (rage) fireAimed(e, 3, 0.10f, sp, E_ICEW) }
+                1 -> { e.patCd = if (rage) 0.20f else 0.26f    // stalactites : couloirs de pluie, qui changent à chaque fois
+                    fireLanes(sp, E_ICEW, e.atkCycle) }
+                else -> { e.patCd = if (rage) 0.8f else 1.05f  // flocons à six branches
+                    fireFlower(e, wn(24), 6, sp * 0.85f, E_ICE, e.t * dir)
+                    if (rage && e.volley % 2 == 0) fireAimed(e, 3, 0.10f, sp, E_ICEW) }
             }
-            4 -> { // larges rafales de lave rapides + tourbillon lent qui aspire l'attention
-                e.patCd = if (rage) 0.5f else 0.8f
-                fireAimed(e, wn(7), 0.13f, sp * 1.1f, E_LAVA)
-                if (e.volley % 4 == 1) fireVortex(e, sp, Color(0xFF9A5CFF))
+            4 -> when (e.atk) { // lave
+                0 -> { e.patCd = if (rage) 0.5f else 0.8f      // larges rafales + tourbillon
+                    fireAimed(e, wn(7), 0.13f, sp * 1.1f, E_LAVA)
+                    if (e.volley % 4 == 1) fireVortex(e, sp, Color(0xFF9A5CFF)) }
+                1 -> { e.patCd = if (rage) 0.17f else 0.21f    // deux coulées qui se croisent
+                    fireSweep(e, 1, 0f, sp * 0.95f, E_LAVA, e.atkT * 1.9f, 0.85f)
+                    fireSweep(e, 1, 0f, sp * 0.95f, ORANGE, e.atkT * 1.9f + 3.1416f, 0.85f) }
+                else -> { e.patCd = if (rage) 0.65f else 0.85f // éruption : anneaux à porte + tourbillon
+                    fireGateRing(e, wn(22), sp * 0.85f, E_LAVA, 0.42f, shift = 0.26f)
+                    if (e.volley % 4 == 1) fireVortex(e, sp, Color(0xFF9A5CFF)) }
             }
-            else -> { // niveau 5 : anneaux tournants + visé
-                e.patCd = if (rage) 0.55f else 0.85f
-                fireRing(e, wn(if (rage) 26 else 18), sp, E_VIO, spin = e.t * 1.5f)
-                fireAimed(e, 3, 0.12f, sp * 1.1f, E_MAG)
+            else -> when (e.atk) { // niveau 5
+                0 -> { e.patCd = if (rage) 0.55f else 0.85f    // anneaux tournants + visé
+                    fireRing(e, wn(if (rage) 26 else 18), sp, E_VIO, spin = e.t * 1.5f)
+                    fireAimed(e, 3, 0.12f, sp * 1.1f, E_MAG) }
+                1 -> { e.patCd = if (rage) 0.15f else 0.19f    // triple hélice + tourbillons
+                    fireHelix(e, 3, sp * 0.9f, E_VIO, E_MAG)
+                    if (e.volley % 9 == 4) fireVortex(e, sp, Color(0xFF9A5CFF)) }
+                else -> { e.patCd = if (rage) 0.75f else 0.95f // fleurs + murs troués
+                    fireFlower(e, wn(if (rage) 26 else 20), 5, sp * 0.9f, E_MAG, e.t * dir)
+                    if (e.volley % 3 == 2) fireWall(e, sp * 0.8f, E_VIO) }
             }
         }
         e.volley++
         // Phase critique (3e phase, < 25 % PV) : cadence accrue + anneau de rage supplémentaire.
         // Pas au niveau 1 (boss d'apprentissage) : il saturait l'écran, injouable.
         if (frac < 0.25f && level >= 2) {
-            e.patCd *= 0.75f
-            fireRing(e, 9, sp * 0.8f, PHASE_RED, spin = -e.t)
+            if (e.patCd >= 0.45f) { e.patCd *= 0.75f; fireRing(e, 9, sp * 0.8f, PHASE_RED, spin = -e.t) }
+            else if (e.volley % 5 == 0) fireRing(e, 9, sp * 0.8f, PHASE_RED, spin = -e.t)
         }
     }
 
@@ -2180,8 +2271,8 @@ fun ShmupScreen(onBack: () -> Unit) {
         ImageBitmap.imageResource(R.drawable.cs_bg5),
         ImageBitmap.imageResource(R.drawable.cs_bg6)
     )
-    // Projectiles ennemis IA (cs_proj_1..20) : chargés dynamiquement.
-    val projIds = (1..20).mapNotNull { i ->
+    // Projectiles ennemis IA (cs_proj_1..24) : chargés dynamiquement.
+    val projIds = (1..24).mapNotNull { i ->
         val id = ctx.resources.getIdentifier("cs_proj_$i", "drawable", ctx.packageName)
         if (id != 0) id else null
     }
@@ -3040,11 +3131,12 @@ private fun DrawScope.drawGame(g: ShmupGame, phase: ShPhase, logo: ImageBitmap?,
                 }
                 b.fang -> drawFang(b.x, b.y, b.r, b.color, atan2(b.vy, b.vx))
                 ps.isNotEmpty() -> {
-                    // Sprite choisi par couleur d'ennemi (+ niveau) : stable par type d'ennemi.
-                    val idx = ((b.color.hashCode() and 0x7fffffff) + g.level * 7) % ps.size
+                    // Sprite le plus proche de la COULEUR de l'attaque : on lit le motif d'un coup d'œil (vert = venin,
+                    // bleu/blanc = glace, orange = lave…). Bille de diamètre 1,9 r : assez grosse pour être vue de loin.
+                    val idx = projIndexFor(ps, b.color)
                     val ang = atan2(b.vy, b.vx) * 180f / PI.toFloat() + 90f
                     rotate(ang, pivot = Offset(b.x, b.y)) {
-                        drawSpriteImg(ps[idx], b.x, b.y, b.r * 2.8f, rot180 = false, tint = null, flash = false)
+                        drawSpriteImg(ps[idx], b.x, b.y, b.r * 1.9f, rot180 = false, tint = null, flash = false)
                     }
                 }
                 else -> drawPixelBead(b.x, b.y, b.r * 0.9f, b.color)
@@ -4010,6 +4102,57 @@ private fun playerImg(s: ShSprites, ship: ShShip): ImageBitmap = when (ship) {
 }
 
 /** Dessine un sprite PNG (pixel net) centré, avec rotation 180° optionnelle et teinte. */
+// --- Choix du sprite de balle par couleur --------------------------------------------------------------
+// Couleur moyenne de chaque sprite (pixels opaques non sombres, ramenée à pleine intensité), calculée une fois ;
+// puis petit cache couleur → indice (tableaux parallèles : aucune allocation pendant le dessin).
+private var projAvgFor: List<ImageBitmap>? = null
+private var projAvg = IntArray(0)
+private val projKeys = IntArray(48); private val projVals = IntArray(48); private var projN = 0
+private const val PROJ_SKULL = 18   // cs_proj_19 = crâne rouge (anneau de rage), cs_proj_20 = crâne bleu : hors tirage
+
+private fun projIndexFor(ps: List<ImageBitmap>, color: Color): Int {
+    if (projAvgFor !== ps) {
+        projAvgFor = ps; projN = 0
+        projAvg = IntArray(ps.size) { i ->
+            val bmp = ps[i].asAndroidBitmap()
+            var r = 0L; var g = 0L; var b = 0L; var n = 0L
+            val step = maxOf(1, bmp.width / 24)
+            var y = 0
+            while (y < bmp.height) { var x = 0
+                while (x < bmp.width) {
+                    val p = bmp.getPixel(x, y)
+                    val pr = (p shr 16) and 255; val pg = (p shr 8) and 255; val pb = p and 255
+                    if ((p ushr 24) > 128 && maxOf(pr, pg, pb) > 90) { r += pr; g += pg; b += pb; n++ }
+                    x += step }
+                y += step }
+            if (n == 0L) 0 else {
+                val m = maxOf(r, g, b).coerceAtLeast(1L)
+                (((r * 255 / m).toInt()) shl 16) or (((g * 255 / m).toInt()) shl 8) or ((b * 255 / m).toInt())
+            }
+        }
+    }
+    val key = color.toArgb()
+    for (i in 0 until projN) if (projKeys[i] == key) return projVals[i]
+    var best = 0
+    if (key == PHASE_RED.toArgb() && ps.size > PROJ_SKULL) best = PROJ_SKULL
+    else {
+        val cr0 = (key shr 16) and 255; val cg0 = (key shr 8) and 255; val cb0 = key and 255
+        val m = maxOf(cr0, cg0, cb0).coerceAtLeast(1)
+        val cr = cr0 * 255 / m; val cg = cg0 * 255 / m; val cb = cb0 * 255 / m
+        var bd = Long.MAX_VALUE
+        for (i in ps.indices) {
+            // (hors tirage : les deux crânes, et les deux billes cyan clair — trop proches des tirs du joueur)
+            if (i == PROJ_SKULL || i == PROJ_SKULL + 1 || i == 0 || i == 6) continue
+            val a = projAvg[i]
+            val dr = ((a shr 16) and 255) - cr; val dg = ((a shr 8) and 255) - cg; val db = (a and 255) - cb
+            val d = (dr * dr + dg * dg + db * db).toLong()
+            if (d < bd) { bd = d; best = i }
+        }
+    }
+    if (projN < projKeys.size) { projKeys[projN] = key; projVals[projN] = best; projN++ }
+    return best
+}
+
 private fun DrawScope.drawSpriteImg(img: ImageBitmap, cx: Float, cy: Float, dst: Float,
                                     rot180: Boolean, tint: Color?, flash: Boolean) {
     val half = dst / 2f

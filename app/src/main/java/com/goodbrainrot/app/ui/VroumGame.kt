@@ -103,8 +103,10 @@ internal class VPick(var lane: Int, var z: Float, val type: VItem, val variant: 
 internal class VShot(var z: Float, val lane: Int)
 internal class VPart(var x: Float, var y: Float, var z: Float, var vx: Float, var vy: Float, var life: Float, val maxLife: Float,
                      val r: Float, val g: Float, val b: Float, val size: Float, val floaty: Boolean = false, val streak: Float = 0f, var vz: Float = 0f)
-internal class VText(var x: Float, var y: Float, val z: Float, val text: String, var life: Float, val color: Color, val big: Boolean = false) {
+internal class VText(var x: Float, var y: Float, var z: Float, @Volatile var text: String, var life: Float, @Volatile var color: Color, val big: Boolean = false) {
     @Volatile var sx = -1000f; @Volatile var sy = -1000f
+    @Volatile var pop = 1f      // 1 → 0 : petit rebond d'échelle à l'apparition (et à chaque fusion de gains)
+    var gain = 0                // > 0 : compteur de points (les gains rapprochés s'y additionnent)
 }
 internal class VDecor(var z: Float, var lateral: Float, val kind: Int, val cheer: Int = -1, val flag: Boolean = false) { var arms = 0f }
 
@@ -220,6 +222,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         const val PLAYER_Z = 18f
         const val LEVEL_LEN = 2000f
         const val INTRO_DUR = 3.6f
+        const val ROCKET_WINDOW = 0.55f   // départ canon : on appuie sur BOOST dans cette fenêtre avant le GO
         const val COMBO_T = 3.0f
         const val BOOST_SEG_S = 2.2f       // secondes de boost par segment de jauge
         const val MAX_SEG = 4
@@ -316,6 +319,8 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
     var boostSeg = 1                // capacité : 1..4 segments
     private var segProgress = 0     // takedowns depuis le dernier segment gagné
     @Volatile var boostHeld = false // le doigt est sur le bouton
+    private var prevHeld = false; private var startPress = -1f   // départ canon : instant (introT) où BOOST a été enfoncé
+    var rocketStart = false; var rocketLabel = "DÉPART CANON !"
     private var autoBoost = false   // Facile : part tout seul quand la jauge est pleine
     var boosting = false
     private val boostMul: Float get() = if (superT > 0f) 1.7f else if (boosting) 1.45f else if (turboT > 0f) 1.35f else if (giant > 0) 1.3f else 1f
@@ -476,10 +481,22 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         if (landedT > 0f) landedT -= dt
         if (blastT > 0f) blastT -= dt
         if (introT > 0f) {
+            // DÉPART CANON : BOOST enfoncé dans la dernière demi-seconde avant le GO (un simple tap suffit ; tenu depuis
+            // trop longtemps = rien, sans punition)
+            val held = boostHeld
+            if (held && !prevHeld) startPress = introT
+            prevHeld = held
             introT -= dt
             val step = kotlin.math.ceil(introT.toDouble()).toInt()
             if (step < introStep && step >= 1) { introStep = step; ev("count") }
-            if (introT <= 0f) { introT = 0f; ev("go") }
+            if (introT <= 0f) {
+                introT = 0f; ev("go")
+                if (startPress > 0f && startPress <= ROCKET_WINDOW) {
+                    rocketStart = true
+                    turboT = max(turboT, 2.6f); gainFlow(0.35f); gainBoost(0.6f); shake = max(shake, 10f)
+                    texts.add(VText(lx * LANE_M, 1.6f, PLAYER_Z + 6f, rocketLabel, 1.8f, V_CYAN, big = true)); ev("rocketStart")
+                }
+            }
         }
         val racing = !over && sputter < 0f && !cleared && !inIntro
         // élan : monte tout seul ; la vitesse rejoint la croisière (accélère vite, ralentit doucement après un boost)
@@ -671,7 +688,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
             if (p.life <= 0f) prt.remove()
         }
         val tit = texts.iterator()
-        while (tit.hasNext()) { val t = tit.next(); t.life -= dt; t.y += 1.2f * dt; if (t.life <= 0f) tit.remove() }
+        while (tit.hasNext()) { val t = tit.next(); t.life -= dt; t.y += 1.2f * dt; if (t.pop > 0f) t.pop = max(0f, t.pop - dt * 4.5f); if (t.life <= 0f) tit.remove() }
         textSnap = if (texts.isEmpty()) emptyList() else ArrayList(texts)
     }
 
@@ -1138,8 +1155,14 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
     private fun addScore(n: Int, x: Float, z: Float, col: Color) {
         val v = n * mult * (if (passengerKind >= 0) 2 else 1)
         score += v
-        texts.add(VText(x, 2.2f, z, "+$v", 0.9f, col))
+        // les gains qui s'enchaînent (pièces en file, takedowns en série) alimentent le MÊME compteur, qui grossit
+        val last = lastGain
+        if (last != null && last.life > 0.45f) {
+            last.gain += v; last.text = "+${last.gain}"; last.life = 0.9f; last.color = col
+            last.x = x; last.y = 2.2f; last.z = z; last.pop = 1f
+        } else lastGain = VText(x, 2.2f, z, "+$v", 0.9f, col).also { it.gain = v; texts.add(it) }
     }
+    private var lastGain: VText? = null
 
     private fun nearMiss(e: VEnemy) {
         nearCount++

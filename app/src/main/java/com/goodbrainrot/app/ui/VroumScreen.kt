@@ -61,6 +61,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
@@ -140,7 +141,7 @@ fun VroumScreen(onBack: () -> Unit) {
     var themeIdx by remember { mutableIntStateOf(0) }      // circuit : forêt, nuit, volcan, Tokyo, neige
     var runToken by remember { mutableIntStateOf(0) }
     var tick by remember { mutableIntStateOf(0) }
-    var countdown by remember { mutableIntStateOf(0) }     // 3,2,1 puis 0 = GO affiché brièvement, -1 = rien
+    var countdown by remember { mutableIntStateOf(-1) }    // 3,2,1 puis 0 = GO affiché brièvement, -1 = rien
     val synthRes = remember { ctx.resources.getIdentifier("vv_synth", "raw", ctx.packageName) }
     val frenzyRes = remember { ctx.resources.getIdentifier("vv_frenzy", "raw", ctx.packageName) }
     val boostRes = remember { ctx.resources.getIdentifier("vv_boost", "raw", ctx.packageName).let { if (it != 0) it else ctx.resources.getIdentifier("vv_frenzy", "raw", ctx.packageName) } }
@@ -151,13 +152,13 @@ fun VroumScreen(onBack: () -> Unit) {
     val jumpedLabel = stringResource(R.string.vroum_jumped)
     val nearLabel = stringResource(R.string.vroum_near); val maxLabel = stringResource(R.string.vroum_flow_max)
     val vLabels = listOf(R.string.vroum_takedown, R.string.vroum_strike, R.string.vroum_revenge, R.string.vroum_stomp, R.string.vroum_crash, R.string.vroum_shove,
-        R.string.vroum_ghost, R.string.vroum_wind, R.string.vroum_w_bomb, R.string.vroum_w_laser, R.string.vroum_w_flame, R.string.vroum_w_magnet, R.string.vroum_w_shield).map { stringResource(it) }
+        R.string.vroum_ghost, R.string.vroum_wind, R.string.vroum_w_bomb, R.string.vroum_w_laser, R.string.vroum_w_flame, R.string.vroum_w_magnet, R.string.vroum_w_shield, R.string.vroum_rocket).map { stringResource(it) }
     val game = remember(runToken) {
         if (phase != VPhase.PLAYING) null
         else VroumGame(endless, vehicle, diff, THEMES[themeIdx], trickLabel, cannonLabel).also { g ->
             g.lanesLabel = lanesLabel; g.superLabel = superLabel; g.jumpedLabel = jumpedLabel; g.nearLabel = nearLabel; g.maxLabel = maxLabel
             g.takedownLabel = vLabels[0]; g.strikeLabel = vLabels[1]; g.revengeLabel = vLabels[2]; g.stompLabel = vLabels[3]; g.crashLabel = vLabels[4]
-            g.shoveLabel = vLabels[5]; g.ghostLabel = vLabels[6]; g.windLabel = vLabels[7]; g.weaponLabels = vLabels.subList(8, 13)
+            g.shoveLabel = vLabels[5]; g.ghostLabel = vLabels[6]; g.windLabel = vLabels[7]; g.weaponLabels = vLabels.subList(8, 13); g.rocketLabel = vLabels[13]
             // charge le fantôme pour ce circuit / cette difficulté : meilleur temps en Course, distance max en Arcade
             Settings.vroumGhost(if (endless) "${THEMES[themeIdx].key}_a$diff" else "${THEMES[themeIdx].key}_$diff")?.let { s ->
                 val p = s.split(";")
@@ -250,7 +251,9 @@ fun VroumScreen(onBack: () -> Unit) {
     LaunchedEffect(game) {
         val g = game ?: return@LaunchedEffect
         countdown = 3
-        if (synthRes != 0) GameMusic.playRes(ctx, synthRes)
+        // chaque famille de circuits a sa musique (repli sur la synthwave si le fichier manque)
+        val raceRes = ctx.resources.getIdentifier(vroumMusicKey(g.theme.key), "raw", ctx.packageName).let { if (it != 0) it else synthRes }
+        if (raceRes != 0) GameMusic.playRes(ctx, raceRes)
         SoundEngine.playVvTick(0.8f)
         var engine = 0
         var engineCd = 0f
@@ -284,6 +287,7 @@ fun VroumScreen(onBack: () -> Unit) {
                         "bounce" -> { SoundEngine.playJump(); SoundEngine.playVvTick(1.0f + 0.12f * g.stompChain.coerceAtMost(8)); Haptics.tap(ctx) }
                         "revenge" -> { SoundEngine.playVvYahoo(); SoundEngine.playVvFanfare() }
                         "segUp" -> SoundEngine.playVvSuccess()
+                        "rocketStart" -> { SoundEngine.playTurbo(); SoundEngine.playVvYahoo(); Haptics.success(ctx) }
                         "boostFull" -> SoundEngine.playVvTick(1.4f)
                         // le moteur HURLE tant qu'on tient le boost (vrai enregistrement de voiture de course, en boucle)
                         "boostOn" -> { SoundEngine.playTurbo(); Haptics.tap(ctx); Sfx.stopStream(roar); roar = Sfx.loop("vv_boostloop", 0.9f, 0.95f) }
@@ -312,14 +316,14 @@ fun VroumScreen(onBack: () -> Unit) {
                         "splash" -> SoundEngine.playSplash()
                         "turbo" -> SoundEngine.playTurbo()
                         "superboost" -> { SoundEngine.playTurbo(); SoundEngine.playVvYahoo(); Haptics.tap(ctx); if (boostRes != 0) GameMusic.playRes(ctx, boostRes) }
-                        "boostEnd" -> { if (g.giant > 0 && frenzyRes != 0) GameMusic.playRes(ctx, frenzyRes) else if (synthRes != 0) GameMusic.playRes(ctx, synthRes) }
+                        "boostEnd" -> { if (g.giant > 0 && frenzyRes != 0) GameMusic.playRes(ctx, frenzyRes) else if (raceRes != 0) GameMusic.playRes(ctx, raceRes) }
                         "fuel" -> SoundEngine.playFuel()
                         "pick1" -> SoundEngine.playPick(1)
                         "pick2" -> SoundEngine.playPick(2)
                         "pick3" -> SoundEngine.playPick(3)
                         "passenger" -> SoundEngine.playVvSuccess()
                         "giant1", "giant2" -> { SoundEngine.playStarPick(); if (frenzyRes != 0) GameMusic.playRes(ctx, frenzyRes) }
-                        "giantEnd" -> { SoundEngine.playBoom(); if (g.superT > 0f && boostRes != 0) GameMusic.playRes(ctx, boostRes) else if (synthRes != 0) GameMusic.playRes(ctx, synthRes) }
+                        "giantEnd" -> { SoundEngine.playBoom(); if (g.superT > 0f && boostRes != 0) GameMusic.playRes(ctx, boostRes) else if (raceRes != 0) GameMusic.playRes(ctx, raceRes) }
                         "flag" -> { SoundEngine.playVvFanfare(); Tts.speak(ctx.getString(cheers.random())) }
                         "cheer" -> Tts.speak(ctx.getString(cheers.random()))
                         "sputter" -> { SoundEngine.playStall(); Sfx.stopStream(engine); engine = 0 }
@@ -381,7 +385,8 @@ fun VroumScreen(onBack: () -> Unit) {
                     )
                     @Suppress("UNUSED_EXPRESSION") tick
                     val speedPath = remember { androidx.compose.ui.graphics.Path() }
-                    Canvas(Modifier.fillMaxSize().clip(androidx.compose.ui.graphics.RectangleShape)) {
+                    val textBoxes = remember { FloatArray(24 * 4) }   // boîtes des textes flottants déjà posés (anti-chevauchement)
+                    Canvas(Modifier.fillMaxSize()) {
                         @Suppress("UNUSED_EXPRESSION") tick
                         // LIGNES DE VITESSE : des pointes claires fuient du point de fuite vers les bords de l'écran. Discrètes à
                         // pleine vitesse, franches pendant un boost (bleutées), arc-en-ciel pendant le super boost.
@@ -406,19 +411,36 @@ fun VroumScreen(onBack: () -> Unit) {
                                     speedPath.moveTo(x0, y0); speedPath.lineTo(x1 - sa * wd, y1 + ca * wd); speedPath.lineTo(x1 + sa * wd, y1 - ca * wd); speedPath.close()
                                 }
                                 val col = if (lvl == 2) { val (r, gg, b) = g.rainbow(g.elapsed * 0.9f); Color(0.6f + 0.4f * r, 0.6f + 0.4f * gg, 0.6f + 0.4f * b) } else if (lvl == 1) Color(0xFFCFEBFF) else Color.White
-                                drawPath(speedPath, col.copy(alpha = 0.20f + 0.45f * k))
+                                clipRect { drawPath(speedPath, col.copy(alpha = 0.20f + 0.45f * k)) }   // (sinon les pointes débordent sur les barres système)
                             }
                         }
                         val snap = g.textSnap
                         val u = size.height / 100f
                         if (snap.isNotEmpty()) drawIntoCanvas { c ->
                             val paint = android.graphics.Paint().apply { isAntiAlias = true; textAlign = android.graphics.Paint.Align.CENTER; isFakeBoldText = true; setShadowLayer(6f, 0f, 3f, android.graphics.Color.argb(160, 0, 0, 0)) }
-                            for (t in snap) {
+                            // du plus récent au plus ancien : un texte qui en recouvrirait un autre est repoussé au-dessus
+                            var nb = 0
+                            for (i in snap.indices.reversed()) {
+                                val t = snap[i]
                                 if (t.sx < -500f) continue
                                 val a = (t.life / 0.9f).coerceIn(0f, 1f)
-                                paint.textSize = u * (if (t.big) 6.5f else 4f)
-                                paint.color = android.graphics.Color.argb((a * 255).toInt(), (t.color.red * 255).toInt(), (t.color.green * 255).toInt(), (t.color.blue * 255).toInt())
-                                c.nativeCanvas.drawText(t.text, t.sx, t.sy, paint)
+                                val label = t.text; val col = t.color
+                                paint.textSize = u * (if (t.big) 6.5f else if (t.gain >= 100) 5f else 4f) * (1f + 0.4f * t.pop)
+                                val hw = paint.measureText(label) / 2f; val hh = paint.textSize
+                                val tx = if (hw * 2f + u * 2f < size.width) t.sx.coerceIn(hw + u, size.width - hw - u) else size.width / 2f
+                                var y = t.sy; var tries = 0
+                                while (tries < 6) {
+                                    var hit = false
+                                    for (b in 0 until nb) {
+                                        val o = b * 4
+                                        if (tx - hw < textBoxes[o + 2] && tx + hw > textBoxes[o] && y - hh < textBoxes[o + 3] && y > textBoxes[o + 1]) { y = textBoxes[o + 1] - u * 0.3f; hit = true }
+                                    }
+                                    if (!hit) break
+                                    tries++
+                                }
+                                if (nb < 24) { val o = nb * 4; textBoxes[o] = tx - hw; textBoxes[o + 1] = y - hh; textBoxes[o + 2] = tx + hw; textBoxes[o + 3] = y; nb++ }
+                                paint.color = android.graphics.Color.argb((a * 255).toInt(), (col.red * 255).toInt(), (col.green * 255).toInt(), (col.blue * 255).toInt())
+                                c.nativeCanvas.drawText(label, tx, y, paint)
                             }
                         }
                         if (g.giant > 0) drawRect(V_GOLD.copy(alpha = 0.25f + 0.2f * sin(g.elapsed * 10f)), size = size, style = Stroke(u * 1.6f))
@@ -444,7 +466,7 @@ fun VroumScreen(onBack: () -> Unit) {
                     }
                     ItemSlot(g, spr.items, tick, Modifier.align(Alignment.CenterStart).padding(start = 12.dp).offset(y = if (g.wide) 14.dp else (-40).dp))
                     TakedownChip(g, tick, Modifier.align(Alignment.CenterEnd).padding(end = 12.dp).offset(y = if (g.wide) (-20).dp else (-40).dp))
-                    if (countdown >= 0) CountdownOverlay(countdown)
+                    if (countdown >= 0) CountdownOverlay(countdown, hint = !g.duel)
                     // tutoriel de la toute première partie (3 bulles, avance avec les gestes de l'enfant)
                     if (tutoStep >= 0 && countdown < 0) VroumTutoOverlay(tutoStep)
                 }
@@ -595,7 +617,7 @@ private fun Chevron(left: Boolean, alpha: Float) {
 
 /** 3 - 2 - 1 - GO ! : chiffre qui apparaît en grand et se dégonfle. */
 @Composable
-private fun CountdownOverlay(count: Int) {
+private fun CountdownOverlay(count: Int, hint: Boolean = false) {
     val scale = remember(count) { Animatable(1.6f) }
     LaunchedEffect(count) { scale.animateTo(1f, spring(dampingRatio = 0.5f, stiffness = 400f)) }
     val label = if (count > 0) "$count" else stringResource(R.string.vroum_go)
@@ -605,6 +627,9 @@ private fun CountdownOverlay(count: Int) {
             fontSize = if (count > 0) 120.sp else 64.sp, textAlign = TextAlign.Center,
             modifier = Modifier.scale(scale.value).shadow(0.dp)
         )
+        // l'astuce du départ canon, glissée sous le « 1 » (les grands la lisent, les petits tombent dessus par hasard)
+        if (hint && count == 1) Text(stringResource(R.string.vroum_rocket_hint), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp, maxLines = 1,
+            modifier = Modifier.align(Alignment.Center).offset(y = 92.dp).clip(RoundedCornerShape(12.dp)).background(Color(0x77000000)).padding(horizontal = 12.dp, vertical = 5.dp))
     }
 }
 

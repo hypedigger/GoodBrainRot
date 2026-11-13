@@ -1,5 +1,13 @@
 # Nouveautés — GoodBrainRot
 
+## 3.98 — 2026-11-13
+- **Crimson Sky — des boss qui enchaînent leurs attaques.** Chaque boss ne répète plus un seul motif : il alterne **trois attaques** de quelques secondes, séparées par une courte respiration annoncée par un anneau lumineux (la troisième arrive quand il est abîmé). Nouveaux motifs de balles : **essuie-glace** (un éventail qui balaie l'écran), **anneau à porte** (une ouverture par où se faufiler), **double hélice**, **fleurs** dont les pétales s'ouvrent, **couloirs de pluie** qui changent de place. Le premier boss reste lent et lisible ; l'anneau de rage de fin de combat ne s'ajoute plus à chaque tir des attaques rapides.
+- **Crimson Sky — des balles qu'on voit.** Les balles ennemies étaient de petites billes dont le sprite était tiré au hasard (souvent rouge sombre sur fond de forêt). Elles ont maintenant toutes le même gabarit, presque deux fois plus gros, et leur **couleur suit l'attaque** : vert pour le venin, bleu et blanc pour la glace, orange pour la lave, violet et rose pour le dernier boss, crânes rouges pour l'anneau de rage. Quatre nouvelles billes (vert, citron, rose, blanc glacé).
+- **Vroum — départ canon** (façon Mario Kart) : appuyer sur BOOST pile au GO donne un turbo de départ. L'astuce s'affiche sous le « 1 » du décompte ; appuyer trop tôt ne punit pas.
+- **Vroum — une musique par ambiance.** Cinq nouvelles boucles (générées en local) : tropicale pour Plage / Océan / Jungle, western rock pour Canyon / Dinosaures / Volcan / Ferme, féerie d'hiver pour Neige / Banquise / Nuages / Bonbons, eurobeat pour Tokyo / Cyber / Étoiles, surf d'Halloween pour le Manoir hanté. Les autres circuits gardent la synthwave.
+- **Vroum — textes plus lisibles** : les gains de points qui s'enchaînent s'additionnent dans un seul compteur qui grossit (« +10 », « +40 » → « +50 ») au lieu de s'empiler ; chaque message apparaît avec un petit rebond et deux messages ne se superposent plus jamais.
+- **Vroum — lignes de vitesse** : elles ne débordent plus sur les barres du téléphone.
+- **Vroum — sprites de face** : le char, le tracteur et la voiture de course n'ont plus de détails qui pouvaient passer pour un visage.
 ## 3.97 — 2026-11-13
 - **Vroum — sensation de vitesse** : de vraies lignes de vitesse fuient vers les bords de l'écran dès qu'on roule à fond, franches et bleutées pendant le boost, arc-en-ciel pendant le super boost.
 - **Vroum — rebonds plus lisibles** : pendant un saut, un chevron doré sautille au-dessus de chaque véhicule sur lequel on peut retomber, avec un anneau au sol.

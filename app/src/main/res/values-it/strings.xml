@@ -326,6 +326,8 @@
     <string name="vroum_tip_works">Trampolini ovunque</string>
     <string name="vroum_tip_sky">Raffiche di vento ti spingono</string>
     <string name="vroum_tip_cyber">Barriere laser da saltare a ritmo</string>
+    <string name="vroum_rocket">PARTENZA A RAZZO!</string>
+    <string name="vroum_rocket_hint">Premi BOOST proprio al via!</string>
     <string name="vroum_takedown">TAKEDOWN!</string>
     <string name="vroum_strike">STRIKE!</string>
     <string name="vroum_revenge">RIVINCITA!</string>

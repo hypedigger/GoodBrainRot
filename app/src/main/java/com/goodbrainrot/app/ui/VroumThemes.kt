@@ -166,3 +166,13 @@ internal val THEMES = listOf(
         listOf("cy_holo" to 2.6f, "cy_tower" to 3.6f, "cy_cubes" to 1.3f, "cy_palm" to 2.6f, "cy_robot" to 1.4f, "cy_dish" to 1.5f, "cy_holo" to 2.6f, "cy_tower" to 3.6f),
         listOf("vv_cy_p1", "vv_cy_p2", "vv_cy_p3"), 8, logTex = "vv_cy_gate", trait = VTrait(gates = true), tip = R.string.vroum_tip_cyber),
 )
+
+/** Musique de course du circuit (ressource raw) ; les circuits sans ambiance propre gardent la synthwave d'origine. */
+internal fun vroumMusicKey(themeKey: String): String = when (themeKey) {
+    "beach", "ocean", "jungle" -> "vv_m_tropic"
+    "desert", "dino", "volcano", "farm" -> "vv_m_west"
+    "snow", "ice", "sky", "candy" -> "vv_m_frost"
+    "tokyo", "cyber", "space" -> "vv_m_neon"
+    "spooky" -> "vv_m_spooky"
+    else -> "vv_synth"
+}
