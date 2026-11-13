@@ -300,6 +300,7 @@
     <string name="vroum_v_excavator">Digger</string>
     <string name="vroum_v_bear">Bear</string>
     <string name="vroum_jumped">Jumped!</string>
+    <string name="vroum_best">Best</string>
     <string name="vroum_near">Close call!</string>
     <string name="vroum_flow_max">Full speed!</string>
     <string name="vroum_res_time">Time left: +%1$d</string>

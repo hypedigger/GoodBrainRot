@@ -291,6 +291,7 @@
     <string name="vroum_v_excavator">Excavadora</string>
     <string name="vroum_v_bear">Oso</string>
     <string name="vroum_jumped">¡Saltado!</string>
+    <string name="vroum_best">Récord</string>
     <string name="vroum_near">¡Por poco!</string>
     <string name="vroum_flow_max">¡A tope!</string>
     <string name="vroum_res_time">Tiempo restante: +%1$d</string>

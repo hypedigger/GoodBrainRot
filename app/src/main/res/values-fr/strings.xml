@@ -291,6 +291,7 @@
     <string name="vroum_v_excavator">Pelleteuse</string>
     <string name="vroum_v_bear">Ours</string>
     <string name="vroum_jumped">Sauté !</string>
+    <string name="vroum_best">Record</string>
     <string name="vroum_near">Frôlé !</string>
     <string name="vroum_flow_max">À fond !</string>
     <string name="vroum_res_time">Temps restant : +%1$d</string>

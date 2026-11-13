@@ -61,6 +61,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.painter.BitmapPainter
@@ -106,12 +108,14 @@ import kotlin.random.Random
 
 private enum class VPhase { SELECT, LEVEL, PLAYING, DUEL, CLEAR, END }
 
-private class VSprites(private val ctx: android.content.Context) {
+internal class VSprites(private val ctx: android.content.Context) {
     private fun load(name: String): ImageBitmap? {
         val id = ctx.resources.getIdentifier(name, "drawable", ctx.packageName)
         return if (id != 0) try { ImageBitmap.imageResource(ctx.resources, id) } catch (_: Exception) { null } else null
     }
     val vehicles = VEHICLES.map { load("vr_${it.key}") ?: load("vv_${it.key}") }
+    /** bolides vus de FACE (garage, photo finish) ; null si le sprite n'existe pas encore */
+    val fronts = VEHICLES.map { load("vf_${it.key}") }
     val title = load("vv_title"); val village = load("vv_village"); val empty = load("vv_empty")
     val cards = THEMES.map { load(it.card) }
 }
@@ -298,9 +302,9 @@ fun VroumScreen(onBack: () -> Unit) {
 
     Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF7FD4FF), Color(0xFFB39DFF))))) {
         when (phase) {
-            VPhase.SELECT -> SelectScreen(spr, vehicle, onBack = onBack, onPick = { vehicle = it; hornFor(it) },
+            VPhase.SELECT -> GarageScreen(spr, vehicle, VEHICLE_COLORS, onBack = onBack, onPick = { vehicle = it; hornFor(it) },
                 onNext = { SoundEngine.playVroumUi(); phase = VPhase.LEVEL })
-            VPhase.LEVEL -> LevelScreen(spr, diff, endless, duelMode, onDiff = { SoundEngine.playVroumUi(); diff = it },
+            VPhase.LEVEL -> RaceSetupScreen(spr, vehicle, themeIdx, diff, endless, duelMode, onDiff = { SoundEngine.playVroumUi(); diff = it },
                 onEndless = { SoundEngine.playVroumUi(); endless = it }, onDuel = { SoundEngine.playVroumUi(); duelMode = it }, onBack = { phase = VPhase.SELECT },
                 onPlay = { t -> SoundEngine.playVroumUi(); themeIdx = t; phase = if (duelMode) VPhase.DUEL else VPhase.PLAYING; runToken++ })
             VPhase.DUEL -> DuelScreen(themeIdx, vehicle, onBack = { phase = VPhase.LEVEL })
@@ -360,7 +364,7 @@ fun VroumScreen(onBack: () -> Unit) {
             }
             VPhase.CLEAR, VPhase.END -> {
                 ResultScreen(spr, cleared = resCleared, score = resScore, dist = resDist, record = resRecord, endless = endless, diff = diff, timeUp = resTimeUp,
-                    vehicleImg = spr.vehicles.getOrNull(vehicle), best = HighScores.best(gameKey), bg = if (themeIdx == 0) spr.village else spr.cards.getOrNull(themeIdx),
+                    vehicleImg = spr.vehicles.getOrNull(vehicle), frontImg = spr.fronts.getOrNull(vehicle), best = HighScores.best(gameKey), bg = if (themeIdx == 0) spr.village else spr.cards.getOrNull(themeIdx),
                     onReplay = { SoundEngine.playVroumUi(); phase = VPhase.PLAYING; runToken++ },
                     onOther = { SoundEngine.playVroumUi(); phase = VPhase.LEVEL },
                     onVehicle = { SoundEngine.playVroumUi(); phase = VPhase.SELECT })
@@ -520,7 +524,7 @@ private fun CountdownOverlay(count: Int) {
  * une par une, score qui défile, pluie de confettis, gros bouton « Encore ! ».
  */
 @Composable
-private fun ResultScreen(spr: VSprites, cleared: Boolean, score: Int, dist: Int, record: Boolean, endless: Boolean, diff: Int, timeUp: Boolean, vehicleImg: ImageBitmap?, best: Int, bg: ImageBitmap?,
+private fun ResultScreen(spr: VSprites, cleared: Boolean, score: Int, dist: Int, record: Boolean, endless: Boolean, diff: Int, timeUp: Boolean, vehicleImg: ImageBitmap?, frontImg: ImageBitmap?, best: Int, bg: ImageBitmap?,
                          onReplay: () -> Unit, onOther: () -> Unit, onVehicle: () -> Unit) {
     val stars = vroumStarCount(endless, cleared, score, dist, diff)
     var t by remember { mutableStateOf(0f) }
@@ -555,7 +559,28 @@ private fun ResultScreen(spr: VSprites, cleared: Boolean, score: Int, dist: Int,
                         style = androidx.compose.ui.text.TextStyle(shadow = androidx.compose.ui.graphics.Shadow(Color(0x55000000), Offset(0f, 3f), 6f)))
                 }
             }
-            vehicleImg?.let {
+            if (cleared && frontImg != null) {
+                // PHOTO FINISH : un polaroïd qui claque à l'écran, le bolide vu de face sous le damier d'arrivée
+                val pop = 1f + 0.4f * (1f - (t / 0.30f).coerceIn(0f, 1f))
+                Box(Modifier.padding(top = 8.dp, bottom = 16.dp).fillMaxWidth(0.60f).scale(pop).graphicsLayer { rotationZ = -4f + sin(t * 1.3f) * 1.2f }
+                    .shadow(16.dp, RoundedCornerShape(10.dp), clip = false).clip(RoundedCornerShape(10.dp)).background(Color.White)
+                    .padding(start = 9.dp, end = 9.dp, top = 9.dp, bottom = 5.dp)) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Box(Modifier.fillMaxWidth().aspectRatio(1.12f).clip(RoundedCornerShape(4.dp)).background(Color(0xFF6B5B95))) {
+                            (bg ?: spr.village)?.let { Image(painter = BitmapPainter(it), contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop) }
+                            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.5f to Color.Transparent, 1f to Color(0x99000000))))
+                            Canvas(Modifier.fillMaxWidth().height(16.dp)) {
+                                val c = size.height / 2f; var x = 0f; var i = 0
+                                while (x < size.width) { for (r in 0..1) drawRect(if ((i + r) % 2 == 0) Color.White else Color(0xFF1B1B1B), Offset(x, r * c), Size(c, c)); x += c; i++ }
+                            }
+                            Image(painter = BitmapPainter(frontImg), contentDescription = null, contentScale = ContentScale.Fit,
+                                modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth(0.74f).aspectRatio(1f).offset(y = (4f - abs(sin(t * 4f)) * 6f).dp))
+                        }
+                        Text("PHOTO FINISH", color = V_INK, fontWeight = FontWeight.Black, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, fontSize = 15.sp,
+                            letterSpacing = 2.sp, maxLines = 1, modifier = Modifier.padding(top = 4.dp))
+                    }
+                }
+            } else vehicleImg?.let {
                 val bob = abs(sin(t * 4f)) * 8f
                 Image(painter = BitmapPainter(it), contentDescription = null, modifier = Modifier.size(104.dp).padding(top = bob.dp), contentScale = ContentScale.Fit)
             }
@@ -581,6 +606,7 @@ private fun ResultScreen(spr: VSprites, cleared: Boolean, score: Int, dist: Int,
             }
             Spacer(Modifier.height(6.dp))
         }
+        if (cleared && frontImg != null && t < 0.45f) Box(Modifier.fillMaxSize().background(Color.White.copy(alpha = 0.9f * (1f - t / 0.45f))))
     }
 }
 
@@ -593,54 +619,6 @@ private fun Illustration(img: ImageBitmap?) {
 }
 
 /** Écran 1 : choix du bolide — tout tient sur un écran (5 rangées de 2 cartes). */
-@Composable
-private fun SelectScreen(spr: VSprites, vehicle: Int, onBack: () -> Unit, onPick: (Int) -> Unit, onNext: () -> Unit) {
-    Column(Modifier.fillMaxSize()) {
-        Box(Modifier.fillMaxWidth().height(150.dp)) {
-            spr.title?.let { Image(painter = BitmapPainter(it), contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop) }
-            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xAA7FD4FF)))))
-            BackButton(onBack = onBack, modifier = Modifier.align(Alignment.TopStart))
-            Column(Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Vroum Vrouuuuuuum", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 26.sp)
-                Text(stringResource(R.string.vroum_choose), color = Color.White.copy(alpha = 0.95f), fontWeight = FontWeight.Bold, fontSize = 16.sp)
-            }
-        }
-        Column(Modifier.fillMaxWidth().weight(1f).padding(horizontal = 14.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            for (row in 0 until (VEHICLES.size + 1) / 2) {
-                Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    for (col in 0..1) {
-                        val i = row * 2 + col
-                        val sel = i == vehicle
-                        val sc by androidx.compose.animation.core.animateFloatAsState(if (sel) 1.04f else 1f, label = "sel")
-                        Box(
-                            modifier = Modifier
-                                .weight(1f).fillMaxHeight()
-                                .scale(sc)
-                                .shadow(if (sel) 10.dp else 3.dp, RoundedCornerShape(20.dp), clip = false)
-                                .clip(RoundedCornerShape(20.dp))
-                                .background(if (sel) Brush.verticalGradient(listOf(Color(0xFFFFF4C2), Color(0xFFFFE08A))) else Brush.verticalGradient(listOf(V_CARD, Color(0xE6F3F0FF))))
-                                .border(if (sel) 3.dp else 0.dp, if (sel) V_GOLD else Color.Transparent, RoundedCornerShape(20.dp))
-                                .clickableNoRipple { onPick(i) }
-                        ) {
-                            Row(Modifier.fillMaxSize().padding(horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                                val img = spr.vehicles[i]
-                                if (img != null) Image(painter = BitmapPainter(img), contentDescription = null, modifier = Modifier.size(58.dp), contentScale = ContentScale.Fit)
-                                else Box(Modifier.size(58.dp).clip(CircleShape).background(VEHICLE_COLORS[i]))
-                                Text(stringResource(VEHICLES[i].nameRes), color = V_INK, fontWeight = FontWeight.Bold, fontSize = 14.sp,
-                                    modifier = Modifier.padding(start = 8.dp), lineHeight = 16.sp)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        Box(Modifier.fillMaxWidth().padding(bottom = 18.dp, top = 6.dp), contentAlignment = Alignment.Center) {
-            PillButton(stringResource(R.string.vroum_next), listOf(V_GREEN, V_TEAL), onClick = onNext)
-        }
-    }
-}
-
-/** Écran 2 : choix de la route. */
 /** Tutoriel de la toute première partie : 3 bulles qui avancent avec les gestes de l'enfant. */
 @Composable
 private fun VroumTutoOverlay(step: Int) {
@@ -749,104 +727,6 @@ private fun DuelHalf(player: Int, g: VroumGame, v: VroumGlView, tick: Int) {
         JumpButton(modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 14.dp), cooldown = (g.jumpCd / g.JUMP_CD).coerceIn(0f, 1f), frame = tick) { v.queueEvent { g.jump() } }
         if (g.introT > 0f) Text("${kotlin.math.ceil(g.introT.toDouble()).toInt().coerceIn(1, 3)}", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 60.sp,
             modifier = Modifier.align(Alignment.Center), style = androidx.compose.ui.text.TextStyle(shadow = androidx.compose.ui.graphics.Shadow(Color(0xAA000000), Offset(0f, 3f), 8f)))
-    }
-}
-
-@Composable
-private fun LevelScreen(spr: VSprites, diff: Int, endless: Boolean, duel: Boolean, onDiff: (Int) -> Unit, onEndless: (Boolean) -> Unit, onDuel: (Boolean) -> Unit, onBack: () -> Unit, onPlay: (Int) -> Unit) {
-    val unlocked by Settings.vroumEndlessUnlocked
-    Column(Modifier.fillMaxSize().padding(16.dp).verticalScroll(rememberScrollState())) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            BackButton(onBack = onBack)
-            Text(stringResource(R.string.vroum_pick_level), color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
-        }
-        Spacer(Modifier.height(10.dp))
-        // Difficulté : Facile (chrono, invincible) / Moyen / Difficile — comme dans les autres jeux
-        Text(stringResource(R.string.vroum_difficulty), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp, modifier = Modifier.padding(start = 4.dp, bottom = 6.dp))
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            val labels = listOf(R.string.vroum_diff_easy, R.string.vroum_diff_medium, R.string.vroum_diff_hard)
-            val descs = listOf(R.string.vroum_diff_easy_desc, R.string.vroum_diff_medium_desc, R.string.vroum_diff_hard_desc)
-            val glyphs = listOf("🙂", "😎", "🔥")
-            val cols = listOf(V_GREEN, V_CYAN, V_RED)
-            for (i in 0..2) {
-                val sel = i == diff
-                Column(
-                    Modifier.weight(1f).shadow(if (sel) 10.dp else 4.dp, RoundedCornerShape(18.dp), clip = false).clip(RoundedCornerShape(18.dp))
-                        .background(if (sel) Color(0xFFFFE9A8) else V_CARD)
-                        .border(if (sel) 3.dp else 0.dp, if (sel) V_GOLD else Color.Transparent, RoundedCornerShape(18.dp))
-                        .clickableNoRipple { onDiff(i) }.padding(horizontal = 8.dp, vertical = 10.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Box(Modifier.size(34.dp).clip(CircleShape).background(cols[i]), contentAlignment = Alignment.Center) { Text(glyphs[i], fontSize = 18.sp) }
-                    Text(stringResource(labels[i]), color = V_INK, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp, modifier = Modifier.padding(top = 4.dp))
-                    Text(stringResource(descs[i]), color = V_INK.copy(alpha = 0.7f), fontSize = 11.sp, textAlign = TextAlign.Center, lineHeight = 13.sp)
-                }
-            }
-        }
-        Spacer(Modifier.height(12.dp))
-        // Mode : Course (2 000 m jusqu'au village) ou Sans fin (débloqué après une première arrivée)
-        Text(stringResource(R.string.vroum_mode), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp, modifier = Modifier.padding(start = 4.dp, bottom = 6.dp))
-        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Color(0x55FFFFFF)).padding(4.dp)) {
-            for ((i, lab) in listOf(R.string.vroum_race, R.string.vroum_endless, R.string.vroum_duel).withIndex()) {
-                val sel = when (i) { 0 -> !endless && !duel; 1 -> endless && !duel; else -> duel }
-                val ok = i != 1 || unlocked
-                Box(Modifier.weight(1f).clip(RoundedCornerShape(14.dp)).background(if (sel) Color.White else Color.Transparent)
-                    .clickableNoRipple { if (ok) { if (i == 2) onDuel(true) else { onDuel(false); onEndless(i == 1) } } }.padding(vertical = 10.dp), contentAlignment = Alignment.Center) {
-                    Text((if (i == 1 && !unlocked) "🔒 " else if (i == 2) "👥 " else "") + stringResource(lab), color = if (sel) V_INK else Color.White.copy(alpha = if (ok) 1f else 0.6f), fontWeight = FontWeight.ExtraBold, fontSize = 14.sp, maxLines = 1)
-                }
-            }
-        }
-        Text(if (duel) stringResource(R.string.vroum_duel_hint)
-             else if (!unlocked) stringResource(R.string.vroum_endless_locked)
-             else stringResource(if (endless) R.string.vroum_mode_arcade_hint else R.string.vroum_mode_race_hint),
-            color = Color.White.copy(alpha = 0.85f), fontSize = 12.sp, modifier = Modifier.padding(start = 6.dp, top = 4.dp))
-        Spacer(Modifier.height(12.dp))
-        // Circuits : 5 thèmes en grille de 2 colonnes
-        val starsMap by Settings.vroumStars
-        val rows = THEMES.indices.chunked(2)
-        for (r in rows) {
-            Row(Modifier.fillMaxWidth().height(150.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                for (i in r) LevelCard(stringResource(THEMES[i].nameRes), spr.cards.getOrNull(i) ?: spr.title, true, null,
-                    Modifier.weight(1f).fillMaxHeight(),
-                    starsByDiff = (0..2).map { d -> starsMap["${THEMES[i].key}_${if (endless) "a" else "c"}$d"] ?: -1 }) { onPlay(i) }
-                if (r.size == 1) Spacer(Modifier.weight(1f))
-            }
-            Spacer(Modifier.height(12.dp))
-        }
-        val best = HighScores.best(if (endless) HighScores.Games.VROUM_ENDLESS else HighScores.Games.VROUM)
-        if (best > 0) Text("🏆 $best", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp, modifier = Modifier.align(Alignment.CenterHorizontally))
-        Spacer(Modifier.height(16.dp))
-    }
-}
-
-@Composable
-private fun LevelCard(label: String, img: ImageBitmap?, enabled: Boolean, lockedText: String?, modifier: Modifier, starsByDiff: List<Int> = emptyList(), onClick: () -> Unit) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .shadow(12.dp, RoundedCornerShape(26.dp), clip = false)
-            .clip(RoundedCornerShape(26.dp))
-            .background(Color(0xFF6B5B95))
-            .clickableNoRipple { if (enabled) onClick() }
-    ) {
-        img?.let { Image(painter = BitmapPainter(it), contentDescription = null, modifier = Modifier.fillMaxSize().alpha(if (enabled) 1f else 0.4f), contentScale = ContentScale.Crop) }
-        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xB3000000)))))
-        // étoiles gagnées sur ce circuit : une ligne par difficulté déjà jouée (🙂 / 😎 / 🔥), pour le mode sélectionné
-        if (starsByDiff.any { it >= 0 }) Column(Modifier.align(Alignment.TopEnd).padding(8.dp).clip(RoundedCornerShape(12.dp)).background(Color(0x66000000)).padding(horizontal = 7.dp, vertical = 3.dp)) {
-            val glyphs = listOf("🙂", "😎", "🔥")
-            starsByDiff.forEachIndexed { d, stars ->
-                if (stars >= 0) Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(glyphs[d], fontSize = 10.sp, modifier = Modifier.padding(end = 2.dp))
-                    for (k in 0 until 3) Text("★", color = if (k < stars) V_GOLD else Color.White.copy(alpha = 0.35f), fontSize = 12.sp,
-                        style = androidx.compose.ui.text.TextStyle(shadow = androidx.compose.ui.graphics.Shadow(Color(0x88000000), Offset(0f, 1f), 3f)))
-                }
-            }
-        }
-        Column(Modifier.align(Alignment.BottomStart).padding(14.dp)) {
-            Text(label, color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 19.sp, lineHeight = 21.sp,
-                style = androidx.compose.ui.text.TextStyle(shadow = androidx.compose.ui.graphics.Shadow(Color(0x88000000), Offset(0f, 2f), 6f)))
-            if (lockedText != null) Text("🔒 $lockedText", color = Color.White.copy(alpha = 0.85f), fontSize = 12.sp)
-        }
     }
 }
 

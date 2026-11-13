@@ -195,7 +195,51 @@ private class Enemy(
     var cannon = false     // gros canon fixe qui tire tout droit vers le bas (destructible)
     var anchorY = 0f       // position verticale d'arrêt (canon)
     var phaseSeen = 0      // vague C : dernière phase de boss annoncée (0/1/2)
+    // --- ESCADRONS : vol sur trajectoire (courbe passant par des points), en file derrière un meneur ---
+    var path: FloatArray? = null   // points de passage (x0,y0,x1,y1…) en pixels monde ; null = comportement classique
+    var pathDur = 1f       // secondes pour parcourir la trajectoire
+    var pathT = 0f         // avancement 0..1
+    var pathDelay = 0f     // retard au départ (les suiveurs partent l'un après l'autre)
+    var pathHold = false   // en fin de trajectoire : reste en formation (sinon quitte l'écran)
+    var formation = false  // tient sa place dans une formation (balancement d'ensemble)
+    var squad = 0          // n° d'escadron (prime si tout l'escadron est détruit)
+    var shot = 0           // motif de tir : 0 aucun, 1 visé, 2 éventail de 3, 3 anneau, 4 rafale de 3, 5 double tir droit
+    var shotAt = 2f        // avancement auquel il tire
+    var shotGap = 0f       // > 0 : tire de nouveau tous les shotGap d'avancement
+    var charge = 0f        // TÉLÉGRAPHE : il « charge » (anneau lumineux) avant de tirer, on voit venir le tir
+    var burstN = 0         // tirs restants d'une rafale en cours
+    var burstCd = 0f
+    var tilt = 0f          // orientation du sprite (degrés) : le nez suit la trajectoire
+    var gunship = false    // canonnière : se poste puis déroule un motif de balles (éventail, double anneau, tourniquet, rideau)
+    var leaveAt = 0f       // canonnière : repart vers le haut après ce délai (0 = jamais)
 }
+
+/** Escadron : la prime tombe si tous ses membres sont détruits (aucun échappé). */
+private class ShSquad(val total: Int) { var killed = 0; var escaped = false }
+
+/**
+ * Trajectoire d'escadron : points de passage normalisés (x de 0 à 1 sur la largeur de l'écran, y de 0 à 1 sur la
+ * hauteur ; hors de 0..1 = hors champ). [dur] secondes de vol, [shotAt] avancement où les tireurs font feu.
+ */
+private class ShPath(val dur: Float, val shotAt: Float, vararg val p: Float)
+private const val P_SWOOP = 0; private const val P_SNAKE = 1; private const val P_LOOP = 2; private const val P_SIDE = 3
+private const val P_PINCER = 4; private const val P_CROSS = 5; private const val P_CIRCLE = 6
+private val SH_PATHS = listOf(
+    // plongeon en U : entre en haut à gauche, passe au centre, ressort en haut à droite
+    ShPath(4.6f, 0.45f, 0.08f, -0.10f, 0.16f, 0.22f, 0.50f, 0.40f, 0.84f, 0.22f, 0.92f, -0.12f),
+    // serpent : zigzague sur toute la hauteur et sort par le bas
+    ShPath(6.4f, 0.30f, 0.18f, -0.10f, 0.74f, 0.14f, 0.26f, 0.32f, 0.74f, 0.50f, 0.26f, 0.70f, 0.55f, 1.12f),
+    // looping : descend, boucle, repart vers le haut
+    ShPath(6.2f, 0.28f, 0.28f, -0.10f, 0.30f, 0.26f, 0.48f, 0.46f, 0.64f, 0.32f, 0.50f, 0.18f, 0.36f, 0.34f, 0.52f, 0.56f, 0.76f, 0.40f, 0.86f, -0.12f),
+    // balayage : entre par le côté gauche, traverse, fait demi-tour et ressort du même côté
+    ShPath(5.6f, 0.40f, -0.10f, 0.10f, 0.45f, 0.16f, 0.88f, 0.28f, 0.62f, 0.42f, -0.12f, 0.34f),
+    // tenaille (à doubler en miroir) : arrive d'un coin, pique vers le centre, repart du même côté
+    ShPath(5.0f, 0.42f, -0.08f, 0.02f, 0.26f, 0.18f, 0.44f, 0.38f, 0.28f, 0.54f, -0.14f, 0.46f),
+    // diagonale (à doubler en miroir : les deux files se croisent)
+    ShPath(4.2f, 0.45f, 0.02f, -0.10f, 0.30f, 0.20f, 0.62f, 0.44f, 1.10f, 0.62f),
+    // ronde : un tour complet autour du centre, repart par le haut
+    ShPath(7.0f, 0.22f, 0.50f, -0.12f, 0.50f, 0.12f, 0.74f, 0.24f, 0.78f, 0.42f, 0.50f, 0.54f, 0.22f, 0.42f, 0.26f, 0.24f, 0.50f, 0.12f, 0.50f, -0.14f),
+)
 
 // --- Mini-boss : chaque apparition est unique (couleur + motif de tir + mouvement) ---
 private val MINIBOSS_TINT = listOf(
@@ -1087,6 +1131,7 @@ private class ShmupGame(
             ))
         }
         enemies.remove(e)
+        if (e.squad != 0) squadKill(e)
         if (e.kind == Kind.BOSS) { boss = null; bossDeathPos = Offset(e.x, e.y); deadBoss = e }
         // Mort d'un mini-boss : on aspire toutes les PIÈCES (pas les power-ups), façon bombe.
         if (e.kind == Kind.MINIBOSS) magnetCoins()
@@ -1113,6 +1158,16 @@ private class ShmupGame(
             // VERROU d'invincibilite d'entree : une fois assez visible, l'ennemi reste vulnerable
             // meme s'il repart vers un bord.
             if (!e.vulnerable && entryVisibleNow(e)) e.vulnerable = true
+            // escadrons : vol sur trajectoire, canonnière en poste, formation qui tient sa place
+            if (e.path != null) { updatePathEnemy(e, dt); continue }
+            if (e.gunship) { updateGunship(e, dt); continue }
+            if (e.formation) {
+                e.x = e.baseX + sin(stageElapsed * 1.1f) * u * 5f
+                e.y = e.anchorY + sin(stageElapsed * 1.7f) * u * 1.5f
+                e.tilt += (0f - e.tilt) * min(1f, dt * 6f)
+                maybeFireAimed(e, dt, 3.4f, if (level >= 3 && mode != ShMode.EASY) 3 else 1)
+                continue
+            }
             if (e.side) {
                 // ennemi entré par un côté (partie haute) : traverse en descendant un peu, tire
                 e.entering = false
@@ -1724,6 +1779,226 @@ private class ShmupGame(
         }
     }
 
+    // -----------------------------------------------------------------------
+    // ESCADRONS : files d'ennemis sur trajectoire, formations, canonnières
+    // -----------------------------------------------------------------------
+    private val squads = HashMap<Int, ShSquad>()
+    private var squadSeq = 0
+    private val tmpPos = FloatArray(2)
+
+    /** Courbe lisse (Catmull-Rom) passant par les points de [p] ; [t] de 0 à 1. */
+    private fun pathPos(p: FloatArray, t: Float, out: FloatArray) {
+        val n = p.size / 2
+        val f = t.coerceIn(0f, 1f) * (n - 1); val i = min(f.toInt(), n - 2); val s = f - i
+        val s2 = s * s; val s3 = s2 * s
+        for (c in 0..1) {
+            val a = p[2 * (i - 1).coerceAtLeast(0) + c]; val b = p[2 * i + c]
+            val d = p[2 * (i + 1) + c]; val e = p[2 * (i + 2).coerceAtMost(n - 1) + c]
+            out[c] = 0.5f * (2f * b + (d - a) * s + (2f * a - 5f * b + 4f * d - e) * s2 + (3f * b - a - 3f * d + e) * s3)
+        }
+    }
+
+    private fun gruntHp(kind: Kind) = max(1, ((if (kind == Kind.INTERCEPTOR) 3 else 2) * diffHp).toInt())
+
+    /** Un tireur sur [every] dans un escadron (moins en Facile, plus en Difficile) ; 0 = personne ne tire. */
+    private fun shooterStep(every: Int): Int = if (every <= 0) 0 else when (mode) { ShMode.EASY -> every * 2; ShMode.HARD -> max(1, every - 1); else -> every }
+
+    /**
+     * Escadron de [count] ennemis en FILE sur la trajectoire [pathId] (voir SH_PATHS), cadrée sur l'écran au moment
+     * de l'appel ; [mirror] = symétrie gauche/droite ; [gap] secondes entre deux ennemis ; [shot] motif de tir des
+     * tireurs (un sur [every]), annoncé par un anneau lumineux avant de partir.
+     */
+    fun spawnSquad(pathId: Int, count: Int, kind: Kind, mirror: Boolean = false, gap: Float = 0.30f, shot: Int = 0, every: Int = 3, repeatShot: Boolean = false) {
+        val sp = SH_PATHS[pathId]
+        val n = sp.p.size / 2
+        val x0 = camX - viewW * 0.08f; val ww = viewW * 1.16f
+        val pts = FloatArray(n * 2)
+        for (k in 0 until n) { val nx = if (mirror) 1f - sp.p[2 * k] else sp.p[2 * k]; pts[2 * k] = x0 + nx * ww; pts[2 * k + 1] = sp.p[2 * k + 1] * h }
+        val id = ++squadSeq; squads[id] = ShSquad(count)
+        val step = shooterStep(every); val hp = gruntHp(kind)
+        for (i in 0 until count) {
+            val e = Enemy(pts[0], pts[1], hp, hp, kind, if (kind == Kind.INTERCEPTOR) 150 else 100, u * 3.6f)
+            e.path = pts; e.pathDur = sp.dur; e.pathDelay = i * gap; e.squad = id; e.canShoot = false
+            if (shot != 0 && step > 0 && i % step == step / 2) { e.shot = shot; e.shotAt = sp.shotAt; if (repeatShot) e.shotGap = 0.3f }
+            tagEnemy(e); enemies.add(e)
+        }
+    }
+
+    /** Kamikazes : ils piquent l'un après l'autre vers l'endroit où se trouve le vaisseau, puis filent par le bas. */
+    fun spawnDivers(count: Int) {
+        val id = ++squadSeq; squads[id] = ShSquad(count)
+        val hp = gruntHp(Kind.DRONE)
+        for (i in 0 until count) {
+            val sx = camX + viewW * (0.12f + 0.76f * (if (count <= 1) 0.5f else i.toFloat() / (count - 1)))
+            val tx = px + (Random.nextFloat() - 0.5f) * u * 10f
+            val pts = floatArrayOf(sx, -h * 0.10f, sx, h * 0.16f, sx + (tx - sx) * 0.35f, h * 0.30f, tx, h * 0.62f, tx + (tx - sx) * 0.25f, h * 1.14f)
+            val e = Enemy(pts[0], pts[1], hp, hp, Kind.DRONE, 120, u * 3.6f)
+            e.path = pts; e.pathDur = 3.3f; e.pathDelay = i * 0.55f; e.squad = id; e.canShoot = false
+            tagEnemy(e); enemies.add(e)
+        }
+    }
+
+    /**
+     * FORMATION qui se met en place puis tient sa position : [shape] 0 = V (pointe en bas), 1 = ligne, 2 = deux rangs.
+     * Les tireurs font feu chacun leur tour, de gauche à droite (vague de tirs lisible).
+     */
+    fun spawnFormation(count: Int, kind: Kind, shape: Int, shoot: Boolean) {
+        val id = ++squadSeq; squads[id] = ShSquad(count)
+        val hp = gruntHp(kind)
+        val cx = camX + viewW / 2f
+        val step = shooterStep(2)
+        for (i in 0 until count) {
+            val f = if (count <= 1) 0.5f else i.toFloat() / (count - 1)
+            val row = if (shape == 2) i % 2 else 0
+            val sx = cx + (f - 0.5f) * viewW * 0.62f
+            val sy = when (shape) { 0 -> h * (0.14f + 0.16f * (1f - abs(f - 0.5f) * 2f)); 2 -> h * (0.14f + 0.09f * row); else -> h * 0.17f }
+            val side = if (f < 0.5f) -1f else 1f
+            val pts = floatArrayOf(sx + side * viewW * 0.45f, -h * 0.10f, sx + side * viewW * 0.30f, sy * 0.55f, sx + side * viewW * 0.06f, sy * 1.12f, sx, sy)
+            val e = Enemy(pts[0], pts[1], hp, hp, kind, if (kind == Kind.INTERCEPTOR) 150 else 100, u * 3.6f)
+            e.path = pts; e.pathDur = 1.9f; e.pathDelay = abs(f - 0.5f) * 1.2f; e.pathHold = true; e.formation = true; e.squad = id
+            e.canShoot = shoot && step > 0 && i % step == 0
+            e.fireCd = 2.2f + f * 2.4f          // salve qui balaie la formation de gauche à droite
+            tagEnemy(e); enemies.add(e)
+        }
+    }
+
+    /**
+     * CANONNIÈRES : gros vaisseaux qui viennent se poster en haut et déroulent un motif de balles propre à leur
+     * [variant] (0 éventail visé, 1 double anneau décalé, 2 tourniquet, 3 rideau), puis repartent.
+     */
+    fun spawnGunships(count: Int, variant: Int) {
+        val n = count.coerceIn(1, 3)
+        val id = ++squadSeq; squads[id] = ShSquad(n)
+        val hp = max(1, (12 * diffHp).toInt())
+        for (i in 0 until n) {
+            val sx = camX + viewW * (i + 1f) / (n + 1f)
+            val sy = h * (0.15f + 0.05f * (i % 2))
+            val side = if (i % 2 == 0) -1f else 1f
+            val pts = floatArrayOf(sx + side * viewW * 0.5f, -h * 0.12f, sx + side * viewW * 0.2f, sy * 0.4f, sx, sy)
+            val e = Enemy(pts[0], pts[1], hp, hp, Kind.INTERCEPTOR, 500, u * 6f)
+            e.path = pts; e.pathDur = 2.2f; e.pathDelay = i * 0.5f; e.pathHold = true; e.squad = id
+            e.gunship = true; e.heavy = true; e.canShoot = false; e.variant = variant + i; e.patCd = 0.6f + i * 0.7f; e.leaveAt = 13f
+            tagEnemy(e); enemies.add(e)
+        }
+    }
+
+    /** Ennemis d'escadron encore en vol (ils finiront par quitter l'écran) + canonnières en poste. */
+    fun flyingCount(): Int = enemies.count { it.path != null || it.gunship }
+    /** Membres d'une formation encore en place. */
+    fun formationCount(): Int = enemies.count { it.formation }
+
+    private fun squadEscaped(e: Enemy) { squads[e.squad]?.escaped = true }
+
+    /** Escadron entièrement détruit : prime, pluie de pièces, texte. */
+    private fun squadKill(e: Enemy) {
+        val s = squads[e.squad] ?: return
+        s.killed++
+        if (s.killed < s.total || s.escaped || s.total < 3) return
+        squads.remove(e.squad)
+        val gain = 100 * s.total * mult
+        if (mode.scored) score += gain
+        texts.add(FloatText(e.x, e.y - u * 5f, "SQUAD BONUS +$gain", 1.4f, GOLD))
+        repeat(min(8, s.total)) {
+            coins.add(Coin((e.x + (Random.nextFloat() - 0.5f) * u * 12f).coerceIn(u * 6f, w - u * 6f), e.y, h * (0.10f + Random.nextFloat() * 0.12f),
+                (Random.nextFloat() - 0.5f) * h * 0.10f, randomCoinValue()))
+        }
+        blasts.add(Blast(e.x, e.y, u * 16f, GOLD, 0.5f, thick = 1.6f))
+        SoundEngine.playBreak()
+    }
+
+    /** Vol sur trajectoire : position, orientation du sprite (le nez suit la courbe), tir annoncé, sortie ou mise en formation. */
+    private fun updatePathEnemy(e: Enemy, dt: Float) {
+        val p = e.path ?: return
+        if (e.pathDelay > 0f) { e.pathDelay -= dt; return }
+        val ox = e.x; val oy = e.y
+        e.pathT += dt / e.pathDur
+        pathPos(p, e.pathT, tmpPos); e.x = tmpPos[0]; e.y = tmpPos[1]
+        e.entering = false
+        val dx = e.x - ox; val dy = e.y - oy
+        if (dx * dx + dy * dy > 1e-3f) {
+            var d = atan2(dy, dx) * 180f / PI.toFloat() - 90f - e.tilt
+            while (d > 180f) d -= 360f; while (d < -180f) d += 360f
+            e.tilt += d * min(1f, dt * 10f)
+        }
+        updateShot(e, dt)
+        if (e.pathT >= 1f) {
+            if (e.pathHold) { e.path = null; e.baseX = e.x; e.anchorY = e.y; e.t = 0f }
+            else { squadEscaped(e); enemies.remove(e) }
+        }
+    }
+
+    private fun onScreen(e: Enemy) = e.x > camX - u * 2f && e.x < camX + viewW + u * 2f && e.y > u * 2f && e.y < h * 0.68f
+
+    private fun updateShot(e: Enemy, dt: Float) {
+        if (e.burstN > 0) {
+            e.burstCd -= dt
+            if (e.burstCd <= 0f) { e.burstCd = 0.14f; e.burstN--; fireAimed(e, 1, 0f, h * diffBullet * 1.05f, PINK) }
+        }
+        if (e.shot == 0) return
+        if (e.charge > 0f) {
+            e.charge -= dt
+            if (e.charge <= 0f) {
+                if (onScreen(e) && eBullets.size < 150) fireShot(e)
+                if (e.shotGap > 0f) e.shotAt += e.shotGap else e.shot = 0
+            }
+            return
+        }
+        if (e.pathT >= e.shotAt) { if (onScreen(e)) e.charge = 0.40f else if (e.shotGap > 0f) e.shotAt += e.shotGap else e.shot = 0 }
+    }
+
+    private fun fireShot(e: Enemy) {
+        val sp = h * diffBullet
+        when (e.shot) {
+            1 -> fireAimed(e, 1, 0f, sp, PINK)
+            2 -> fireAimed(e, 3, 0.20f, sp, PINK)
+            3 -> fireRing(e, if (mode == ShMode.EASY) 6 else 8, sp * 0.70f, ORANGE, spin = e.phase)
+            4 -> { e.burstN = 3; e.burstCd = 0f }
+            else -> for (k in listOf(-1f, 1f)) eBullets.add(Bullet(e.x + k * u * 1.6f, e.y + u * 2f, 0f, sp * 0.9f, u * 1.5f, false, ORANGE))
+        }
+    }
+
+    /** Canonnière en poste : léger balancement, motif de balles en boucle (toujours annoncé), puis départ. */
+    private fun updateGunship(e: Enemy, dt: Float) {
+        e.x = e.baseX + sin(e.t * 0.9f + e.phase) * u * 5f
+        e.tilt += (0f - e.tilt) * min(1f, dt * 6f)
+        if (e.leaveAt > 0f && e.t > e.leaveAt) {
+            e.y -= h * 0.28f * dt
+            if (e.y < -e.radius * 2f) { squadEscaped(e); enemies.remove(e) }
+            return
+        }
+        if (!onScreen(e)) return
+        val easy = mode == ShMode.EASY
+        val sp = h * diffBullet
+        if (e.burstN > 0) {
+            e.burstCd -= dt
+            if (e.burstCd <= 0f) {
+                e.burstN--
+                when (e.variant % 4) {
+                    1 -> { e.burstCd = 0.42f; fireRing(e, if (easy) 7 else 11, sp * 0.70f, ORANGE, spin = e.volley * 0.37f + (if (e.burstN % 2 == 0) 0.29f else 0f)) }
+                    2 -> { e.burstCd = 0.11f; fireSpiral(e, 2, sp * 0.78f, Color(0xFFB56CFF)) }
+                    else -> { e.burstCd = 0.5f; val off = if (e.burstN % 2 == 0) 0f else u * 3f
+                        for (k in -2..2) eBullets.add(Bullet(e.x + k * u * 6f + off, e.y + u * 4f, 0f, sp * 0.75f, u * 1.5f, false, CYAN_HOT)) }
+                }
+            }
+            return
+        }
+        if (e.charge > 0f) {
+            e.charge -= dt
+            if (e.charge <= 0f) {
+                e.volley++
+                when (e.variant % 4) {
+                    0 -> { fireAimed(e, if (easy) 3 else 5, 0.17f, sp, PINK); e.patCd = 1.9f }
+                    1 -> { e.burstN = 2; e.burstCd = 0f; e.patCd = 2.6f }
+                    2 -> { e.burstN = if (easy) 7 else 12; e.burstCd = 0f; e.patCd = 2.4f }
+                    else -> { e.burstN = 3; e.burstCd = 0f; e.patCd = 2.2f }
+                }
+            }
+            return
+        }
+        e.patCd -= dt * diffFire
+        if (e.patCd <= 0f && eBullets.size < 160) e.charge = 0.45f
+    }
+
     /** Lâche un power-up qui descend depuis le haut (distribution pilotée par le directeur). */
     fun dropPowerUp() {
         val x = u * 9f + Random.nextFloat() * (w - u * 18f)
@@ -2083,19 +2358,27 @@ fun ShmupScreen(onBack: () -> Unit) {
             game.dropPowerUp(); game.dropPowerUp()
             var loop = 0
             while (phase == ShPhase.PLAYING && !game.gameOver) {
-                when (loop % 4) {
-                    0 -> game.spawnMixedSwarm(22 + (loop * 2).coerceAtMost(20))
-                    1 -> game.spawnArc(Kind.INTERCEPTOR, 16 + loop.coerceAtMost(12))
-                    2 -> game.spawnSwarm(Kind.DRONE, 24 + (loop * 2).coerceAtMost(24))
-                    else -> game.spawnMixedSwarm(20 + loop.coerceAtMost(16))
+                // enchaînement d'escadrons variés (trajectoires, tenailles, canonnières) entrecoupé d'essaims à pulvériser
+                val k = 7 + (loop / 2).coerceAtMost(5)
+                val sh = 1 + loop % 4
+                when (loop % 8) {
+                    0 -> { game.spawnSquad(P_SWOOP, k, Kind.DRONE, shot = sh); game.spawnSquad(P_SWOOP, k, Kind.DRONE, mirror = true, shot = sh) }
+                    1 -> game.spawnMixedSwarm(22 + (loop * 2).coerceAtMost(20))
+                    2 -> { game.spawnSquad(P_PINCER, k, Kind.INTERCEPTOR, shot = sh, every = 2); game.spawnSquad(P_PINCER, k, Kind.INTERCEPTOR, mirror = true, shot = sh, every = 2) }
+                    3 -> { game.spawnGunships(2, loop); game.spawnSquad(P_SNAKE, k + 2, Kind.DRONE, gap = 0.26f, shot = sh, every = 4) }
+                    4 -> game.spawnSwarm(Kind.DRONE, 24 + (loop * 2).coerceAtMost(24))
+                    5 -> { game.spawnSquad(P_CROSS, k, Kind.INTERCEPTOR, shot = sh, every = 2); game.spawnSquad(P_CROSS, k, Kind.INTERCEPTOR, mirror = true, shot = sh, every = 2); game.spawnDivers(4) }
+                    6 -> { game.spawnFormation(8, Kind.INTERCEPTOR, loop / 8 % 3, shoot = true); game.spawnSquad(P_LOOP, k, Kind.DRONE, shot = sh, repeatShot = true) }
+                    else -> { game.spawnSquad(P_CIRCLE, k + 2, Kind.DRONE, shot = sh, repeatShot = true); game.spawnGunships(1, loop + 1) }
                 }
                 if (loop % 3 == 1) game.dropPowerUp()
                 if (loop == 6) { GameMusic.playBoss(ctx); game.spawnMiniBoss()
                     while (game.miniBossAlive() && !game.gameOver && phase == ShPhase.PLAYING) kotlinx.coroutines.delay(80)
                     if (phase == ShPhase.PLAYING) GameMusic.playStage(ctx, lvl) }
                 var acc = 0f
-                while (acc < 5500f && !game.gameOver && phase == ShPhase.PLAYING) {
-                    if (game.gruntCount() <= 4) break
+                kotlinx.coroutines.delay(900)
+                while (acc < 9000f && !game.gameOver && phase == ShPhase.PLAYING) {
+                    if (game.gruntCount() <= 4 && game.flyingCount() == 0) break
                     kotlinx.coroutines.delay(90); acc += 90f
                 }
                 kotlinx.coroutines.delay(500)
@@ -2117,6 +2400,15 @@ fun ShmupScreen(onBack: () -> Unit) {
                 if (game.gruntCount() <= 4) break
                 kotlinx.coroutines.delay(90); acc += 90
             }
+        }
+        // Escadrons : on attend qu'ils aient fini leur vol (détruits ou repartis) ; formation : qu'il n'en reste presque plus.
+        suspend fun waitSquads(maxS: Float) {
+            var acc = 0f; kotlinx.coroutines.delay(900)
+            while (acc < maxS * 1000 && !game.gameOver) { if (game.flyingCount() == 0) break; kotlinx.coroutines.delay(90); acc += 90 }
+        }
+        suspend fun waitFormation(maxS: Float) {
+            var acc = 0f; kotlinx.coroutines.delay(1500)
+            while (acc < maxS * 1000 && !game.gameOver) { if (game.formationCount() <= 1) break; kotlinx.coroutines.delay(90); acc += 90 }
         }
         // Gros essaim : déferle, on le laisse se faire pulvériser, puis une pause (plus d'air).
         suspend fun waveSwarm(kind: Kind, count: Int, maxWait: Float): Boolean {
@@ -2185,27 +2477,53 @@ fun ShmupScreen(onBack: () -> Unit) {
             GameMusic.playBoss(ctx)
             game.spawnTrueLastBoss(); untilBossDead()
         } else {
-            // Acte 1 (formations variées : ligne, V, mixte)
-            if (!waveSwarm(Kind.DRONE, small, 5f)) return@LaunchedEffect
-            if (!waveArc(Kind.INTERCEPTOR, small, 5f)) return@LaunchedEffect       // formation en V
+            // Chaque niveau a ses motifs de tir : visé simple -> double tir droit -> éventail -> rafale -> anneau
+            val shotA = when (lvl) { 1 -> 1; 2 -> 5; 3 -> 2; 4 -> 4; else -> 2 }
+            val shotB = when (lvl) { 1 -> 1; 2 -> 1; 3 -> 3; 4 -> 2; else -> 4 }
+            val n = 5 + lvl                                   // taille d'un escadron : 6..10
+            // ---- Acte 1 : on apprend à lire les trajectoires
+            // deux plongeons en U, un de chaque côté (le second part quand le premier est au milieu)
+            game.spawnSquad(P_SWOOP, n, Kind.DRONE, shot = shotA, every = 3)
+            wait(2.0f); if (game.gameOver) return@LaunchedEffect
+            game.spawnSquad(P_SWOOP, n, Kind.DRONE, mirror = true, shot = shotA, every = 3)
+            waitSquads(9f); wait(0.8f); if (game.gameOver) return@LaunchedEffect
+            // une formation en V vient se poster et tire par vague, de gauche à droite
+            game.spawnFormation(5 + lvl / 2 * 2, Kind.INTERCEPTOR, 0, shoot = true)
+            waitFormation(9f); wait(0.8f); if (game.gameOver) return@LaunchedEffect
             tryPup()
-            if (!waveMixed(small + 6, 6f)) return@LaunchedEffect                   // essaim mixte
+            // deux serpents qui se croisent sur toute la hauteur
+            game.spawnSquad(P_SNAKE, n + 2, Kind.DRONE, gap = 0.26f, shot = shotB, every = 4)
+            wait(1.6f); if (game.gameOver) return@LaunchedEffect
+            game.spawnSquad(P_SNAKE, n + 2, Kind.DRONE, mirror = true, gap = 0.26f, shot = shotB, every = 4)
+            waitSquads(11f); wait(0.8f); if (game.gameOver) return@LaunchedEffect
             tryPup()
             // Niveau 2 : champ de murs à franchir/détruire
             if (lvl == 2) { game.spawnWall(ObKind.WALL); wait(3.2f); if (game.gameOver) return@LaunchedEffect
                             game.spawnWall(ObKind.WALL); wait(3.2f); if (game.gameOver) return@LaunchedEffect }
-            if (!waveSwarm(Kind.DRONE, big, 8f)) return@LaunchedEffect           // gros essaim
+            // bouquet final de l'acte : le gros essaim à pulvériser
+            if (!waveSwarm(Kind.DRONE, big, 8f)) return@LaunchedEffect
             // 1er mini-boss
             GameMusic.playBoss(ctx)
             game.spawnMiniBoss(); untilBossDead(); if (game.gameOver) return@LaunchedEffect
             GameMusic.playStage(ctx, lvl); wait(1.2f)
             game.dropGiant()                     // item géant (un par stage)
-            // Acte 2
-            if (!waveMixed(small + 8, 6f)) return@LaunchedEffect
+            // ---- Acte 2 : attaques par les côtés, premières canonnières
+            // tenaille : deux files arrivent des deux coins en même temps et se referment au centre
+            game.spawnSquad(P_PINCER, n - 1, Kind.INTERCEPTOR, shot = shotA, every = 2)
+            game.spawnSquad(P_PINCER, n - 1, Kind.INTERCEPTOR, mirror = true, shot = shotA, every = 2)
+            waitSquads(9f); wait(0.8f); if (game.gameOver) return@LaunchedEffect
             tryPup()
-            game.spawnFromSides(2 + lvl / 3)    // quelques ennemis par les côtés (haut)
-            game.spawnCannons(1 + lvl / 3)      // gros canons fixes (tir vers le bas, destructibles)
-            if (!waveArc(Kind.DRONE, small + 6, 6f)) return@LaunchedEffect        // formation en V
+            // canonnières (un motif de balles par niveau) escortées par un balayage latéral
+            game.spawnGunships(1 + lvl / 3, lvl - 1)
+            wait(2.4f); if (game.gameOver) return@LaunchedEffect
+            game.spawnSquad(P_SIDE, n, Kind.DRONE, mirror = lvl % 2 == 0, shot = shotB, every = 3)
+            waitSquads(14f); wait(0.8f); if (game.gameOver) return@LaunchedEffect
+            // canons fixes + kamikazes qui piquent sur le vaisseau : il faut bouger
+            game.spawnCannons(1 + lvl / 3)
+            game.spawnDivers(3 + lvl / 2)
+            wait(3.2f); if (game.gameOver) return@LaunchedEffect
+            game.spawnSquad(P_LOOP, n + 1, Kind.DRONE, gap = 0.28f, shot = shotA, every = 3, repeatShot = lvl >= 3)
+            waitSquads(11f); wait(0.8f); if (game.gameOver) return@LaunchedEffect
             // Niveau 4 : ligne de bâtiments à raser
             if (lvl == 4) { game.spawnWall(ObKind.BUILDING); wait(3.4f); if (game.gameOver) return@LaunchedEffect
                             game.spawnWall(ObKind.BUILDING); wait(3.4f); if (game.gameOver) return@LaunchedEffect }
@@ -2219,15 +2537,25 @@ fun ShmupScreen(onBack: () -> Unit) {
                 game.spawnMiniBoss(); untilBossDead(); if (game.gameOver) return@LaunchedEffect
                 GameMusic.playStage(ctx, lvl); wait(1.2f)
             }
-            // Acte 3
-            if (!waveArc(Kind.INTERCEPTOR, small, 5f)) return@LaunchedEffect
+            // ---- Acte 3 : tout s'enchaîne, la pression monte jusqu'au boss
+            // deux diagonales qui se croisent au milieu de l'écran
+            game.spawnSquad(P_CROSS, n, Kind.INTERCEPTOR, gap = 0.26f, shot = shotB, every = 2)
+            game.spawnSquad(P_CROSS, n, Kind.INTERCEPTOR, mirror = true, gap = 0.26f, shot = shotB, every = 2)
+            waitSquads(8f); wait(0.6f); if (game.gameOver) return@LaunchedEffect
             // Escadron LOURD : peu d'ennemis mais coriaces (diversité de rythme)
-            if (game.gameOver) return@LaunchedEffect
             game.spawnHeavies(2 + lvl / 2); waitCleared(9f); wait(1.0f)
             if (game.gameOver) return@LaunchedEffect
             game.dropBlackhole()                 // item trou noir (aspire tout + points)
             tryPup()
-            game.spawnFromSides(2 + lvl / 2)    // ennemis par les côtés (acte 3)
+            // la ronde : un escadron tourne autour du centre pendant qu'une formation à deux rangs se poste
+            game.spawnSquad(P_CIRCLE, n + 2, Kind.DRONE, gap = 0.30f, shot = shotA, every = 3, repeatShot = true)
+            wait(2.5f); if (game.gameOver) return@LaunchedEffect
+            game.spawnFormation(6 + lvl / 2 * 2, Kind.INTERCEPTOR, if (lvl >= 3) 2 else 1, shoot = true)
+            waitSquads(11f); waitFormation(6f); wait(0.8f); if (game.gameOver) return@LaunchedEffect
+            // canonnières au motif suivant + kamikazes, puis essaim mixte
+            game.spawnGunships(1 + lvl / 2, lvl + 1)
+            game.spawnDivers(2 + lvl / 2)
+            waitSquads(15f); wait(0.8f); if (game.gameOver) return@LaunchedEffect
             if (!waveMixed(small + 10, 6f)) return@LaunchedEffect
             if (lvl >= 3 && !waveSwarm(Kind.DRONE, big, 8f)) return@LaunchedEffect
             // dernier(s) power-up(s) juste avant le boss (max atteignable si tout ramassé)
@@ -2729,6 +3057,22 @@ private fun DrawScope.drawGame(g: ShmupGame, phase: ShPhase, logo: ImageBitmap?,
             // IMPORTANT : ce raccourci ne concerne QUE la pietaille (DRONE/INTERCEPTOR). Les mid-boss
             // et boss ont AUSSI un spriteImg mais doivent passer par drawMiniBoss/drawBoss (echelle,
             // barre de vie, phases). Sinon ils etaient dessines a taille fixe (10.5u) = tout petits.
+            // TÉLÉGRAPHE de tir : un anneau se resserre sur l'ennemi qui va tirer (on voit venir la salve)
+            if (e.charge > 0f) {
+                val k = 1f - (e.charge / 0.45f).coerceIn(0f, 1f)
+                drawCircle(Color.White.copy(alpha = 0.25f + 0.55f * k), radius = e.radius * (2.6f - 1.4f * k), center = Offset(e.x, e.y), style = Stroke(g.u * 0.5f))
+                drawCircle(PINK.copy(alpha = 0.40f * k), radius = e.radius * 1.25f, center = Offset(e.x, e.y))
+            }
+            // escadron en vol : le sprite pivote, le nez suit la trajectoire
+            if (kotlin.math.abs(e.tilt) > 0.5f && (e.kind == Kind.DRONE || e.kind == Kind.INTERCEPTOR)) {
+                val img = e.spriteImg
+                rotate(e.tilt, pivot = Offset(e.x, e.y)) {
+                    if (img != null) drawSpriteImg(img, e.x, e.y, g.u * (if (e.heavy) 17f else 8.8f), rot180 = false, tint = null, flash = e.hitFlash > 0f)
+                    else drawSpriteImg(if (e.kind == Kind.DRONE) spr.enemyA else spr.enemyB, e.x, e.y, g.u * 9f, rot180 = true,
+                        tint = tintVariant(if (e.kind == Kind.DRONE) g.theme.droneColor else g.theme.interColor, e.shade), flash = e.hitFlash > 0f)
+                }
+                continue
+            }
             val eimg = e.spriteImg
             if (eimg != null && e.kind != Kind.MINIBOSS && e.kind != Kind.BOSS) {
                 val szU = if (e.kind == Kind.INTERCEPTOR && e.heavy) 17f else 8.8f

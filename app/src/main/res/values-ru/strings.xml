@@ -291,6 +291,7 @@
     <string name="vroum_v_excavator">Экскаватор</string>
     <string name="vroum_v_bear">Медведь</string>
     <string name="vroum_jumped">Перепрыгнул!</string>
+    <string name="vroum_best">Рекорд</string>
     <string name="vroum_near">Впритирку!</string>
     <string name="vroum_flow_max">Полный газ!</string>
     <string name="vroum_res_time">Остаток времени: +%1$d</string>
