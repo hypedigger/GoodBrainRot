@@ -188,6 +188,17 @@ class VroumBalanceTest {
         org.junit.Assert.assertTrue("bon timing", run(0.3f).rocketStart)
         org.junit.Assert.assertFalse("trop tôt", run(2.0f).rocketStart)
         org.junit.Assert.assertFalse("sans appuyer", run(-1f).rocketStart)
+        // juste après le GO (temps de réaction) : ça compte encore ; une demi-seconde plus tard : trop tard
+        fun late(delay: Float): VroumGame {
+            val g = VroumGame(false, 0, 1, THEMES[0], "T", "C", seed = 42L)
+            while (g.inIntro) g.update(1f / 60f)
+            var t = 0f
+            while (t < delay) { g.update(1f / 60f); t += 1f / 60f }
+            g.boostHeld = true; g.update(1f / 60f)
+            return g
+        }
+        org.junit.Assert.assertTrue("juste après le GO", late(0.15f).rocketStart)
+        org.junit.Assert.assertFalse("trop tard", late(0.6f).rocketStart)
     }
 
     @Test

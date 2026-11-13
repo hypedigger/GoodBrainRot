@@ -72,6 +72,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -360,6 +361,8 @@ fun VroumScreen(onBack: () -> Unit) {
             VPhase.PLAYING -> {
                 val g = game
                 if (g != null && glView != null) {
+                    // le temps que la 3D s'affiche (une fraction de seconde), on voit l'illustration du circuit plutôt qu'un fond vide
+                    spr.cards.getOrNull(themeIdx)?.let { Image(BitmapPainter(it), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop) }
                     AndroidView(factory = { glView.also { it.onResume() } }, modifier = Modifier.fillMaxSize())
                     Box(
                         modifier = Modifier
@@ -426,7 +429,9 @@ fun VroumScreen(onBack: () -> Unit) {
                                 val a = (t.life / 0.9f).coerceIn(0f, 1f)
                                 val label = t.text; val col = t.color
                                 paint.textSize = u * (if (t.big) 6.5f else if (t.gain >= 100) 5f else 4f) * (1f + 0.4f * t.pop)
-                                val hw = paint.measureText(label) / 2f; val hh = paint.textSize
+                                var hw = paint.measureText(label) / 2f
+                                if (hw * 2f > size.width * 0.92f) { paint.textSize *= size.width * 0.92f / (hw * 2f); hw = paint.measureText(label) / 2f }
+                                val hh = paint.textSize
                                 val tx = if (hw * 2f + u * 2f < size.width) t.sx.coerceIn(hw + u, size.width - hw - u) else size.width / 2f
                                 var y = t.sy; var tries = 0
                                 while (tries < 6) {
@@ -466,7 +471,7 @@ fun VroumScreen(onBack: () -> Unit) {
                     }
                     ItemSlot(g, spr.items, tick, Modifier.align(Alignment.CenterStart).padding(start = 12.dp).offset(y = if (g.wide) 14.dp else (-40).dp))
                     TakedownChip(g, tick, Modifier.align(Alignment.CenterEnd).padding(end = 12.dp).offset(y = if (g.wide) (-20).dp else (-40).dp))
-                    if (countdown >= 0) CountdownOverlay(countdown, hint = !g.duel)
+                    if (countdown >= 0) CountdownOverlay(countdown, hint = !g.duel, rocket = g.rocketStart)
                     // tutoriel de la toute première partie (3 bulles, avance avec les gestes de l'enfant)
                     if (tutoStep >= 0 && countdown < 0) VroumTutoOverlay(tutoStep)
                 }
@@ -617,15 +622,19 @@ private fun Chevron(left: Boolean, alpha: Float) {
 
 /** 3 - 2 - 1 - GO ! : chiffre qui apparaît en grand et se dégonfle. */
 @Composable
-private fun CountdownOverlay(count: Int, hint: Boolean = false) {
-    val scale = remember(count) { Animatable(1.6f) }
-    LaunchedEffect(count) { scale.animateTo(1f, spring(dampingRatio = 0.5f, stiffness = 400f)) }
-    val label = if (count > 0) "$count" else stringResource(R.string.vroum_go)
+private fun CountdownOverlay(count: Int, hint: Boolean = false, rocket: Boolean = false) {
+    // (un départ canon réussi remplace le « GO! » par son message, qui « saute » à son tour)
+    val boosted = rocket && count == 0
+    val scale = remember(count, boosted) { Animatable(1.6f) }
+    LaunchedEffect(count, boosted) { scale.animateTo(1f, spring(dampingRatio = 0.5f, stiffness = 400f)) }
+    val label = if (count > 0) "$count" else if (boosted) stringResource(R.string.vroum_rocket) else stringResource(R.string.vroum_go)
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Text(
-            label, color = if (count > 0) Color.White else V_GOLD, fontWeight = FontWeight.ExtraBold,
-            fontSize = if (count > 0) 120.sp else 64.sp, textAlign = TextAlign.Center,
-            modifier = Modifier.scale(scale.value).shadow(0.dp)
+            label, color = if (count > 0) Color.White else if (boosted) V_CYAN else V_GOLD, fontWeight = FontWeight.ExtraBold,
+            fontStyle = if (boosted) FontStyle.Italic else FontStyle.Normal,
+            fontSize = if (count > 0) 120.sp else if (boosted) 40.sp else 64.sp, textAlign = TextAlign.Center, maxLines = 1,
+            style = androidx.compose.ui.text.TextStyle(shadow = androidx.compose.ui.graphics.Shadow(Color(0xCC000000), Offset(0f, 5f), 12f)),
+            modifier = Modifier.scale(scale.value)
         )
         // l'astuce du départ canon, glissée sous le « 1 » (les grands la lisent, les petits tombent dessus par hasard)
         if (hint && count == 1) Text(stringResource(R.string.vroum_rocket_hint), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp, maxLines = 1,

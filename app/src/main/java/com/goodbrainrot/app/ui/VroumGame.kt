@@ -222,7 +222,8 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         const val PLAYER_Z = 18f
         const val LEVEL_LEN = 2000f
         const val INTRO_DUR = 3.6f
-        const val ROCKET_WINDOW = 0.55f   // départ canon : on appuie sur BOOST dans cette fenêtre avant le GO
+        const val ROCKET_WINDOW = 0.7f    // départ canon : on appuie sur BOOST dans cette fenêtre avant le GO…
+        const val ROCKET_LATE = 0.3f      // … ou juste après (ceux qui réagissent au « GO! »)
         const val COMBO_T = 3.0f
         const val BOOST_SEG_S = 2.2f       // secondes de boost par segment de jauge
         const val MAX_SEG = 4
@@ -320,6 +321,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
     private var segProgress = 0     // takedowns depuis le dernier segment gagné
     @Volatile var boostHeld = false // le doigt est sur le bouton
     private var prevHeld = false; private var startPress = -1f   // départ canon : instant (introT) où BOOST a été enfoncé
+    private var rocketLateT = 0f                                // … et délai de grâce après le GO
     var rocketStart = false; var rocketLabel = "DÉPART CANON !"
     private var autoBoost = false   // Facile : part tout seul quand la jauge est pleine
     var boosting = false
@@ -491,12 +493,13 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
             if (step < introStep && step >= 1) { introStep = step; ev("count") }
             if (introT <= 0f) {
                 introT = 0f; ev("go")
-                if (startPress > 0f && startPress <= ROCKET_WINDOW) {
-                    rocketStart = true
-                    turboT = max(turboT, 2.6f); gainFlow(0.35f); gainBoost(0.6f); shake = max(shake, 10f)
-                    texts.add(VText(lx * LANE_M, 1.6f, PLAYER_Z + 6f, rocketLabel, 1.8f, V_CYAN, big = true)); ev("rocketStart")
-                }
+                if (startPress > 0f && startPress <= ROCKET_WINDOW) grantRocketStart() else rocketLateT = ROCKET_LATE
             }
+        } else if (rocketLateT > 0f) {
+            rocketLateT -= dt
+            val held = boostHeld
+            if (held && !prevHeld) { rocketLateT = 0f; grantRocketStart() }
+            prevHeld = held
         }
         val racing = !over && sputter < 0f && !cleared && !inIntro
         // élan : monte tout seul ; la vitesse rejoint la croisière (accélère vite, ralentit doucement après un boost)
@@ -1151,6 +1154,12 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
     // -----------------------------------------------------------------------
     // Événements de jeu
     // -----------------------------------------------------------------------
+
+    private fun grantRocketStart() {
+        rocketStart = true
+        turboT = max(turboT, 2.6f); gainFlow(0.35f); gainBoost(0.6f); shake = max(shake, 10f)
+        ev("rocketStart")   // (le message remplace le « GO! » à l'écran : voir CountdownOverlay)
+    }
 
     private fun addScore(n: Int, x: Float, z: Float, col: Color) {
         val v = n * mult * (if (passengerKind >= 0) 2 else 1)

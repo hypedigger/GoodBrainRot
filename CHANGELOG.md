@@ -1,5 +1,9 @@
 # Nouveautés — GoodBrainRot
 
+## 3.99 — 2026-11-13
+- **Vroum — départ canon plus tolérant** : il compte aussi si l'on appuie juste après le « GO! » (temps de réaction), et la fenêtre avant le GO est un peu plus large. Quand il réussit, « DÉPART CANON ! » remplace le « GO! » au centre de l'écran.
+- **Vroum — lancement d'une course** : l'illustration du circuit reste affichée pendant la fraction de seconde où la 3D se charge (plus d'écran vide) ; le décompte a une ombre portée et se lit sur les ciels clairs (neige, plage).
+- **Vroum** : un message plus large que l'écran est réduit pour tenir en entier.
 ## 3.98 — 2026-11-13
 - **Crimson Sky — des boss qui enchaînent leurs attaques.** Chaque boss ne répète plus un seul motif : il alterne **trois attaques** de quelques secondes, séparées par une courte respiration annoncée par un anneau lumineux (la troisième arrive quand il est abîmé). Nouveaux motifs de balles : **essuie-glace** (un éventail qui balaie l'écran), **anneau à porte** (une ouverture par où se faufiler), **double hélice**, **fleurs** dont les pétales s'ouvrent, **couloirs de pluie** qui changent de place. Le premier boss reste lent et lisible ; l'anneau de rage de fin de combat ne s'ajoute plus à chaque tir des attaques rapides.
 - **Crimson Sky — des balles qu'on voit.** Les balles ennemies étaient de petites billes dont le sprite était tiré au hasard (souvent rouge sombre sur fond de forêt). Elles ont maintenant toutes le même gabarit, presque deux fois plus gros, et leur **couleur suit l'attaque** : vert pour le venin, bleu et blanc pour la glace, orange pour la lave, violet et rose pour le dernier boss, crânes rouges pour l'anneau de rage. Quatre nouvelles billes (vert, citron, rose, blanc glacé).
