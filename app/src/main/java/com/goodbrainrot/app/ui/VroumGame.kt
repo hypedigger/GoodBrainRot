@@ -49,9 +49,11 @@ internal enum class VWeapon(val tex: String, val dur: Float) {
  */
 internal val VROUM_STAR_SCORE = listOf(intArrayOf(6000, 12000), intArrayOf(18000, 28000), intArrayOf(22000, 34000))
 internal val VROUM_STAR_DIST = listOf(intArrayOf(4000, 7000), intArrayOf(4500, 7500), intArrayOf(3500, 6500))
-internal fun vroumStarCount(endless: Boolean, cleared: Boolean, score: Int, dist: Int, diff: Int = 1): Int {
+internal fun vroumStarCount(endless: Boolean, cleared: Boolean, score: Int, dist: Int, diff: Int = 1, place: Int = 0): Int {
     val d = diff.coerceIn(0, 2)
     return when {
+        // Course à positions : 1er = 3 étoiles, podium = 2, arrivé = 1
+        !endless && cleared && place > 0 -> when { place == 1 -> 3; place <= 3 -> 2; else -> 1 }
         endless -> when { dist >= VROUM_STAR_DIST[d][1] -> 3; dist >= VROUM_STAR_DIST[d][0] -> 2; else -> 1 }
         cleared -> when { score >= VROUM_STAR_SCORE[d][1] -> 3; score >= VROUM_STAR_SCORE[d][0] -> 2; else -> 1 }
         else -> if (dist >= 1000) 1 else 0
@@ -92,8 +94,27 @@ internal class VEnemy(var lane: Int, var z: Float, val kind: Int, var mps: Float
     var want = 20f                // distance devant nous qu'il cherche à tenir
     var aiCd = 1f; var warn = 0f; var stun = 0f
     var revenge = false           // il nous a dégagés : le sortir à son tour = REVANCHE
+    var racer: VRacer? = null     // concurrent de la Course (il a sa propre distance parcourue)
+    var dodge = 0f; var hold = 0f // concurrent : prochain contrôle d'esquive / il lève le pied derrière nous
     val alive: Boolean get() = crushed < 0f && fly < 0f
 }
+/**
+ * Concurrent de la Course. Il court SA course : [d] = mètres parcourus, [pace] = vitesse moyenne visée (m/s), [rank] = force
+ * (0 = le plus rapide). Dans le champ de la caméra il est incarné par un [VEnemy] « rival » ([e]) qui fait alors foi.
+ */
+internal class VRacer(val veh: Int, val rank: Int, val pace: Float, val phase: Float) {
+    var d = 0f; var lane = 1
+    var out = 0f                  // secondes perdues après un takedown
+    var finT = -1f                // temps d'arrivée (-1 = en course)
+    var e: VEnemy? = null
+    var revenge = false
+}
+/** Une ligne du classement d'arrivée ([rank] = force du concurrent, -1 pour le joueur). */
+internal class VResult(val veh: Int, val me: Boolean, val time: Float, val rank: Int)
+/** Points de championnat par place (1er → 8e). */
+internal val VROUM_POINTS = intArrayOf(15, 12, 10, 8, 6, 4, 2, 1)
+/** Prime de score par place à l'arrivée (× difficulté + 1). */
+internal val VROUM_PLACE_BONUS = intArrayOf(5000, 3500, 2600, 1900, 1300, 800, 400, 0)
 internal class VPick(var lane: Int, var z: Float, val type: VItem, val variant: Int) {
     var t = 0f
     var used = false   // ressort déjà déclenché (il reste en place et oscille)
@@ -215,9 +236,12 @@ internal object VPatterns {
 /**
  * [diff] : 0 = Facile (les accidents ne font que ralentir, le boost part tout seul), 1 = Moyen, 2 = Difficile.
  * [duel] : course à deux, ni chrono ni fantôme. [seed] : graine de la route (la même pour les deux joueurs d'un duel).
+ * [cast] : bolides des concurrents de la Course, du plus fort au plus faible (null = tirés au sort, vide = aucun : on
+ * retrouve alors l'ancienne Course au chrono, utilisée par les tests de règles). [rivalBoost] : coefficient d'allure du plus
+ * fort (le RIVAL d'une coupe se cale sur notre score au classement).
  */
 internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, val theme: VTheme, val trickLabel: String, val cannonLabel: String,
-                         val duel: Boolean = false, seed: Long = Random.nextLong()) {
+                         val duel: Boolean = false, seed: Long = Random.nextLong(), val cast: IntArray? = null, val rivalBoost: Float = 1f) {
     companion object {
         const val LANE_M = 3.2f
         const val Z_FAR = 300f
@@ -232,9 +256,47 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         const val COMBO_T = 3.0f
         const val BOOST_SEG_S = 2.2f       // secondes de boost par segment de jauge
         const val MAX_SEG = 4
+        /** temps de course visé par le concurrent le plus rapide, par difficulté (calé sur les robots de VroumBalanceTest) */
+        val PAR_TIME = floatArrayOf(68.5f, 50.5f, 41f)
+        /** écart de temps entre deux concurrents successifs */
+        val PAR_STEP = floatArrayOf(0.030f, 0.028f, 0.025f)
+        const val RUBBER = 0.08f           // élastique : un concurrent loin devant lève un peu le pied, loin derrière il pousse
+        const val STRETCH = 320f           // longueur de la dernière ligne droite (m)
     }
     val tune = VTUNES[diff.coerceIn(0, 2)]
     val trait = theme.trait
+
+    // ---- PELOTON (Course) : 7 concurrents, on part dernier. La place remplace le chrono : on finit toujours, reste à finir DEVANT.
+    val racers = ArrayList<VRacer>()
+    private val fieldRng = Random(seed xor 0x5DEECE66DL)
+    init {
+        if (!endless && !duel && (cast == null || cast.isNotEmpty())) {
+            val vs = cast ?: VEHICLES.indices.filter { it != vehicle }.shuffled(fieldRng).take(7).toIntArray()
+            val k3 = diff.coerceIn(0, 2)
+            val par = PAR_TIME[k3]; val step = PAR_STEP[k3]
+            for (k in vs.indices) racers.add(VRacer(vs[k], k, LEVEL_LEN / (par * (1f + step * k)) * (if (k == 0) rivalBoost else 1f), fieldRng.nextFloat() * 6.28f).also {
+                val row = vs.size - 1 - k             // grille de départ : les plus forts devant, nous tout au fond
+                it.d = 7f + 5.5f * row; it.lane = intArrayOf(0, 2, 1)[row % 3]
+            })
+        }
+    }
+    /** place en course (1 = en tête) ; figée à l'arrivée */
+    var place = racers.size + 1
+    @Volatile var placePop = 0f         // 1 → 0 : la pastille de place « saute » quand on double ou qu'on est doublé
+    @Volatile var placeDir = 0          // +1 on vient de gagner une place, -1 d'en perdre une
+    val fieldSize: Int get() = racers.size + 1
+    var finishTime = 0f
+    /** Classement d'arrivée (les concurrents encore en piste sont classés selon ce qu'il leur reste à parcourir). */
+    fun raceResults(): List<VResult> {
+        val l = ArrayList<VResult>()
+        for (r in racers) l.add(VResult(r.veh, false, if (r.finT >= 0f) r.finT else 9000f - r.d, r.rank))
+        l.add(VResult(vehicle, true, if (cleared) finishTime else 9000f - dist, -1))
+        return l.sortedBy { it.time }
+    }
+    // ---- ASPIRATION : une seconde dans le sillage d'un concurrent = coup de vitesse
+    var draft = 0f; var draftT = 0f; var draftLabel = "ASPIRATION !"
+    // ---- DERNIÈRE LIGNE DROITE : les 300 derniers mètres (musique accélérée, public déchaîné)
+    var finalStretch = false; var stretchLabel = "DERNIÈRE LIGNE DROITE !"
     fun groundY(zw: Float): Float = 1.6f * sin(zw * 0.030f) + 0.8f * sin(zw * 0.071f + 1f)
     fun xCenter(z: Float): Float = curve * z * z * 0.0012f
     var curve = 0f; private var curveTarget = 0f; private var nextCurveAt = 120f
@@ -293,7 +355,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
     /** l'essence compte (Arcade) ; en Course c'est le chrono */
     val fuelOn: Boolean get() = endless
     // Course (défaut) : au CHRONO — arriver au village (2 000 m) avant la fin du temps ; Arcade (endless) : à l'ESSENCE
-    val timeLimit = if (!endless && !duel) tune.timeLimit else -1f
+    val timeLimit = if (!endless && !duel && racers.isEmpty()) tune.timeLimit else -1f
     var timeLeft = timeLimit
     var timeUp = false
     var timeBonus = 0               // points du temps restant, ajoutés au score à l'arrivée
@@ -343,7 +405,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
     private var rocketLateT = 0f                                // … et délai de grâce après le GO
     var rocketStart = false; var rocketLabel = "DÉPART CANON !"
     var boosting = false
-    private val boostMul: Float get() = if (superT > 0f) 1.7f else if (boosting) 1.45f else if (turboT > 0f) 1.35f else if (giant > 0) 1.3f else 1f
+    private val boostMul: Float get() = if (superT > 0f) 1.7f else if (boosting) 1.45f else if (turboT > 0f) 1.35f else if (giant > 0) 1.3f else if (draftT > 0f) 1.26f else 1f
     /** en boost (ou turbo) on défonce aussi les camions et les bus */
     private val powered: Boolean get() = boosting || turboT > 0f
 
@@ -455,7 +517,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         return spd * intro
     }
     /** Intensité du boost pour les effets (0 rien, 1 turbo ou boost, 2 super). */
-    val boostLevel: Int get() = if (superT > 0f) 2 else if (turboT > 0f || boosting) 1 else 0
+    val boostLevel: Int get() = if (superT > 0f) 2 else if (turboT > 0f || boosting || draftT > 0f) 1 else 0
     val speedFactor: Float get() = mps / 18f
     val kmh: Int get() = (mps * 3.6f / 5f).toInt() * 5
 
@@ -548,6 +610,12 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         val sp = mps
         val dz = sp * dt
         if (!over && sputter < 0f) dist += dz
+        updateRacers(dt)
+        if (placePop > 0f) placePop = max(0f, placePop - dtRaw * 2.2f)
+        if (racers.isNotEmpty() && !cleared && !over) {
+            val p = 1 + racers.count { it.d > dist }
+            if (p != place) { if (!inIntro) { placeDir = if (p < place) 1 else -1; placePop = 1f; ev(if (p < place) "posUp" else "posDown") }; place = p }
+        }
         // trace de la course (fantôme) : un point (dist, voie) toutes les 0,25 s après le départ (Course ET Arcade)
         if (!duel && !inIntro && !over && !cleared) {
             recAcc += dt
@@ -616,6 +684,26 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
             }
         }
         if (racing) weapons(dt)
+        if (racing) {
+            // ASPIRATION : dans le sillage d'un concurrent (même voie, 4 à 26 m derrière lui) la charge monte, puis ça part
+            val wake = !jumping && draftT <= 0f && enemies.any { it.rival && it.alive && it.lane == lane && it.z - PLAYER_Z > 3.5f && it.z - PLAYER_Z < 26f }
+            if (wake) {
+                draft += dt / 0.9f
+                if (parts.size < 170) parts.add(VPart(lx * LANE_M + (Random.nextFloat() - 0.5f) * 2f, groundY(dist + PLAYER_Z) + 0.4f + Random.nextFloat() * 1.5f, PLAYER_Z + 5f + Random.nextFloat() * 14f,
+                    0f, 0f, 0.3f, 0.3f, 0.65f, 0.95f, 1f, 0.10f + 0.08f * draft, floaty = true, vz = -14f))
+                if (draft >= 1f) {
+                    draft = 0f; draftT = 1.7f; gainBoost(0.25f); gainFlow(0.05f); chain(); shake = max(shake, 5f)
+                    texts.add(VText(lx * LANE_M, 4.2f, PLAYER_Z, draftLabel, 1.2f, V_CYAN, big = true)); ev("draft")
+                }
+            } else draft = max(0f, draft - dt * 1.6f)
+            if (draftT > 0f) draftT -= dt
+            if (!endless && !finalStretch && dist >= LEVEL_LEN - STRETCH) {
+                finalStretch = true
+                texts.add(VText(0f, 4.6f, 34f, stretchLabel, 2.0f, V_GOLD, big = true).also { it.style = 1 })
+                for (d in decor) if (d.cheer >= 0) d.arms = 99f
+                ev("finalStretch")
+            }
+        }
 
         if (racing) {
             if (timeLimit > 0f) {
@@ -634,8 +722,14 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         }
         if (sputter >= 0f) { sputter += dt; if (sputter > 2.8f && !over) { over = true; ev("over") } }
         if (!endless && !cleared && dist >= LEVEL_LEN) {
-            cleared = true; finishT = 0f; finishSpd = spd
+            cleared = true; finishT = 0f; finishSpd = spd; finishTime = raceT
             if (timeLimit > 0f) { timeBonus = (timeLeft * 40f).toInt() * (diff + 1); score += timeBonus }
+            if (racers.isNotEmpty()) {
+                // la place est figée : ceux qui ont franchi la ligne avant nous sont devant, les autres finissent derrière
+                place = 1 + racers.count { it.finT >= 0f }
+                for (r in racers) if (r.finT < 0f) r.finT = raceT + 0.3f + (LEVEL_LEN - r.d).coerceAtLeast(0f) / (r.pace * 1.05f)
+                timeBonus = VROUM_PLACE_BONUS[(place - 1).coerceIn(0, 7)] * (diff + 1); score += timeBonus
+            }
             ev("finishLine")
             texts.add(VText(0f, 4.4f, PLAYER_Z + 4f, finishLabel, 2.4f, V_GOLD, big = true).also { it.style = 1 })
             for (d in decor) if (d.cheer >= 0) d.arms = 99f
@@ -684,13 +778,13 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         if (racing) {
             cheerCd -= dt
             if (cheerCd <= 0f) {
-                cheerCd = 2.5f + Random.nextFloat() * 3f
+                cheerCd = if (finalStretch) 0.35f else 2.5f + Random.nextFloat() * 3f
                 val side = if (Random.nextBoolean()) -1f else 1f
-                decor.add(VDecor(Z_FAR, side * (decorHalf + 1.0f), -1, cheer = Random.nextInt(CHEER_KEYS.size)))
+                decor.add(VDecor(Z_FAR, side * (decorHalf + 1.0f), -1, cheer = Random.nextInt(CHEER_KEYS.size)).also { if (finalStretch) it.arms = 99f })
             }
             // rivaux : il en arrive un par derrière de temps en temps, jusqu'au nombre voulu
             rivalCd -= dt
-            if (rivalCd <= 0f && !duel) {
+            if (rivalCd <= 0f && !duel && racers.isEmpty()) {
                 rivalCd = 5f + Random.nextFloat() * 5f
                 if (enemies.count { it.rival && it.alive } < tune.rivals + trait.rivalsExtra && (endless || dist < LEVEL_LEN - 250f)) spawnRival()
             }
@@ -813,7 +907,10 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
                     airborne -> if (!trickDone) { trickDone = true; chain(); gainFlow(0.04f); gainBoost(0.12f); addScore(25, lx * LANE_M, PLAYER_Z, V_CYAN); texts.add(VText(lx * LANE_M, 4f, PLAYER_Z, trickLabel, 1.0f, V_CYAN, big = true)); ev("trick") }
                     invuln > 0f -> {}
                     e.oncoming || e.boulder -> crash(e)
-                    e.rival -> if (powered) takedown(e, 1) else { e.stun = 0.5f; e.bounce = 0.5f; flow *= 0.92f; shake = max(shake, 5f); invuln = 0.35f; ev("bumpSoft") }
+                    e.rival -> if (powered) takedown(e, 1) else {
+                        e.stun = 0.5f; e.bounce = 0.5f; flow *= 0.92f; shake = max(shake, 5f); invuln = 0.35f; ev("bumpSoft")
+                        if (e.racer != null) e.target = if (e.lane >= lanes - 1) e.lane - 1 else if (e.lane <= 0) 1 else e.lane + (if (rng.nextBoolean()) 1 else -1)
+                    }
                     !e.heavy || powered -> takedown(e, if (powered) 1 else 0)
                     else -> crash(e)
                 }
@@ -832,16 +929,34 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
     /** Rival : il tient sa distance devant nous (élastique), change de voie, et parfois nous serre (annoncé par un « ! »). */
     private fun updateRival(e: VEnemy, dt: Float, sp: Float) {
         val off = e.z - PLAYER_Z
-        if (e.stun > 0f) { e.stun -= dt; e.mps = sp - 3f }
+        val r = e.racer
+        // décompte et arrivée : le peloton roule groupé, à notre allure
+        if (r != null && (cleared || inIntro)) { e.mps = if (cleared && e.z < PLAYER_Z + 1.5f) sp - 12f else sp; e.fx += (e.target - e.fx).coerceIn(-dt * 3.2f, dt * 3.2f); e.lane = Math.round(e.fx).coerceIn(0, lanes - 1); return }
+        if (e.stun > 0f) { e.stun -= dt; e.mps = if (r != null) min(racerSpeed(r), sp - 3f) else sp - 3f }
         else {
-            e.mps = (sp + (e.want - off) * 0.9f).coerceIn(sp - 10f, sp + 11f)
+            e.mps = if (r != null) racerSpeed(r) else (sp + (e.want - off) * 0.9f).coerceIn(sp - 10f, sp + 11f)
+            if (r != null) {
+                // un concurrent ne nous traverse pas : s'il remonte dans notre voie il déboîte (ou lève le pied) ; il contourne le trafic
+                if (e.hold > 0f) { e.hold -= dt; e.mps = min(e.mps, sp - 0.5f) }
+                e.dodge -= dt
+                if (e.dodge <= 0f) {
+                    e.dodge = 0.2f
+                    val behindMe = off < 3f && off > -18f
+                    val mine = behindMe && e.target == lane && e.mps > sp - 1f && giant == 0
+                    val jam = enemies.any { it !== e && it.alive && !it.oncoming && it.lane == e.target && it.z > e.z && it.z - e.z < 26f && it.mps < e.mps - 2f }
+                    if (mine || jam) {
+                        val opts = listOf(e.target - 1, e.target + 1).filter { l -> l in 0 until lanes && !(l == lane && behindMe) && enemies.none { it !== e && it.alive && it.lane == l && abs(it.z - e.z) < 12f } }
+                        if (opts.isNotEmpty()) e.target = opts[rng.nextInt(opts.size)] else if (mine) e.hold = 0.3f
+                    }
+                }
+            }
             e.aiCd -= dt
             if (e.aiCd <= 0f) {
                 e.aiCd = 1.3f + rng.nextFloat() * 1.8f
                 e.want = listOf(7f, 14f, 24f, 36f, 50f)[rng.nextInt(5)]
                 // évite ce qui est juste devant lui, sinon flâne d'une voie
-                val blocked = enemies.any { it !== e && it.alive && !it.rival && it.lane == e.target && it.z > e.z && it.z - e.z < 22f }
-                if (blocked || rng.nextFloat() < 0.45f) e.target = (e.target + (if (rng.nextBoolean()) 1 else -1)).coerceIn(0, lanes - 1)
+                val blocked = r == null && enemies.any { it !== e && it.alive && !it.rival && it.lane == e.target && it.z > e.z && it.z - e.z < 22f }
+                if (blocked || (r == null && rng.nextFloat() < 0.45f)) e.target = (e.target + (if (rng.nextBoolean()) 1 else -1)).coerceIn(0, lanes - 1)
                 // il nous serre : il est à côté de nous, il prévient (« ! ») puis se rabat sur notre voie
                 if (tune.aggro > 0f && abs(off) < 6f && abs(e.lane - lane) == 1 && rng.nextFloat() < tune.aggro * 0.55f) { e.warn = 0.9f; e.want = 0f; ev("rivalWarn") }
             }
@@ -856,7 +971,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         if (invuln > 0f || superT > 0f) return
         if (shieldT > 0f) { popShield(); e.stun = 1.2f; return }
         val d = if (e.lane < lane) 1 else -1
-        e.target = lane; e.revenge = true
+        e.target = lane; e.revenge = true; e.racer?.revenge = true
         val n = (lane + d).coerceIn(laneLo, laneHi)
         if (n != lane) { lane = n; slideT = 0.5f; slideDir = d }
         if (diff != 0) { loseFlow(0.75f); boost = max(0f, boost - 0.4f) } else flow *= 0.9f
@@ -874,6 +989,47 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
             chain(); gainBoost(0.3f); addScore(40, laneX(e.lane), e.z, V_ORANGE)
             texts.add(VText(laneX(e.lane), 3.2f, e.z, shoveLabel, 0.9f, V_ORANGE, big = true))
             shake = max(shake, 7f); ev("shove")
+        }
+    }
+
+    /** Vitesse d'un concurrent : son allure, une montée en régime comme la nôtre, une petite respiration, et l'élastique. */
+    private fun racerSpeed(r: VRacer): Float {
+        val t = raceT
+        val ramp = 0.72f + 0.36f * (t / (LEVEL_LEN / r.pace * 0.45f)).coerceIn(0f, 1f)
+        val wob = 1f + 0.035f * sin(t * 0.21f + r.phase)
+        val gap = r.d - dist
+        val rubber = 1f - ((gap - 50f) / 160f).coerceIn(0f, 1f) * RUBBER + ((-gap - 50f) / 160f).coerceIn(0f, 1f) * RUBBER
+        return r.pace * ramp * wob * rubber
+    }
+
+    /** Fait avancer le peloton. Un concurrent dans le champ (11 m derrière → 180 m devant) devient un VEnemy « rival ». */
+    private fun updateRacers(dt: Float) {
+        if (racers.isEmpty()) return
+        for (r in racers) {
+            var e = r.e
+            if (e != null && (!e.alive || e !in enemies)) {
+                if (!e.alive) { r.out = 1.2f; r.d = dist + (e.z - PLAYER_Z); r.revenge = false }      // sorti par un takedown : il perd du temps
+                r.e = null; e = null
+            }
+            if (e != null) {
+                r.d = dist + (e.z - PLAYER_Z); r.lane = e.lane       // à l'écran, c'est son véhicule qui fait foi
+                if (e.z > PLAYER_Z + 240f) { enemies.remove(e); r.e = null }
+            } else if (!cleared) {
+                if (r.out > 0f) { r.out -= dt; r.d += r.pace * 0.25f * dt }
+                else {
+                    r.d += (if (inIntro) mps else racerSpeed(r)) * dt
+                    val rel = r.d - dist
+                    if (rel > -11f && rel < 180f) {
+                        var l = r.lane.coerceIn(0, lanes - 1)
+                        if (rel < 5f && l == lane) l = if (l > 0) l - 1 else l + 1          // jamais sur nous
+                        val ne = VEnemy(l, PLAYER_Z + rel, 0, if (inIntro) mps else racerSpeed(r))
+                        ne.rival = true; ne.veh = r.veh; ne.racer = r; ne.fx = l.toFloat(); ne.target = l; ne.aiCd = 0.6f + rng.nextFloat(); ne.revenge = r.revenge
+                        enemies.add(ne); r.e = ne
+                        if (rel < 5f && !inIntro) ev("rivalIn")
+                    }
+                }
+            }
+            if (r.finT < 0f && r.d >= LEVEL_LEN && !cleared) r.finT = raceT
         }
     }
 

@@ -94,6 +94,13 @@ object GameMusic {
         if (r != 0) switchTo(r)
     }
 
+    /** Vitesse de lecture (1 = normale) : la dernière ligne droite de Vroum accélère le morceau, la hauteur suit un peu. */
+    @Volatile private var speed = 1f
+    fun setSpeed(s: Float) { speed = s; track?.let { applySpeed(it) } }
+    private fun applySpeed(t: AudioTrack) {
+        try { t.playbackParams = t.playbackParams.setSpeed(speed).setPitch(1f + (speed - 1f) * 0.5f) } catch (_: Exception) {}
+    }
+
     fun stop() {
         wantRes = 0
         swapJob?.cancel()
@@ -124,6 +131,7 @@ object GameMusic {
             try {
                 next.setVolume(0f)
                 next.play()
+                if (speed != 1f) applySpeed(next)
                 // fondu enchaîné
                 val steps = 12
                 for (i in 1..steps) {

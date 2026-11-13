@@ -19,7 +19,7 @@ class VroumBalanceTest {
         Bot("expert", 0.10f, 1.6f, 0.01f, 1.0f, true, 1.0f),
     )
 
-    private class Run(val cleared: Boolean, val time: Float, val score: Int, val dist: Float, val bumps: Int, val nears: Int, val combo: Int, val avgSpeed: Float, val takedowns: Int, val stomp: Int)
+    private class Run(val cleared: Boolean, val time: Float, val score: Int, val dist: Float, val bumps: Int, val nears: Int, val combo: Int, val avgSpeed: Float, val takedowns: Int, val stomp: Int, val place: Int = 0)
 
     private fun play(endless: Boolean, diff: Int, bot: Bot, seed: Long, theme: VTheme = THEMES[0]): Run {
         val g = VroumGame(endless, 0, diff, theme, "T", "C", seed = seed)
@@ -37,7 +37,7 @@ class VroumBalanceTest {
             g.update(dt)
             g.events.clear(); if (g.parts.size > 40) g.parts.clear()
         }
-        return Run(g.cleared, g.raceT, g.score, g.dist, g.bumpCount, g.nearCount, g.bestCombo, if (g.raceT > 0f) g.dist / g.raceT else 0f, g.takedowns, g.bestStomp)
+        return Run(g.cleared, g.raceT, g.score, g.dist, g.bumpCount, g.nearCount, g.bestCombo, if (g.raceT > 0f) g.dist / g.raceT else 0f, g.takedowns, g.bestStomp, g.place)
     }
 
     private fun decide(g: VroumGame, bot: Bot, r: Random) {
@@ -99,7 +99,7 @@ class VroumBalanceTest {
 
     private fun line(sb: StringBuilder, bot: Bot, runs: List<Run>, endless: Boolean, diff: Int) {
         val n = runs.size
-        val stars = runs.map { vroumStarCount(endless, it.cleared, it.score, it.dist.toInt(), diff) }
+        val stars = runs.map { vroumStarCount(endless, it.cleared, it.score, it.dist.toInt(), diff, it.place) }
         val sc = runs.map { it.score.toFloat() }; val ds = runs.map { it.dist }; val tm = runs.map { it.time }
         sb.append(String.format(java.util.Locale.US,
             "  %-7s arrivé %3d%%  temps %5.1f/%5.1f/%5.1f s  v.moy %4.1f  score %5.0f/%5.0f/%5.0f  dist %5.0f/%5.0f/%5.0f  chocs %4.1f  frôlés %4.1f  série %3.0f  takedowns %4.1f  rebonds %3.1f  ★ %d%%/%d%%/%d%%/%d%%\n",
@@ -107,13 +107,14 @@ class VroumBalanceTest {
             pct(sc, 0.1f), pct(sc, 0.5f), pct(sc, 0.9f), pct(ds, 0.1f), pct(ds, 0.5f), pct(ds, 0.9f),
             runs.map { it.bumps }.average(), runs.map { it.nears }.average(), runs.map { it.combo }.average(), runs.map { it.takedowns }.average(), runs.map { it.stomp }.average(),
             stars.count { it == 0 } * 100 / n, stars.count { it == 1 } * 100 / n, stars.count { it == 2 } * 100 / n, stars.count { it == 3 } * 100 / n))
+        if (!endless) sb.append("          place " + (1..8).joinToString(" ") { p -> "$p:${runs.count { it.place == p } * 100 / n}%" } + String.format(java.util.Locale.US, "   moyenne %.1f\n", runs.map { it.place }.average()))
     }
 
     // ---- Règles du jeu, vérifiées une par une sur une route vidée -----------------------------------------------
 
     /** Partie Moyen lancée (décompte passé), route vide, joueur au centre. */
     private fun emptyRoad(): VroumGame {
-        val g = VroumGame(false, 0, 1, THEMES[0], "T", "C", seed = 42L)
+        val g = VroumGame(false, 0, 1, THEMES[0], "T", "C", seed = 42L, cast = intArrayOf())
         repeat(60 * 4) { g.update(1f / 60f) }
         g.enemies.clear(); g.picks.clear(); g.events.clear()
         return g
@@ -181,7 +182,7 @@ class VroumBalanceTest {
     @Test
     fun pressing_boost_right_before_go_gives_a_rocket_start() {
         fun run(pressAt: Float): VroumGame {
-            val g = VroumGame(false, 0, 1, THEMES[0], "T", "C", seed = 42L)
+            val g = VroumGame(false, 0, 1, THEMES[0], "T", "C", seed = 42L, cast = intArrayOf())
             var tapped = false
             while (g.inIntro) { if (!tapped && g.introT <= pressAt) { tapped = true; g.tapBoost() }; g.update(1f / 60f) }
             return g
@@ -191,7 +192,7 @@ class VroumBalanceTest {
         org.junit.Assert.assertFalse("sans appuyer", run(-1f).rocketStart)
         // juste après le GO (temps de réaction) : ça compte encore ; une demi-seconde plus tard : trop tard
         fun late(delay: Float): VroumGame {
-            val g = VroumGame(false, 0, 1, THEMES[0], "T", "C", seed = 42L)
+            val g = VroumGame(false, 0, 1, THEMES[0], "T", "C", seed = 42L, cast = intArrayOf())
             while (g.inIntro) g.update(1f / 60f)
             var t = 0f
             while (t < delay) { g.update(1f / 60f); t += 1f / 60f }
@@ -232,7 +233,7 @@ class VroumBalanceTest {
         val sb = StringBuilder("\n=== VROUM — équilibrage ($n parties par case) ===\n")
         for (endless in listOf(false, true)) for (diff in 0..2) {
             sb.append("\n${if (endless) "ARCADE" else "COURSE"} ${listOf("Facile", "Moyen", "Difficile")[diff]}" +
-                (if (!endless) "  (chrono ${VTUNES[diff].timeLimit.toInt()} s, étoiles ${VROUM_STAR_SCORE[diff].toList()})" else "  (étoiles ${VROUM_STAR_DIST[diff].toList()} m)") + "\n")
+                (if (!endless) "  (temps du meilleur concurrent ${VroumGame.PAR_TIME[diff]} s)" else "  (étoiles ${VROUM_STAR_DIST[diff].toList()} m)") + "\n")
             for (bot in bots) line(sb, bot, (0 until n).map { play(endless, diff, bot, 1000L + it) }, endless, diff)
         }
         // chaque circuit : il doit rester jouable (Course, Moyen, joueur moyen)

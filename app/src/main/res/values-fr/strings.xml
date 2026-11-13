@@ -272,7 +272,7 @@
     <string name="vroum_race">Course</string>
     <string name="vroum_route">Route</string>
     <string name="vroum_vehicle">Bolide</string>
-    <string name="vroum_mode_race_hint">Roule proprement pour prendre de la vitesse et franchir la ligne d\'arrivée avant la fin du temps !</string>
+    <string name="vroum_mode_race_hint">Double tes 7 concurrents et franchis la ligne d\'arrivée en tête !</string>
     <string name="vroum_mode_arcade_hint">Roule le plus loin possible : ça s\'arrête quand il n\'y a plus d\'essence.</string>
     <string name="vroum_duel">2 joueurs</string>
     <string name="vroum_duel_hint">Chacun sa moitié d\'écran : le premier sur la ligne d\'arrivée gagne !</string>
@@ -485,4 +485,8 @@
     <string name="job_footballer">Footballeur</string>
     <string name="job_pharmacist">Pharmacienne</string>
     <string name="job_programmer">Informaticien</string>
+    <string name="vroum_draft">ASPIRATION !</string>
+    <string name="vroum_final_stretch">DERNIÈRE LIGNE DROITE !</string>
+    <string name="vroum_pts">%1$d pts</string>
+    <string name="vroum_rival">RIVAL</string>
 </resources>

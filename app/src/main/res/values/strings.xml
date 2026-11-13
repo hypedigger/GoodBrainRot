@@ -281,7 +281,7 @@
     <string name="vroum_race">Race</string>
     <string name="vroum_route">Route</string>
     <string name="vroum_vehicle">Ride</string>
-    <string name="vroum_mode_race_hint">Drive clean to build speed and reach the finish line before time runs out!</string>
+    <string name="vroum_mode_race_hint">Overtake your 7 opponents and cross the finish line first!</string>
     <string name="vroum_mode_arcade_hint">Drive as far as you can: it ends when the fuel is gone.</string>
     <string name="vroum_duel">2 players</string>
     <string name="vroum_duel_hint">Half the screen each: first across the finish line wins!</string>
@@ -494,4 +494,8 @@
     <string name="job_footballer">Footballer</string>
     <string name="job_pharmacist">Pharmacist</string>
     <string name="job_programmer">Programmer</string>
+    <string name="vroum_draft">SLIPSTREAM!</string>
+    <string name="vroum_final_stretch">FINAL STRETCH!</string>
+    <string name="vroum_pts">%1$d pts</string>
+    <string name="vroum_rival">RIVAL</string>
 </resources>

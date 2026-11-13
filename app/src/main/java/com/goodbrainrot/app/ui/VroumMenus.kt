@@ -664,9 +664,10 @@ internal fun CupSelectScreen(spr: VSprites, vehicle: Int, cupIdx: Int, diff: Int
 
 /** Fin de coupe : le trophée, les quatre courses avec leurs étoiles, le total, et la NOTE GLOBALE qui s'affiche en grand. */
 @Composable
-internal fun CupResultScreen(spr: VSprites, cupIdx: Int, stars: IntArray, scores: IntArray, onAgain: () -> Unit, onOther: () -> Unit) {
+internal fun CupResultScreen(spr: VSprites, cupIdx: Int, stars: IntArray, scores: IntArray, rows: List<VStandRow>, onAgain: () -> Unit, onOther: () -> Unit) {
     val cup = CUPS[cupIdx]
-    val sum = stars.sum(); val global = cupGlobalStars(sum)
+    val rank = rows.indexOfFirst { it.me } + 1
+    val sum = stars.sum(); val global = if (rank > 0) cupRankStars(rank) else cupGlobalStars(sum)
     var t by remember { mutableStateOf(0f) }
     LaunchedEffect(Unit) { val t0 = withFrameNanos { it }; while (true) { val now = withFrameNanos { it }; t = (now - t0) / 1e9f } }
     Box(Modifier.fillMaxSize()) {
@@ -696,7 +697,15 @@ internal fun CupResultScreen(spr: VSprites, cupIdx: Int, stars: IntArray, scores
                             Text("★", color = if (on) V_GOLD else Color.White.copy(alpha = 0.25f), fontSize = 58.sp, modifier = Modifier.scale(sc),
                                 style = TextStyle(fontFamily = VROUM_FONT, shadow = Shadow(Color(0x99000000), Offset(0f, 4f), 8f))) }
                     }
-                    Text(stringResource(R.string.vroum_cup_total) + "  ${scores.sum()}", color = Color.White, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = 22.sp,
+                    if (rank > 0) {
+                        // le rang final au classement de la coupe, en grand, et les points
+                        val (num, suf) = vroumOrdinal(rank, vroumLang())
+                        Row(verticalAlignment = Alignment.Bottom) {
+                            Text(num + suf, color = placeColor(rank), fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = 38.sp, style = TextStyle(fontFamily = VROUM_FONT, shadow = TITLE_SHADOW))
+                            Text("   " + stringResource(R.string.vroum_pts, rows[rank - 1].total), color = Color.White, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = 20.sp,
+                                modifier = Modifier.padding(bottom = 6.dp), style = TextStyle(fontFamily = VROUM_FONT, shadow = TITLE_SHADOW))
+                        }
+                    } else Text(stringResource(R.string.vroum_cup_total) + "  ${scores.sum()}", color = Color.White, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = 22.sp,
                         style = TextStyle(fontFamily = VROUM_FONT, shadow = TITLE_SHADOW))
                 }
             }
@@ -715,10 +724,15 @@ internal fun CupResultScreen(spr: VSprites, cupIdx: Int, stars: IntArray, scores
             }
             if (landscape) Row(Modifier.fillMaxSize().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 head(Modifier.weight(1f).fillMaxHeight())
-                Column(Modifier.weight(1f).fillMaxHeight()) { races(Modifier.fillMaxWidth().weight(1f)); buttons(Modifier.fillMaxWidth().padding(top = 12.dp)) }
+                Column(Modifier.weight(1f).fillMaxHeight()) {
+                    if (rows.isNotEmpty()) Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) { StandingsCard(spr, rows, t, Modifier.fillMaxWidth(), rowH = 20.dp) }
+                    else races(Modifier.fillMaxWidth().weight(1f))
+                    buttons(Modifier.fillMaxWidth().padding(top = 12.dp))
+                }
             } else Column(Modifier.fillMaxSize().padding(start = 18.dp, end = 18.dp, top = 22.dp, bottom = 18.dp)) {
                 head(Modifier.fillMaxWidth().weight(1.25f))
-                races(Modifier.fillMaxWidth().weight(1f).padding(top = 12.dp))
+                if (rows.isNotEmpty()) Box(Modifier.fillMaxWidth().weight(1f).padding(top = 10.dp), contentAlignment = Alignment.Center) { StandingsCard(spr, rows, t, Modifier.fillMaxWidth()) }
+                else races(Modifier.fillMaxWidth().weight(1f).padding(top = 12.dp))
                 buttons(Modifier.fillMaxWidth().padding(top = 14.dp))
             }
         }

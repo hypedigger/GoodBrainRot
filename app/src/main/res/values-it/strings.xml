@@ -272,7 +272,7 @@
     <string name="vroum_race">Gara</string>
     <string name="vroum_route">Percorso</string>
     <string name="vroum_vehicle">Bolide</string>
-    <string name="vroum_mode_race_hint">Guida pulito per prendere velocità e taglia il traguardo prima che finisca il tempo!</string>
+    <string name="vroum_mode_race_hint">Supera i tuoi 7 avversari e taglia il traguardo per primo!</string>
     <string name="vroum_mode_arcade_hint">Guida più lontano possibile: finisce quando non c\'è più benzina.</string>
     <string name="vroum_duel">2 giocatori</string>
     <string name="vroum_duel_hint">Metà schermo a testa: vince chi taglia per primo il traguardo!</string>
@@ -485,4 +485,8 @@
     <string name="job_footballer">Calciatore</string>
     <string name="job_pharmacist">Farmacista</string>
     <string name="job_programmer">Programmatore</string>
+    <string name="vroum_draft">SCIA!</string>
+    <string name="vroum_final_stretch">RETTILINEO FINALE!</string>
+    <string name="vroum_pts">%1$d pt</string>
+    <string name="vroum_rival">RIVALE</string>
 </resources>

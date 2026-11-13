@@ -272,7 +272,7 @@
     <string name="vroum_race">Carrera</string>
     <string name="vroum_route">Ruta</string>
     <string name="vroum_vehicle">Bólido</string>
-    <string name="vroum_mode_race_hint">¡Conduce limpio para ganar velocidad y cruza la meta antes de que se acabe el tiempo!</string>
+    <string name="vroum_mode_race_hint">¡Adelanta a tus 7 rivales y cruza la meta en cabeza!</string>
     <string name="vroum_mode_arcade_hint">Conduce lo más lejos posible: se acaba cuando no queda gasolina.</string>
     <string name="vroum_duel">2 jugadores</string>
     <string name="vroum_duel_hint">Media pantalla para cada uno: ¡gana el primero en cruzar la meta!</string>
@@ -485,4 +485,8 @@
     <string name="job_footballer">Futbolista</string>
     <string name="job_pharmacist">Farmacéutica</string>
     <string name="job_programmer">Programador</string>
+    <string name="vroum_draft">¡REBUFO!</string>
+    <string name="vroum_final_stretch">¡RECTA FINAL!</string>
+    <string name="vroum_pts">%1$d pts</string>
+    <string name="vroum_rival">RIVAL</string>
 </resources>

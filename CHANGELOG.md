@@ -1,5 +1,11 @@
 # Nouveautés — GoodBrainRot
 
+## 4.04 — 2026-11-13
+- **Vroum — de vraies positions de course.** En Course et en Championnat, on ne court plus contre le chrono mais contre **7 concurrents** : on part dernier sur la grille, la place s'affiche en grand (« 3e / 8 ») et saute en vert quand on double, en rouge quand on est doublé. Les concurrents roulent leur propre course, contournent le trafic, se font sortir par un takedown (ils perdent du temps) et apparaissent sur la frise d'arrivée. On finit toujours la course : reste à la finir devant. 1er = 3 étoiles, podium = 2.
+- **Vroum — podium.** À l'arrivée, la place en très gros et un **podium animé** : le 3e, le 2e puis le vainqueur montent sur leur marche, une flèche dorée désigne ton bolide.
+- **Vroum — points de championnat.** Chaque course d'une coupe rapporte 15, 12, 10, 8, 6, 4, 2 ou 1 point selon la place ; le **classement** des 8 bolides s'affiche après chaque course et à la fin de la coupe, dont la note dépend du rang final. Le plus fort des concurrents est ton **RIVAL** : il pousse quand tu le distances au classement.
+- **Vroum — aspiration.** Rester une seconde dans le sillage d'un concurrent déclenche un coup de vitesse (« ASPIRATION ! »), sans bouton.
+- **Vroum — dernière ligne droite.** Dans les 320 derniers mètres, la musique accélère, le public envahit les bas-côtés et applaudit.
 ## 4.03 — 2026-11-13
 - **Vroum — sauts courts et vifs.** Le saut est un petit bond de kart, presque deux fois plus rapide et un peu moins haut : on retombe sur la voiture qui roule juste devant. Après un écrasement, le rebond vise tout seul la voiture suivante de la file. La pause entre deux sauts est réduite de moitié ; les ressorts gardent leur grand saut.
 - **Vroum — arrivée.** On franchit l'arche lancé, puis le bolide freine et s'arrête au pied des tribunes, au bout de la route (il s'arrêtait sous l'arche, dont le damier remplissait l'écran). Le second damier du fond est remplacé par une guirlande de fanions : le seul damier, c'est la ligne. Le décor ordinaire passe derrière les tribunes.

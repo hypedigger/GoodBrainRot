@@ -272,7 +272,7 @@
     <string name="vroum_race">Гонка</string>
     <string name="vroum_route">Трасса</string>
     <string name="vroum_vehicle">Машина</string>
-    <string name="vroum_mode_race_hint">Езжай чисто, набирай скорость и пересеки финиш, пока не вышло время!</string>
+    <string name="vroum_mode_race_hint">Обгони 7 соперников и первым пересеки финишную черту!</string>
     <string name="vroum_mode_arcade_hint">Проезжай как можно дальше: игра кончается, когда кончается бензин.</string>
     <string name="vroum_duel">2 игрока</string>
     <string name="vroum_duel_hint">У каждого своя половина экрана: побеждает тот, кто первым пересечёт финиш!</string>
@@ -485,4 +485,8 @@
     <string name="job_footballer">Футболист</string>
     <string name="job_pharmacist">Фармацевт</string>
     <string name="job_programmer">Программист</string>
+    <string name="vroum_draft">СЛИПСТРИМ!</string>
+    <string name="vroum_final_stretch">ФИНИШНАЯ ПРЯМАЯ!</string>
+    <string name="vroum_pts">%1$d очк.</string>
+    <string name="vroum_rival">СОПЕРНИК</string>
 </resources>
