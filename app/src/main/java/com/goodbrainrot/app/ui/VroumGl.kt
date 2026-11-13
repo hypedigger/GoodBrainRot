@@ -45,7 +45,7 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
     @Volatile var paused = false
     private var program = 0
     private var aPos = 0; private var aUV = 0; private var aCol = 0
-    private var uMVP = 0; private var uTex = 0; private var uFog = 0; private var uFogColor = 0; private var uEye = 0
+    private var uMVP = 0; private var uTex = 0; private var uFog = 0; private var uFogColor = 0; private var uEye = 0; private var uFogA = 0; private var uFogB = 0
     private var white = 0
     private var disc: Tex? = null          // disque doux (ombres, particules, halos)
     private var ring: Tex? = null          // anneau doux (onde de choc d'atterrissage)
@@ -65,14 +65,20 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
         aPos = GLES20.glGetAttribLocation(program, "aPos"); aUV = GLES20.glGetAttribLocation(program, "aUV"); aCol = GLES20.glGetAttribLocation(program, "aCol")
         uMVP = GLES20.glGetUniformLocation(program, "uMVP"); uTex = GLES20.glGetUniformLocation(program, "uTex")
         uFog = GLES20.glGetUniformLocation(program, "uFog"); uFogColor = GLES20.glGetUniformLocation(program, "uFogColor"); uEye = GLES20.glGetUniformLocation(program, "uEye")
+        uFogA = GLES20.glGetUniformLocation(program, "uFogA"); uFogB = GLES20.glGetUniformLocation(program, "uFogB")
         white = makeWhiteTexture()
         disc = Tex(makeSoftDisc(), 1f, 1f, 1f)
         ring = Tex(makeSoftRing(), 1f, 1f, 1f)
         tex.clear()
         val names = ArrayList<String>()
-        for (v in VEHICLES) { names.add("vr_${v.key}"); names.add("vr_${v.key}_cannon") }
+        for (v in VEHICLES) names.add("vr_${v.key}")
+        names.add("vr_${VEHICLES[game.vehicle].key}_cannon")
         for (e in ENEMY_KEYS) names.add("vr_$e")
-        for (t in THEMES) { for (d in t.decor) names.add("vr_${d.first}"); names.addAll(t.picks); names.add(t.holeTex); names.add(t.logTex) }
+        for (e in ONCOMING_KEYS) names.add("vr_$e")
+        // seulement le circuit en cours : avec 20 circuits, tout charger prendrait des dizaines de Mo de textures
+        game.theme.let { t -> for (d in t.decor) names.add("vr_${d.first}"); names.addAll(t.picks); names.add(t.holeTex); names.add(t.logTex); names.add(t.rampTex); names.addAll(t.crossers) }
+        for (w in VWeapon.values()) if (w.tex.isNotEmpty()) names.add(w.tex)
+        names.add("vv_itembox"); names.add("vv_jg_boulder"); names.add("vr_rock")
         for (p in PASSENGER_KEYS) names.add("vv_$p")
         for (c in CHEER_KEYS) names.add("vv_$c")
         for (n in listOf("vv_fuel", "vv_star", "vv_turbo", "vv_puddle", "vv_flag", "vv_cannon", "vv_superboost", "vv_hole", "vv_log")) names.add(n)
@@ -112,8 +118,11 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
         GLES20.glEnableVertexAttribArray(aPos); GLES20.glEnableVertexAttribArray(aUV); GLES20.glEnableVertexAttribArray(aCol)
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0); GLES20.glUniform1i(uTex, 0)
         GLES20.glUniform3f(uFogColor, th.fog.r, th.fog.g, th.fog.b)
+        // tempête de sable (désert) : le brouillard se rapproche par vagues
+        val storm = game.storm
+        GLES20.glUniform1f(uFogA, 90f - 72f * storm); GLES20.glUniform1f(uFogB, 230f - 165f * storm)
         // coup de zoom inverse pendant un boost : le champ s'élargit (sensation de vitesse), lissé
-        val wantExtra = game.boostLevel * 6f + game.flow * 6f      // le champ s'ouvre avec l'élan : sensation de vitesse
+        val wantExtra = game.boostLevel * 6f + game.flow * 6f + (if (game.boosting) 8f else 0f)      // le champ s'ouvre avec l'élan : sensation de vitesse
         fovExtra += (wantExtra - fovExtra) * min(1f, dt * 6f)
         Matrix.perspectiveM(proj, 0, (if (game.wide) 40f else 64f) + fovExtra, aspectRatio, 1.0f, 600f)
         Matrix.scaleM(proj, 0, -1f, 1f, 1f)
@@ -288,7 +297,8 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
             val th = game.theme
             val gc = if (even) th.grass else th.grass2; val rc = if (even) th.road else th.road2
             val (gr, gg, gb) = Triple(gc.r * sh, gc.g * sh, gc.b * sh)
-            val (rr, rg, rb) = Triple(rc.r * sh, rc.g * sh, rc.b * sh)
+            // route arc-en-ciel (espace) : la teinte glisse de segment en segment
+            val (rr, rg, rb) = if (th.trait.rainbow) game.rainbow(i * 0.045f).let { (a, b, c) -> Triple((0.25f + 0.6f * a) * sh, (0.25f + 0.6f * b) * sh, (0.3f + 0.6f * c) * sh) } else Triple(rc.r * sh, rc.g * sh, rc.b * sh)
             quad3(cx0 - 90f, y0 + 1.2f, z0, cx0 - half0, y0, z0, cx1 - half1, y1, z1, cx1 - 90f, y1 + 1.2f, z1, gr, gg, gb)
             quad3(cx0 + half0, y0, z0, cx0 + 90f, y0 + 1.2f, z0, cx1 + 90f, y1 + 1.2f, z1, cx1 + half1, y1, z1, gr, gg, gb)
             quad3(cx0 - half0, y0, z0, cx0 + half0, y0, z0, cx1 + half1, y1, z1, cx1 - half1, y1, z1, rr, rg, rb)
@@ -309,7 +319,7 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
     // --------------------------------------------------------------- sprites
     /** Sprite 3D : billboard vertical (par défaut) ou décalque À PLAT sur le sol (ombres, flaques, flèches, onde de choc). */
     private class Bill(val z: Float, val x: Float, val y: Float, val w: Float, val tex: Tex?, val alpha: Float, val r: Float, val g: Float, val b: Float,
-                       val squash: Float = 1f, val stretch: Float = 1f, val flat: Boolean = false, val rot: Float = 0f,
+                       val squash: Float = 1f, val stretch: Float = 1f, val flat: Boolean = false, val rot: Float = 0f, val flip: Boolean = false,
                        // « rig » : morceau du sprite (fractions 0..1, x gauche→droite, y bas→haut), cisaillements horizontaux
                        // des bords haut/bas et décalages verticaux des bords gauche/droit — permet jambes, ailes, suspension
                        val fx0: Float = 0f, val fx1: Float = 1f, val fy0: Float = 0f, val fy1: Float = 1f,
@@ -334,16 +344,34 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
                 }
                 else -> { val dk = g.theme.decor[d.kind % g.theme.decor.size]; val t = tex["vr_" + dk.first]
                     // nuit : le décor non lumineux est assombri (les lampes, enseignes et lanternes restent vives)
-                    val lit = dk.first.startsWith("lamp") || dk.first.startsWith("tk_") || dk.first == "owl_tree"
+                    val lit = dk.first.startsWith("lamp") || dk.first.startsWith("tk_") || dk.first == "owl_tree" || dk.first.startsWith("hw_") || dk.first.startsWith("cy_")
                     val sh = if (g.theme.night && !lit) 0.5f else 1f
                     bills.add(Bill(d.z, x, ground(d.z), dk.second * 3.2f, t, far, if (t == null) 0.19f else sh, if (t == null) 0.48f else sh, if (t == null) 0.21f else sh * 1.1f)) }
             }
         }
         for (p in g.picks) {
             if (p.z < 1f || p.z > VroumGame.Z_FAR) continue
-            val x = g.xCenter(p.z) + g.laneX(p.lane)
+            val x = g.xCenter(p.z) + g.laneX(p.lane) + (if (p.magnet) p.mx * VroumGame.LANE_M else 0f)
             val gy = ground(p.z)
             when (p.type) {
+                VItem.ITEMBOX -> {
+                    // boîte à objet : cube « ? » qui flotte et se balance, halo arc-en-ciel
+                    val (hr, hg, hb) = g.rainbow(p.t * 0.8f + p.z * 0.01f)
+                    val bob = 0.7f + 0.25f * sin(p.t * 4f)
+                    bills.add(Bill(p.z + 0.01f, x, gy, 3.6f + 0.4f * sin(p.t * 6f), disc, 0.45f, hr, hg, hb, squash = 0.6f, flat = true))
+                    bills.add(Bill(p.z + 0.005f, x, gy + bob - 0.5f, 3.0f, disc, 0.35f, hr, hg, hb))
+                    val t = tex["vv_itembox"]
+                    bills.add(Bill(p.z - 0.01f, x, gy + bob, 2.0f, t, 1f, if (t == null) hr else 1f, if (t == null) hg else 1f, if (t == null) hb else 1f, rot = sin(p.t * 3f) * 10f))
+                }
+                VItem.RAMP -> {
+                    // tremplin (ou bulle-trampoline) : halo doré, flèches qui pulsent
+                    val pulse = 0.5f + 0.5f * sin(p.t * 9f)
+                    bills.add(Bill(p.z + 0.02f, x, gy, 3.6f, disc, 0.35f + 0.2f * pulse, 1f, 0.85f, 0.2f, squash = 1.1f, flat = true))
+                    val t = tex[g.theme.rampTex] ?: tex["vv_wk_ramp"]
+                    if (g.theme.rampTex.contains("bubble")) bills.add(Bill(p.z, x, gy + 0.15f + 0.12f * pulse, 2.5f, t, 0.9f, 1f, 1f, 1f, squash = 1f - 0.08f * pulse))
+                    else bills.add(Bill(p.z, x, gy, 2.9f, t, 1f, 1f, if (t == null) 0.8f else 1f, if (t == null) 0.1f else 1f, squash = if (t == null) 0.4f else 1f))
+                    bills.add(Bill(p.z - 0.02f, x, gy + 1.9f + 0.5f * pulse, 0.6f, disc, 0.9f, 1f, 0.9f, 0.3f))
+                }
                 VItem.HOLE -> {
                     // nid-de-poule / lave / glace (texture du thème) : décalque au sol + anneau rouge, à SAUTER
                     val pulse = 0.5f + 0.5f * sin(g.elapsed * 6f + p.z)
@@ -357,14 +385,17 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
                     val pulse = 0.5f + 0.5f * sin(g.elapsed * 6f + p.z)
                     bills.add(Bill(p.z + 0.02f, lx, gy, 4.0f + 0.5f * pulse, disc, 0.3f + 0.2f * pulse, 1f, 0.15f, 0.1f, squash = 0.9f, flat = true))
                     bills.add(Bill(p.z, lx, gy, 2.9f, disc, 0.4f, 0f, 0f, 0f, squash = 0.7f, flat = true))
-                    val t = (if (p.fDir != 0 && g.theme.key == "volcano") tex["vr_rock"] else null) ?: tex[g.theme.logTex] ?: tex["vv_log"]
-                    // rocher du Volcan : il ROULE (rotation continue) ; chat de Tokyo : petit trottinement
-                    val rolling = p.fDir != 0 && g.theme.key == "volcano"
+                    // ce qui TRAVERSE (chat, rocher, crabe, vache, dinosaure…) : sprite du circuit, tiré selon la variante
+                    val cname = if (p.fDir != 0 && g.theme.crossers.isNotEmpty()) g.theme.crossers[p.variant % g.theme.crossers.size] else ""
+                    val t = (if (cname.isNotEmpty()) tex[cname] else null) ?: tex[g.theme.logTex] ?: tex["vv_log"]
+                    // rochers et buissons ROULENT ; les animaux trottinent (le sprite regarde à droite : miroir s'il va à gauche)
+                    val rolling = cname.contains("rock") || cname.contains("tumble")
+                    val animal = cname.isNotEmpty() && !rolling
                     val rot = if (rolling) -p.fDir * 16f * sin(g.elapsed * 13f) else 0f
-                    val hop = if (rolling) 0.35f * abs(sin(g.elapsed * 13f)) else 0f
-                    val sq = if (t == null) 0.35f else if (p.fDir != 0 && g.theme.key == "tokyo") 1f + 0.06f * sin(g.elapsed * 14f) else 1f
-                    val (lr, lg, lb) = if (t == null) Triple(0.45f, 0.3f, 0.2f) else if (rolling) Triple(0.85f, 0.55f, 0.48f) else Triple(1f, 1f, 1f)
-                    bills.add(Bill(p.z - 0.01f, lx, gy + hop, if (rolling) 2.4f else 2.9f, t, 1f, lr, lg, lb, squash = sq, rot = rot))
+                    val hop = if (rolling) 0.35f * abs(sin(g.elapsed * 13f)) else if (animal) 0.16f * abs(sin(g.elapsed * 11f + p.z)) else 0f
+                    val sq = if (t == null) 0.35f else if (animal) 1f + 0.05f * sin(g.elapsed * 14f) else 1f
+                    val (lr, lg, lb) = if (t == null) Triple(0.45f, 0.3f, 0.2f) else if (cname == "vr_rock") Triple(0.85f, 0.55f, 0.48f) else Triple(1f, 1f, 1f)
+                    bills.add(Bill(p.z - 0.01f, lx, gy + hop, if (rolling) 2.4f else 2.9f, t, 1f, lr, lg, lb, squash = sq, rot = rot, flip = animal && p.fDir < 0 && cname != "vv_tk_cat"))
                 }
                 VItem.PUDDLE -> {
                     // piège : anneau rouge qui pulse autour de la flaque
@@ -401,19 +432,51 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
             }
         }
         for (e in g.enemies) {
-            if (e.z < 1f || e.z > VroumGame.Z_FAR) continue
-            val x = g.xCenter(e.z) + g.laneX(e.lane)
+            if (e.z < 1.2f || e.z > VroumGame.Z_FAR) continue
+            val x = g.xCenter(e.z) + (if (e.rival) g.laneXf(e.fx) else g.laneX(e.lane)) + e.flyX
             val gy = ground(e.z)
-            val t = tex["vr_" + ENEMY_KEYS[e.kind]]
+            val t = when {
+                e.rival -> tex["vr_" + VEHICLES[e.veh].key]
+                e.boulder -> tex["vv_jg_boulder"] ?: tex["vr_rock"]
+                e.oncoming -> tex["vr_" + ONCOMING_KEYS[e.kind]] ?: tex["vr_" + ENEMY_KEYS[e.kind]]
+                else -> tex["vr_" + ENEMY_KEYS[e.kind]]
+            }
+            val w = if (e.boulder) 3.0f else if (e.heavy) 3.1f else if (e.rival) 2.15f else 2.7f
             if (e.crushed >= 0f) {
+                // écrasée en sautant dessus : elle s'aplatit
                 val k = (e.crushed / 0.55f).coerceIn(0f, 1f)
-                bills.add(Bill(e.z, x, gy, 2.8f * (1f + 0.35f * k), t, 1f - k * 0.8f, 0.5f, 0.5f, 0.55f, squash = (1f - 0.8f * k).coerceAtLeast(0.15f)))
+                bills.add(Bill(e.z, x, gy, w * (1f + 0.35f * k), t, 1f - k * 0.8f, 0.5f, 0.5f, 0.55f, squash = (1f - 0.8f * k).coerceAtLeast(0.15f)))
+            } else if (e.fly >= 0f) {
+                // TAKEDOWN : elle s'envole en tournoyant puis s'efface
+                val a = (1f - (e.fly - 0.85f).coerceAtLeast(0f) / 0.4f).coerceIn(0f, 1f)
+                bills.add(Bill(e.z + 0.02f, x, gy, w * 0.9f, disc, 0.35f * a, 0f, 0f, 0f, squash = 0.9f, flat = true))
+                bills.add(Bill(e.z, x, gy + e.flyY, w, t, a, 1f, 0.85f, 0.75f, rot = e.spin))
             } else {
-                // OBSTACLE : halo ROUGE qui pulse au sol (lisible pour un enfant de 5 ans) + ombre
-                val pulse = 0.5f + 0.5f * sin(g.elapsed * 6f + e.z)
-                bills.add(Bill(e.z + 0.02f, x, gy, 4.2f + 0.5f * pulse, disc, 0.32f + 0.18f * pulse, 1f, 0.15f, 0.1f, squash = 0.9f, flat = true))
-                bills.add(Bill(e.z, x, gy, 2.8f, disc, 0.45f, 0f, 0f, 0f, squash = 0.9f, flat = true))
-                bills.add(Bill(e.z - 0.01f, x, gy, 2.8f, t, 1f, 1f, 1f, 1f))
+                // Langage visuel : ROUGE qui pulse = danger (en face, camion sans boost, rocher) ; anneau DORÉ = cible à percuter
+                val powered = g.boostLevel > 0 || g.giant > 0
+                val danger = e.oncoming || e.boulder || (e.heavy && !powered)
+                val pulse = 0.5f + 0.5f * sin(g.elapsed * (if (e.oncoming) 11f else 6f) + e.z)
+                val alpha = if (e.ghost) 0.40f + 0.12f * sin(g.elapsed * 5f + e.z) else 1f
+                if (e.ghost) bills.add(Bill(e.z + 0.02f, x, gy, 3.6f, disc, 0.28f, 0.5f, 0.85f, 1f, squash = 0.9f, flat = true))
+                else if (danger) bills.add(Bill(e.z + 0.02f, x, gy, 4.4f + 0.6f * pulse, disc, 0.34f + 0.2f * pulse, 1f, 0.12f, 0.08f, squash = 0.9f, flat = true))
+                else if (!e.rival) bills.add(Bill(e.z + 0.02f, x, gy, 3.5f + 0.3f * pulse, ring, 0.40f + 0.25f * pulse, 1f, 0.85f, 0.2f, squash = 0.9f, flat = true))
+                bills.add(Bill(e.z, x, gy, w, disc, 0.45f * alpha, 0f, 0f, 0f, squash = 0.9f, flat = true))
+                if (e.oncoming) {
+                    // phares : nappe de lumière au sol devant elle + deux points lumineux
+                    bills.add(Bill(e.z - 5f, x, gy, 4.0f, disc, 0.30f, 1f, 0.96f, 0.7f, stretch = 2f, flat = true))
+                    for (sd in listOf(-1f, 1f)) bills.add(Bill(e.z - 0.03f, x + sd * w * 0.27f, gy + w * 0.22f, 0.6f, disc, 0.95f, 1f, 1f, 0.8f))
+                }
+                val wob = if (e.rival && e.stun > 0f) sin(g.elapsed * 30f) * 9f else if (e.boulder) 16f * sin(g.elapsed * 13f + e.z) else 0f
+                val hop = if (e.boulder) 0.4f * abs(sin(g.elapsed * 13f + e.z)) else 0f
+                val (cr, cg, cb) = if (e.ghost) Triple(0.6f, 0.9f, 1f) else Triple(1f, 1f, 1f)
+                bills.add(Bill(e.z - 0.01f, x, gy + hop, w, t, alpha, cr, cg, cb, rot = wob))
+                if (e.rival) {
+                    // marqueur au-dessus du rival : pastille orange ; « ! » rouge clignotant quand il va nous serrer ; cible rouge = REVANCHE
+                    val my = gy + w * 1.2f + 0.15f * sin(g.elapsed * 6f)
+                    if (e.warn > 0f) bills.add(Bill(e.z - 0.02f, x, my, 1.5f, disc, if ((g.elapsed * 12f).toInt() % 2 == 0) 1f else 0.3f, 1f, 0.12f, 0.08f))
+                    else if (e.revenge) { bills.add(Bill(e.z - 0.02f, x, my, 1.3f, ring, 0.95f, 1f, 0.2f, 0.15f)); bills.add(Bill(e.z - 0.03f, x, my + 0.42f, 0.42f, disc, 1f, 1f, 0.2f, 0.15f)) }
+                    else bills.add(Bill(e.z - 0.02f, x, my, 0.5f, disc, 0.9f, 1f, 0.6f, 0.1f))
+                }
             }
         }
         // tirs des canons
@@ -430,6 +493,24 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
             bills.add(Bill(VroumGame.PLAYER_Z, x, gy, 3f + 24f * k, ring, 0.8f * (1f - k), 1f, 1f, 1f, squash = 0.9f, flat = true))
             bills.add(Bill(VroumGame.PLAYER_Z + 0.02f, x, gy, 1.5f + 15f * (k * k), ring, 0.6f * (1f - k), 1f, 0.9f, 0.6f, squash = 0.9f, flat = true))
             bills.add(Bill(VroumGame.PLAYER_Z + 0.03f, x, gy, 4f + 10f * k, disc, 0.25f * (1f - k), 0.75f, 0.62f, 0.45f, squash = 0.9f, flat = true))
+        }
+        // rayon LASER : segments lumineux posés le long de notre voie, loin devant
+        if (g.weapon == VWeapon.LASER) {
+            val cover = g.coveredLanes(); val cl = (cover.first + cover.last) / 2f
+            val wv = 0.8f + 0.2f * sin(g.elapsed * 40f)
+            var zz = VroumGame.PLAYER_Z + 4f
+            while (zz < VroumGame.PLAYER_Z + 170f) {
+                val x = g.xCenter(zz) + g.laneXf(cl); val gy = ground(zz) + 0.9f
+                bills.add(Bill(zz, x, gy, 1.5f * wv, null, 0.30f, 0.3f, 0.85f, 1f, stretch = 4.4f / wv, flat = true))
+                bills.add(Bill(zz - 0.01f, x, gy + 0.02f, 0.45f, null, 0.95f, 0.9f, 1f, 1f, stretch = 14.5f, flat = true))
+                zz += 10f
+            }
+        }
+        // BOMBE lancée : elle file devant en cloche avant d'exploser
+        if (g.weapon == VWeapon.BOMB) {
+            val k = (1f - g.weaponT / VWeapon.BOMB.dur).coerceIn(0f, 1f)
+            val bz = VroumGame.PLAYER_Z + 4f + 55f * k
+            bills.add(Bill(bz, g.xCenter(bz) + g.lx * VroumGame.LANE_M, ground(bz) + 1f + sin(k * 3.1416f) * 7f, 1.8f, tex["vv_bomb"], 1f, 1f, 1f, 1f, rot = k * 540f))
         }
         // fantôme du meilleur temps (Course) : le même bolide en spectre bleuté semi-transparent
         if (g.ghostD != null) {
@@ -528,6 +609,19 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
                     val pt = tex["vv_" + PASSENGER_KEYS[g.passengerKind]]
                     bills.add(Bill(z - 0.05f, x, gy + lift + pw * 0.62f * sq + hop, pw * 0.36f, pt, 1f, 1f, 0.36f, 0.64f))
                 }
+                // BOUCLIER : bulle bleue autour du bolide ; AIMANT : anneau qui pulse au sol
+                if (g.shieldT > 0f) {
+                    val a = if (g.shieldT < 3f && (g.shieldT * 8f).toInt() % 2 == 0) 0.25f else 0.6f
+                    bills.add(Bill(z - 0.04f, x, gy + lift - pw * 0.2f, pw * 2.0f, ring, a, 0.35f, 0.8f, 1f))
+                    bills.add(Bill(z - 0.035f, x, gy + lift - pw * 0.1f, pw * 1.8f, disc, a * 0.3f, 0.35f, 0.8f, 1f))
+                }
+                if (g.weapon == VWeapon.MAGNET) { val mp = (g.elapsed * 1.6f) % 1f; bills.add(Bill(z + 0.03f, x, gy, 16f * (1f - mp) + 2f, ring, 0.5f * mp, 1f, 0.3f, 0.3f, squash = 0.9f, flat = true)) }
+                // flammes de BOOST façon Burnout : deux jets bleus à l'arrière, qui grossissent avec la jauge allongée
+                if (g.boosting) for (sd in listOf(-1f, 1f)) {
+                    val fl = 0.7f + 0.3f * sin(g.elapsed * 55f + sd)
+                    bills.add(Bill(z + 0.6f, x + sd * pw * 0.26f, gy + lift + 0.15f, 0.55f * fl, disc, 0.9f, 0.45f, 0.75f, 1f, stretch = 1f))
+                    bills.add(Bill(z + 1.4f, x + sd * pw * 0.26f, gy + lift + 0.1f, 0.5f, null, 0.55f, 0.3f, 0.6f, 1f, squash = 0.5f, stretch = (3f + g.boostSeg) * fl, flat = true))
+                }
                 if (g.boostLevel > 0) for (i in 0..3) {
                     val (tr, tg, tb) = if (g.boostLevel == 2) g.rainbow(g.elapsed * 2f + i * 0.25f) else Triple(0.29f, 0.88f, 1f)
                     bills.add(Bill(z + 0.5f + i * 0.4f, x + (i - 1.5f) * pw * 0.22f, gy + 0.2f, 0.25f, null, 0.5f, tr, tg, tb, stretch = if (g.boostLevel == 2) 9f else 6f))
@@ -589,8 +683,9 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
             return
         }
         val y0 = b.y; val y1 = b.y + hh
-        vert(x0, y0, b.z, 0f, vMax, b.r, b.g, b.b, b.alpha); vert(x1, y0, b.z, uMax, vMax, b.r, b.g, b.b, b.alpha); vert(x1, y1, b.z, uMax, 0f, b.r, b.g, b.b, b.alpha)
-        vert(x0, y0, b.z, 0f, vMax, b.r, b.g, b.b, b.alpha); vert(x1, y1, b.z, uMax, 0f, b.r, b.g, b.b, b.alpha); vert(x0, y1, b.z, 0f, 0f, b.r, b.g, b.b, b.alpha)
+        val ua = if (b.flip) uMax else 0f; val ub = if (b.flip) 0f else uMax
+        vert(x0, y0, b.z, ua, vMax, b.r, b.g, b.b, b.alpha); vert(x1, y0, b.z, ub, vMax, b.r, b.g, b.b, b.alpha); vert(x1, y1, b.z, ub, 0f, b.r, b.g, b.b, b.alpha)
+        vert(x0, y0, b.z, ua, vMax, b.r, b.g, b.b, b.alpha); vert(x1, y1, b.z, ub, 0f, b.r, b.g, b.b, b.alpha); vert(x0, y1, b.z, ua, 0f, b.r, b.g, b.b, b.alpha)
     }
 
     // ------------------------------------------------------------ projection
@@ -648,7 +743,7 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
         """.trimIndent()
         val fs = """
             precision mediump float;
-            uniform sampler2D uTex; uniform float uFog; uniform vec3 uFogColor;
+            uniform sampler2D uTex; uniform float uFog; uniform vec3 uFogColor; uniform float uFogA; uniform float uFogB;
             varying vec2 vUV; varying vec4 vCol; varying float vDist;
             void main() {
                 // texture pré-multipliée x teinte (rgb*a) : sortie pré-multipliée pour le blending (1, 1-a)
@@ -656,7 +751,7 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
                 float a = t.a * vCol.a;
                 if (a < 0.03) discard;
                 vec3 rgb = t.rgb * vCol.rgb * vCol.a;
-                float f = clamp((vDist - 90.0) / 230.0, 0.0, 1.0) * uFog;
+                float f = clamp((vDist - uFogA) / uFogB, 0.0, 1.0) * uFog;
                 float fade = 1.0 - 0.35 * f;
                 gl_FragColor = vec4(mix(rgb, uFogColor * a, f) * fade, a * fade);
             }

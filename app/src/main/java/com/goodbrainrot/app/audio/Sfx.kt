@@ -63,6 +63,7 @@ object Sfx {
         "vv_fanfare2" to R.raw.sfx_vv_fanfare2,
         "vv_beep" to R.raw.sfx_vv_beep,
         "vv_bear" to R.raw.sfx_vv_bear,
+        "vv_boostloop" to R.raw.sfx_vv_boostloop,   // moteur de course à plein régime (boost, en boucle)
         "gz_tchak" to R.raw.sfx_gz_tchak,
         "gz_nuke" to R.raw.sfx_gz_nuke,
         "gz_splat" to R.raw.sfx_gz_splat,

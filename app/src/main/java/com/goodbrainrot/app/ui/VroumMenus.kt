@@ -336,6 +336,10 @@ private fun CircuitPager(spr: VSprites, pager: PagerState, endless: Boolean, due
                 Column(Modifier.align(Alignment.BottomStart).padding(18.dp)) {
                     Text(stringResource(th.nameRes).uppercase(), color = Color.White, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = 25.sp, lineHeight = 27.sp,
                         letterSpacing = 0.5.sp, style = TextStyle(shadow = TITLE_SHADOW))
+                    // la spécificité du circuit, en une phrase
+                    if (th.tip != 0) Box(Modifier.padding(top = 4.dp).clip(RoundedCornerShape(10.dp)).background(Color(0x99000000)).padding(horizontal = 9.dp, vertical = 3.dp)) {
+                        Text(stringResource(th.tip), color = V_GOLD, fontWeight = FontWeight.Bold, fontSize = 13.sp, lineHeight = 15.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    }
                     if (!duel) Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                         StarRow(starsMap["${th.key}_${if (endless) "a" else "c"}$diff"] ?: 0, 22.sp)
                         bestLabel(th.key, endless, diff)?.let { rec ->
@@ -350,8 +354,8 @@ private fun CircuitPager(spr: VSprites, pager: PagerState, endless: Boolean, due
                 }
             }
         }
-        Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-            for (i in THEMES.indices) Box(Modifier.size(width = if (i == pager.currentPage) 22.dp else 8.dp, height = 8.dp).clip(CircleShape)
+        Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            for (i in THEMES.indices) Box(Modifier.size(width = if (i == pager.currentPage) 18.dp else 6.dp, height = 7.dp).clip(CircleShape)
                 .background(if (i == pager.currentPage) V_GOLD else Color.White.copy(alpha = 0.35f)).clickableNoRipple { scope.launch { pager.animateScrollToPage(i) } })
         }
     }

@@ -116,6 +116,8 @@ internal class VSprites(private val ctx: android.content.Context) {
     val vehicles = VEHICLES.map { load("vr_${it.key}") ?: load("vv_${it.key}") }
     /** bolides vus de FACE (garage, photo finish) ; null si le sprite n'existe pas encore */
     val fronts = VEHICLES.map { load("vf_${it.key}") }
+    /** icônes des objets (case d'objet du HUD) */
+    val items = VWeapon.values().associateWith { if (it.tex.isEmpty()) null else load(it.tex) }
     val title = load("vv_title"); val village = load("vv_village"); val empty = load("vv_empty")
     val cards = THEMES.map { load(it.card) }
 }
@@ -148,10 +150,14 @@ fun VroumScreen(onBack: () -> Unit) {
     val lanesLabel = stringResource(R.string.vroum_lanes); val superLabel = stringResource(R.string.vroum_superboost)
     val jumpedLabel = stringResource(R.string.vroum_jumped)
     val nearLabel = stringResource(R.string.vroum_near); val maxLabel = stringResource(R.string.vroum_flow_max)
+    val vLabels = listOf(R.string.vroum_takedown, R.string.vroum_strike, R.string.vroum_revenge, R.string.vroum_stomp, R.string.vroum_crash, R.string.vroum_shove,
+        R.string.vroum_ghost, R.string.vroum_wind, R.string.vroum_w_bomb, R.string.vroum_w_laser, R.string.vroum_w_flame, R.string.vroum_w_magnet, R.string.vroum_w_shield).map { stringResource(it) }
     val game = remember(runToken) {
         if (phase != VPhase.PLAYING) null
         else VroumGame(endless, vehicle, diff, THEMES[themeIdx], trickLabel, cannonLabel).also { g ->
             g.lanesLabel = lanesLabel; g.superLabel = superLabel; g.jumpedLabel = jumpedLabel; g.nearLabel = nearLabel; g.maxLabel = maxLabel
+            g.takedownLabel = vLabels[0]; g.strikeLabel = vLabels[1]; g.revengeLabel = vLabels[2]; g.stompLabel = vLabels[3]; g.crashLabel = vLabels[4]
+            g.shoveLabel = vLabels[5]; g.ghostLabel = vLabels[6]; g.windLabel = vLabels[7]; g.weaponLabels = vLabels.subList(8, 13)
             // charge le fantôme pour ce circuit / cette difficulté : meilleur temps en Course, distance max en Arcade
             Settings.vroumGhost(if (endless) "${THEMES[themeIdx].key}_a$diff" else "${THEMES[themeIdx].key}_$diff")?.let { s ->
                 val p = s.split(";")
@@ -195,8 +201,9 @@ fun VroumScreen(onBack: () -> Unit) {
     var resCleared by remember { mutableStateOf(false) }
     var resRecord by remember { mutableStateOf(false) }
     var resTimeUp by remember { mutableStateOf(false) }
+    var resTakedowns by remember { mutableIntStateOf(0) }
     fun finishRun(g: VroumGame, cleared: Boolean) {
-        resScore = g.score; resDist = g.dist.toInt(); resCleared = cleared; resTimeUp = g.timeUp
+        resScore = g.score; resDist = g.dist.toInt(); resCleared = cleared; resTimeUp = g.timeUp; resTakedowns = g.takedowns
         val best = HighScores.best(gameKey)
         // le mode Facile (invincible) n'entre pas au tableau des records
         resRecord = g.diff >= 1 && g.score > 0 && g.score > best
@@ -247,6 +254,8 @@ fun VroumScreen(onBack: () -> Unit) {
         SoundEngine.playVvTick(0.8f)
         var engine = 0
         var engineCd = 0f
+        var fxCd = 0f
+        var roar = 0
         try {
             while (true) {
                 withFrameNanos { }
@@ -265,6 +274,32 @@ fun VroumScreen(onBack: () -> Unit) {
                         // frôlement : petit « ding » aigu + vibration courte ; élan au maximum : fanfare brève
                         "near" -> { SoundEngine.playVvTick(1.5f); SoundEngine.playVvCoin(); Haptics.tap(ctx) }
                         "flowMax" -> SoundEngine.playVvSuccess()
+                        // ---- Burnout : takedowns, boost, rivaux
+                        "takedown" -> { SoundEngine.playCrush(); SoundEngine.playBoom(); Haptics.tap(ctx) }
+                        "strike" -> { SoundEngine.playBoom(); SoundEngine.playVvCoin(); Haptics.tap(ctx) }
+                        "stomp" -> SoundEngine.playCrush()
+                        "bounce" -> { SoundEngine.playJump(); SoundEngine.playVvTick(1.0f + 0.12f * g.stompChain.coerceAtMost(8)); Haptics.tap(ctx) }
+                        "revenge" -> { SoundEngine.playVvYahoo(); SoundEngine.playVvFanfare() }
+                        "segUp" -> SoundEngine.playVvSuccess()
+                        "boostFull" -> SoundEngine.playVvTick(1.4f)
+                        // le moteur HURLE tant qu'on tient le boost (vrai enregistrement de voiture de course, en boucle)
+                        "boostOn" -> { SoundEngine.playTurbo(); Haptics.tap(ctx); Sfx.stopStream(roar); roar = Sfx.loop("vv_boostloop", 0.9f, 0.95f) }
+                        "boostOff" -> { Sfx.stopStream(roar); roar = 0 }
+                        "bumpSoft", "rivalHit" -> { SoundEngine.playBump(); Haptics.tap(ctx) }
+                        "shove" -> { SoundEngine.playCrush(); Haptics.tap(ctx) }
+                        "rivalIn" -> SoundEngine.playRealHorn(1.25f)
+                        "rivalWarn" -> { SoundEngine.playVvTick(0.6f); SoundEngine.playRealHorn(0.8f) }
+                        "ghost" -> SoundEngine.playVvCoin()
+                        // ---- Mario Kart : boîtes à objets et armes
+                        "box" -> SoundEngine.playPick(3)
+                        "ramp" -> SoundEngine.playJump()
+                        "bombArm" -> SoundEngine.playJump()
+                        "bomb" -> { SoundEngine.playBoom(); SoundEngine.playCrush(); SoundEngine.playVvYahoo(); Haptics.success(ctx) }
+                        "laser", "flame" -> SoundEngine.playTurbo()
+                        "magnet", "shield" -> SoundEngine.playVvSuccess()
+                        "shieldPop" -> { SoundEngine.playSplash(); SoundEngine.playVvTick(0.7f) }
+                        "windWarn" -> SoundEngine.playVvTick(0.7f)
+                        "wind" -> SoundEngine.playSplash()
                         "horn" -> hornFor(g.vehicle)
                         "bump" -> { SoundEngine.playBump(); Haptics.tap(ctx) }
                         "crush" -> { SoundEngine.playCrush(); Haptics.tap(ctx) }
@@ -293,11 +328,18 @@ fun VroumScreen(onBack: () -> Unit) {
                 }
                 if (countdown == 0 && g.introT <= 0f && g.elapsed > VroumGame.INTRO_DUR + 1.1f) countdown = -1
                 engineCd -= 1f / 60f
-                if (engine != 0 && engineCd <= 0f) { engineCd = 0.15f; Sfx.setStreamRate(engine, 0.75f + g.mps / 34f + (if (g.turboT > 0f) 0.15f else 0f)) }   // le moteur monte dans les tours avec l'élan
+                if (engine != 0 && engineCd <= 0f) { engineCd = 0.15f; Sfx.setStreamRate(engine, 0.75f + g.mps / 34f + (if (g.turboT > 0f) 0.15f else 0f) + (if (g.boosting) 0.4f else 0f)) }
+                // roulette de la boîte à objet : tic-tic-tic de plus en plus aigu ; laser : petit tir répété
+                if (roar != 0) Sfx.setStreamRate(roar, (0.85f + g.mps / 110f + 0.08f * g.boostSeg).coerceIn(0.8f, 1.6f))
+                fxCd -= 1f / 60f
+                if (fxCd <= 0f) {
+                    if (g.roulette > 0f) { fxCd = 0.085f; SoundEngine.playVvTick(1.0f + (1f - g.roulette) * 0.9f) }
+                    else if (g.weapon == VWeapon.LASER) { fxCd = 0.2f; SoundEngine.playShot() }
+                }   // le moteur monte dans les tours avec l'élan
                 tick++
                 if (phase != VPhase.PLAYING) break
             }
-        } finally { Sfx.stopStream(engine) }
+        } finally { Sfx.stopStream(engine); Sfx.stopStream(roar) }
     }
 
     Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF7FD4FF), Color(0xFFB39DFF))))) {
@@ -350,12 +392,27 @@ fun VroumScreen(onBack: () -> Unit) {
                             }
                         }
                         if (g.giant > 0) drawRect(V_GOLD.copy(alpha = 0.25f + 0.2f * sin(g.elapsed * 10f)), size = size, style = Stroke(u * 1.6f))
+                        // éclair blanc de la bombe ; voile de sable pendant la tempête ; rafale de vent annoncée
+                        if (g.flash > 0f) drawRect(Color.White.copy(alpha = (g.flash * 0.85f).coerceIn(0f, 1f)), size = size)
+                        if (g.storm > 0.05f) drawRect(Color(0xFFE8C98A).copy(alpha = 0.30f * g.storm), size = size)
+                        if (g.windT > 0f) for (i in 0 until 9) { val yy = size.height * (0.2f + 0.07f * i); val ph = ((g.elapsed * 2.2f + i * 0.31f) % 1f)
+                            val x0 = if (g.windDir > 0) size.width * (ph - 0.2f) else size.width * (1.2f - ph)
+                            drawLine(Color.White.copy(alpha = 0.55f), Offset(x0, yy), Offset(x0 + g.windDir * size.width * 0.18f, yy), strokeWidth = u * 0.5f, cap = StrokeCap.Round) }
                         if (g.cannonT > 0f) drawRect(V_CYAN.copy(alpha = 0.15f + 0.1f * sin(g.elapsed * 14f)), size = size, style = Stroke(u * 1.2f))
                     }
                     BoostOverlay(g, tick)
                     VroumHud(g, tick)
                     LaneHints(Modifier.align(Alignment.BottomCenter))
-                    JumpButton(modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 22.dp), cooldown = (g.jumpCd / g.JUMP_CD).coerceIn(0f, 1f), frame = tick) { glView.queueEvent { g.jump() } }
+                    // BOOST (à tenir) à gauche, SAUT à droite ; la jauge de boost juste au-dessus
+                    Column(Modifier.align(Alignment.BottomCenter).padding(bottom = 20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        BoostBar(g, tick, Modifier.padding(bottom = 10.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(26.dp), verticalAlignment = Alignment.CenterVertically) {
+                            BoostButton(g, tick) { held -> g.boostHeld = held }
+                            JumpButton(cooldown = (g.jumpCd / g.JUMP_CD).coerceIn(0f, 1f), frame = tick) { glView.queueEvent { g.jump() } }
+                        }
+                    }
+                    ItemSlot(g, spr.items, tick, Modifier.align(Alignment.CenterStart).padding(start = 12.dp).offset(y = (-40).dp))
+                    TakedownChip(g, tick, Modifier.align(Alignment.CenterEnd).padding(end = 12.dp).offset(y = (-40).dp))
                     if (countdown >= 0) CountdownOverlay(countdown)
                     // tutoriel de la toute première partie (3 bulles, avance avec les gestes de l'enfant)
                     if (tutoStep >= 0 && countdown < 0) VroumTutoOverlay(tutoStep)
@@ -363,7 +420,7 @@ fun VroumScreen(onBack: () -> Unit) {
                 BackButton(onBack = { GameMusic.stop(); phase = VPhase.LEVEL }, modifier = Modifier.align(Alignment.TopStart))
             }
             VPhase.CLEAR, VPhase.END -> {
-                ResultScreen(spr, cleared = resCleared, score = resScore, dist = resDist, record = resRecord, endless = endless, diff = diff, timeUp = resTimeUp,
+                ResultScreen(spr, cleared = resCleared, score = resScore, dist = resDist, record = resRecord, endless = endless, diff = diff, timeUp = resTimeUp, takedowns = resTakedowns,
                     vehicleImg = spr.vehicles.getOrNull(vehicle), frontImg = spr.fronts.getOrNull(vehicle), best = HighScores.best(gameKey), bg = if (themeIdx == 0) spr.village else spr.cards.getOrNull(themeIdx),
                     onReplay = { SoundEngine.playVroumUi(); phase = VPhase.PLAYING; runToken++ },
                     onOther = { SoundEngine.playVroumUi(); phase = VPhase.LEVEL },
@@ -467,15 +524,16 @@ private fun BoostOverlay(g: VroumGame, frame: Int) {
     Canvas(Modifier.fillMaxSize()) {
         val w = size.width; val h = size.height; val cx = w / 2f; val cy = h * 0.42f
         val t = g.elapsed
-        val n = if (lvl == 2) 34 else 20
+        val n = if (lvl == 2) 34 else if (g.boosting) 32 else 20
+        val boostCol = if (g.boosting) Color(0xFFBFE2FF) else V_CYAN
         for (i in 0 until n) {
             val a = (i / n.toFloat()) * 6.2832f + (i % 3) * 0.13f
             val flick = ((t * 22f + i * 1.7f) % 1f)
             val r0 = (0.28f + 0.5f * flick) * h; val r1 = r0 + (0.10f + 0.12f * (1f - flick)) * h
-            val col = if (lvl == 2) { val (r, gg, b) = g.rainbow(t * 2f + i * 0.07f); Color(r, gg, b) } else V_CYAN
+            val col = if (lvl == 2) { val (r, gg, b) = g.rainbow(t * 2f + i * 0.07f); Color(r, gg, b) } else boostCol
             drawLine(col.copy(alpha = 0.55f * (1f - flick)), Offset(cx + cos(a) * r0, cy + sin(a) * r0), Offset(cx + cos(a) * r1, cy + sin(a) * r1), strokeWidth = if (lvl == 2) 7f else 5f, cap = StrokeCap.Round)
         }
-        val vig = if (lvl == 2) { val (r, gg, b) = g.rainbow(t * 1.5f); Color(r, gg, b) } else V_CYAN
+        val vig = if (lvl == 2) { val (r, gg, b) = g.rainbow(t * 1.5f); Color(r, gg, b) } else if (g.boosting) Color(0xFF3F8CFF) else V_CYAN
         drawRect(Brush.radialGradient(listOf(Color.Transparent, vig.copy(alpha = if (lvl == 2) 0.35f else 0.22f)), center = Offset(cx, cy), radius = h * 0.75f), size = size)
     }
 }
@@ -524,7 +582,7 @@ private fun CountdownOverlay(count: Int) {
  * une par une, score qui défile, pluie de confettis, gros bouton « Encore ! ».
  */
 @Composable
-private fun ResultScreen(spr: VSprites, cleared: Boolean, score: Int, dist: Int, record: Boolean, endless: Boolean, diff: Int, timeUp: Boolean, vehicleImg: ImageBitmap?, frontImg: ImageBitmap?, best: Int, bg: ImageBitmap?,
+private fun ResultScreen(spr: VSprites, cleared: Boolean, score: Int, dist: Int, record: Boolean, endless: Boolean, diff: Int, timeUp: Boolean, takedowns: Int, vehicleImg: ImageBitmap?, frontImg: ImageBitmap?, best: Int, bg: ImageBitmap?,
                          onReplay: () -> Unit, onOther: () -> Unit, onVehicle: () -> Unit) {
     val stars = vroumStarCount(endless, cleared, score, dist, diff)
     var t by remember { mutableStateOf(0f) }
@@ -590,7 +648,8 @@ private fun ResultScreen(spr: VSprites, cleared: Boolean, score: Int, dist: Int,
                 .background(Brush.verticalGradient(listOf(Color(0xF7FFFFFF), Color(0xE6F4F1FF)))).padding(horizontal = 22.dp, vertical = 16.dp)) {
                 Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("$shownScore", color = V_INK, fontWeight = FontWeight.ExtraBold, fontSize = 44.sp, lineHeight = 46.sp)
-                    Text("🏁 " + stringResource(R.string.vroum_distance, dist), color = V_INK.copy(alpha = 0.65f), fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text("🏁 " + stringResource(R.string.vroum_distance, dist) + (if (takedowns > 0) "   ·   " + stringResource(R.string.vroum_res_takedowns, takedowns) else ""),
+                        color = V_INK.copy(alpha = 0.65f), fontWeight = FontWeight.Bold, fontSize = 15.sp, maxLines = 1)
                     if (record && t > 1.5f) Box(Modifier.padding(top = 8.dp).clip(RoundedCornerShape(14.dp)).background(Brush.horizontalGradient(listOf(V_PINK, V_ORANGE))).padding(horizontal = 14.dp, vertical = 5.dp)) {
                         Text("🏆 " + stringResource(R.string.new_high_score), color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 13.sp, maxLines = 1)
                     } else if (best > 0) Text("🏆 $best", color = V_INK.copy(alpha = 0.55f), fontWeight = FontWeight.Bold, fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp))
@@ -622,7 +681,7 @@ private fun Illustration(img: ImageBitmap?) {
 /** Tutoriel de la toute première partie : 3 bulles qui avancent avec les gestes de l'enfant. */
 @Composable
 private fun VroumTutoOverlay(step: Int) {
-    val txt = when (step) { 0 -> stringResource(R.string.vroum_tuto_lane); 1 -> stringResource(R.string.vroum_tuto_jump); else -> stringResource(R.string.vroum_tuto_items) }
+    val txt = when (step) { 0 -> stringResource(R.string.vroum_tuto_lane); 1 -> stringResource(R.string.vroum_tuto_jump); else -> stringResource(R.string.vroum_tuto_boost) }
     val icon = when (step) { 0 -> "👈      👉"; 1 -> "⬇️"; else -> "🍄 ⛽ 💨  ✅      🕳 🪵  ❌" }
     val pulse by rememberInfiniteTransition(label = "tuto").animateFloat(0.96f, 1.05f, infiniteRepeatable(tween(500), RepeatMode.Reverse), label = "tutoP")
     Box(Modifier.fillMaxSize()) {

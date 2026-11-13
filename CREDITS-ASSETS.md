@@ -332,6 +332,8 @@ Images: `assets/flags/<iso>.webp`, rendered from the flag SVGs of Wikimedia Comm
 except Oman (Omani Open Government Licence 1.0). Country list, ISO codes and names in the 5 languages: Wikidata (CC0),
 some names shortened for children. The source page of each flag is stored in `assets/content/flags.json`.
 
+- Vroum boost engine loop (`res/raw/sfx_vv_boostloop.ogg`): [Ferrari Scuderia Spider 16M.ogg](https://commons.wikimedia.org/wiki/File%3AFerrari_Scuderia_Spider_16M.ogg) by Edvvc, CC BY-SA 3.0 — a steady 1.6 s full-throttle excerpt, cross-faded into a loop.
+
 ## Vehicle sounds (Wikimedia Commons)
 
 Hand-picked recordings, trimmed to the clearest ~3.5 s, normalized, mono Ogg Vorbis.
