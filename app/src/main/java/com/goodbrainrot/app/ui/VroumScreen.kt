@@ -153,13 +153,18 @@ fun VroumScreen(onBack: () -> Unit) {
     val jumpedLabel = stringResource(R.string.vroum_jumped)
     val nearLabel = stringResource(R.string.vroum_near); val maxLabel = stringResource(R.string.vroum_flow_max)
     val vLabels = listOf(R.string.vroum_takedown, R.string.vroum_strike, R.string.vroum_revenge, R.string.vroum_stomp, R.string.vroum_crash, R.string.vroum_shove,
-        R.string.vroum_ghost, R.string.vroum_wind, R.string.vroum_w_bomb, R.string.vroum_w_laser, R.string.vroum_w_flame, R.string.vroum_w_magnet, R.string.vroum_w_shield, R.string.vroum_rocket).map { stringResource(it) }
+        R.string.vroum_ghost, R.string.vroum_wind, R.string.vroum_w_bomb, R.string.vroum_w_laser, R.string.vroum_w_flame, R.string.vroum_w_magnet, R.string.vroum_w_shield, R.string.vroum_rocket, R.string.vroum_finish).map { stringResource(it) }
+    // tous les libellés traduits d'une partie (solo comme duel)
+    val applyLabels: (VroumGame) -> Unit = { g ->
+        g.lanesLabel = lanesLabel; g.superLabel = superLabel; g.jumpedLabel = jumpedLabel; g.nearLabel = nearLabel; g.maxLabel = maxLabel
+        g.takedownLabel = vLabels[0]; g.strikeLabel = vLabels[1]; g.revengeLabel = vLabels[2]; g.stompLabel = vLabels[3]; g.crashLabel = vLabels[4]
+        g.shoveLabel = vLabels[5]; g.ghostLabel = vLabels[6]; g.windLabel = vLabels[7]; g.weaponLabels = vLabels.subList(8, 13); g.rocketLabel = vLabels[13]
+        g.finishLabel = vLabels[14]
+    }
     val game = remember(runToken) {
         if (phase != VPhase.PLAYING) null
         else VroumGame(endless, vehicle, diff, THEMES[themeIdx], trickLabel, cannonLabel).also { g ->
-            g.lanesLabel = lanesLabel; g.superLabel = superLabel; g.jumpedLabel = jumpedLabel; g.nearLabel = nearLabel; g.maxLabel = maxLabel
-            g.takedownLabel = vLabels[0]; g.strikeLabel = vLabels[1]; g.revengeLabel = vLabels[2]; g.stompLabel = vLabels[3]; g.crashLabel = vLabels[4]
-            g.shoveLabel = vLabels[5]; g.ghostLabel = vLabels[6]; g.windLabel = vLabels[7]; g.weaponLabels = vLabels.subList(8, 13); g.rocketLabel = vLabels[13]
+            applyLabels(g)
             // charge le fantôme pour ce circuit / cette difficulté : meilleur temps en Course, distance max en Arcade
             Settings.vroumGhost(if (endless) "${THEMES[themeIdx].key}_a$diff" else "${THEMES[themeIdx].key}_$diff")?.let { s ->
                 val p = s.split(";")
@@ -328,8 +333,10 @@ fun VroumScreen(onBack: () -> Unit) {
                         "flag" -> { SoundEngine.playVvFanfare(); Tts.speak(ctx.getString(cheers.random())) }
                         "cheer" -> Tts.speak(ctx.getString(cheers.random()))
                         "sputter" -> { SoundEngine.playStall(); Sfx.stopStream(engine); engine = 0 }
-                        "clear" -> { Sfx.play("vv_applause", 1f, 1f); Sfx.play("vv_fanfare2", 0.9f, 1f); Settings.setVroumEndlessUnlocked(true)
-                                     Sfx.stopStream(engine); engine = 0; finishRun(g, true) }
+                        "finishLine" -> { Sfx.play("vv_applause", 1f, 1f); Sfx.play("vv_fanfare2", 0.9f, 1f); Settings.setVroumEndlessUnlocked(true)
+                                          Sfx.stopStream(engine); engine = 0; Sfx.stopStream(roar); roar = 0; Haptics.success(ctx); Tts.speak(ctx.getString(cheers.random())) }
+                        "firework" -> SoundEngine.playVvTick(0.55f + kotlin.random.Random.nextFloat() * 0.3f)
+                        "clear" -> finishRun(g, true)
                         "over" -> { Sfx.play("vv_applause", 0.6f, 0.9f); finishRun(g, false) }
                         "timeup" -> { SoundEngine.playVvGameOver(); Sfx.play("vv_applause", 0.6f, 0.9f); Sfx.stopStream(engine); engine = 0; finishRun(g, false) }
                     }
@@ -358,7 +365,7 @@ fun VroumScreen(onBack: () -> Unit) {
             VPhase.LEVEL -> RaceSetupScreen(spr, vehicle, themeIdx, diff, endless, duelMode, onDiff = { SoundEngine.playVroumUi(); diff = it },
                 onEndless = { SoundEngine.playVroumUi(); endless = it }, onDuel = { SoundEngine.playVroumUi(); duelMode = it }, onBack = { phase = VPhase.SELECT },
                 onPlay = { t -> SoundEngine.playVroumUi(); themeIdx = t; phase = if (duelMode) VPhase.DUEL else VPhase.PLAYING; runToken++ })
-            VPhase.DUEL -> DuelScreen(themeIdx, vehicle, onBack = { phase = VPhase.LEVEL })
+            VPhase.DUEL -> DuelScreen(themeIdx, vehicle, spr, applyLabels, onBack = { phase = VPhase.LEVEL })
             VPhase.PLAYING -> {
                 val g = game
                 if (g != null && glView != null) {
@@ -745,7 +752,7 @@ private fun VroumTutoOverlay(step: Int) {
 // Deux parties invincibles, sans chrono ni fantôme : premier arrivé au village !
 // ---------------------------------------------------------------------------
 @Composable
-private fun DuelScreen(themeIdx: Int, vehicle: Int, onBack: () -> Unit) {
+private fun DuelScreen(themeIdx: Int, vehicle: Int, spr: VSprites, labels: (VroumGame) -> Unit, onBack: () -> Unit) {
     val ctx = LocalContext.current
     var runToken by remember { mutableIntStateOf(0) }
     var winner by remember { mutableIntStateOf(0) }   // 0 = course en cours, sinon 1 ou 2
@@ -755,19 +762,32 @@ private fun DuelScreen(themeIdx: Int, vehicle: Int, onBack: () -> Unit) {
     val veh2 = remember(runToken) { (vehicle + 1 + Random.nextInt(VEHICLES.size - 1)) % VEHICLES.size }
     // même graine : les deux joueurs ont exactement la même route, c'est la conduite qui fait la différence
     val seed = remember(runToken) { Random.nextLong() }
-    val g1 = remember(runToken) { VroumGame(false, vehicle, 0, THEMES[themeIdx], trickLabel, cannonLabel, duel = true, seed = seed) }
-    val g2 = remember(runToken) { VroumGame(false, veh2, 0, THEMES[themeIdx], trickLabel, cannonLabel, duel = true, seed = seed) }
+    val g1 = remember(runToken) { VroumGame(false, vehicle, 0, THEMES[themeIdx], trickLabel, cannonLabel, duel = true, seed = seed).also(labels) }
+    val g2 = remember(runToken) { VroumGame(false, veh2, 0, THEMES[themeIdx], trickLabel, cannonLabel, duel = true, seed = seed).also(labels) }
     val v1 = remember(g1) { VroumGlView(ctx, g1) }
     val v2 = remember(g2) { VroumGlView(ctx, g2) }
     DisposableEffect(v1, v2) { onDispose { v1.onPause(); v2.onPause() } }
     LaunchedEffect(g1, g2) {
         SoundEngine.playVvTick(0.8f)
+        var sndCd = 0f
         while (winner == 0) {
             withFrameNanos { }
             tick++
             // quelques sons partagés (une seule fois, pas un par moitié) + purge des files d'événements
-            while (true) { val e = g1.events.poll() ?: break; when (e) { "count" -> SoundEngine.playVvTick(1f); "go" -> SoundEngine.playVvGo(); "jump" -> SoundEngine.playJump(); "land" -> SoundEngine.playLand(); "turbo", "superboost" -> SoundEngine.playTurbo() } }
-            while (true) { val e = g2.events.poll() ?: break; when (e) { "jump" -> SoundEngine.playJump(); "turbo", "superboost" -> SoundEngine.playTurbo() } }
+            sndCd -= 1f / 60f
+            for (gi in 0..1) { val gg = if (gi == 0) g1 else g2
+                while (true) { val e = gg.events.poll() ?: break
+                    when (e) {
+                        "count" -> if (gi == 0) SoundEngine.playVvTick(1f)
+                        "go" -> if (gi == 0) SoundEngine.playVvGo()
+                        "jump", "bounce", "ramp" -> SoundEngine.playJump()
+                        "land" -> if (gi == 0) SoundEngine.playLand()
+                        "turbo", "superboost", "boostOn", "rocketStart" -> SoundEngine.playTurbo()
+                        "takedown", "takedownBig", "strike", "zap", "stomp", "shove" -> if (sndCd <= 0f) { sndCd = 0.1f; SoundEngine.playCrush() }
+                        "bump", "bumpSoft", "rivalHit" -> SoundEngine.playBump()
+                        "bomb" -> SoundEngine.playBoom()
+                    }
+                } }
             if (g1.cleared || g2.cleared) {
                 winner = if (g1.cleared) 1 else 2
                 Sfx.play("vv_fanfare2"); Sfx.play("vv_applause")
@@ -777,13 +797,13 @@ private fun DuelScreen(themeIdx: Int, vehicle: Int, onBack: () -> Unit) {
     BoxWithConstraints(Modifier.fillMaxSize().background(Color.Black)) {
         val landscape = maxWidth > maxHeight
         if (landscape) Row(Modifier.fillMaxSize()) {
-            Box(Modifier.weight(1f).fillMaxHeight()) { DuelHalf(1, g1, v1, tick) }
+            Box(Modifier.weight(1f).fillMaxHeight()) { DuelHalf(1, g1, v1, tick, spr) }
             Box(Modifier.width(3.dp).fillMaxHeight().background(Color.White.copy(alpha = 0.6f)))
-            Box(Modifier.weight(1f).fillMaxHeight()) { DuelHalf(2, g2, v2, tick) }
+            Box(Modifier.weight(1f).fillMaxHeight()) { DuelHalf(2, g2, v2, tick, spr) }
         } else Column(Modifier.fillMaxSize()) {
-            Box(Modifier.weight(1f).fillMaxWidth()) { DuelHalf(2, g2, v2, tick) }
+            Box(Modifier.weight(1f).fillMaxWidth()) { DuelHalf(2, g2, v2, tick, spr) }
             Box(Modifier.fillMaxWidth().height(3.dp).background(Color.White.copy(alpha = 0.6f)))
-            Box(Modifier.weight(1f).fillMaxWidth()) { DuelHalf(1, g1, v1, tick) }
+            Box(Modifier.weight(1f).fillMaxWidth()) { DuelHalf(1, g1, v1, tick, spr) }
         }
         BackButton(onBack = onBack, modifier = Modifier.align(Alignment.TopStart))
         if (winner != 0) Box(Modifier.fillMaxSize().background(Color(0xB3000000)), contentAlignment = Alignment.Center) {
@@ -803,9 +823,11 @@ private fun DuelScreen(themeIdx: Int, vehicle: Int, onBack: () -> Unit) {
 
 /** Une moitié d'écran du duel : vue GL, contrôles tactiles, bandeau de progression et décompte. */
 @Composable
-private fun DuelHalf(player: Int, g: VroumGame, v: VroumGlView, tick: Int) {
+private fun DuelHalf(player: Int, g: VroumGame, v: VroumGlView, tick: Int, spr: VSprites) {
     @Suppress("UNUSED_EXPRESSION") tick
     val col = if (player == 1) V_CYAN else V_PINK
+    val ctx = LocalContext.current
+    val fx = remember(g) { VroumFx(ctx) }
     Box(Modifier.fillMaxSize()) {
         AndroidView(factory = { v.also { it.onResume() } }, modifier = Modifier.fillMaxSize())
         Box(Modifier.fillMaxSize().pointerInput(g) {
@@ -823,7 +845,22 @@ private fun DuelHalf(player: Int, g: VroumGame, v: VroumGlView, tick: Int) {
             }
             Text(" 🏁", fontSize = 14.sp)
         }
-        JumpButton(modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 14.dp), cooldown = (g.jumpCd / g.JUMP_CD).coerceIn(0f, 1f), frame = tick) { v.queueEvent { g.jump() } }
+        // mêmes messages « arcade » qu'en solo (takedowns, rebonds…) et éclair de la bombe
+        Canvas(Modifier.fillMaxSize()) {
+            @Suppress("UNUSED_EXPRESSION") tick
+            fx.draw(this, g, null)
+            if (g.flash > 0f) drawRect(Color.White.copy(alpha = (g.flash * 0.85f).coerceIn(0f, 1f)), size = size)
+        }
+        // commandes : BOOST (une tape = un segment) et SAUT, la jauge au-dessus ; objet à gauche, takedowns à droite
+        Column(Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            BoostBar(g, tick, Modifier.scale(0.78f))
+            Row(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                BoostButton(g, tick, Modifier.scale(0.82f)) { g.tapBoost() }
+                JumpButton(modifier = Modifier.scale(0.9f), cooldown = (g.jumpCd / g.JUMP_CD).coerceIn(0f, 1f), frame = tick) { v.queueEvent { g.jump() } }
+            }
+        }
+        ItemSlot(g, spr.items, tick, Modifier.align(Alignment.CenterStart).padding(start = 8.dp).scale(0.8f))
+        TakedownChip(g, tick, Modifier.align(Alignment.CenterEnd).padding(end = 8.dp))
         if (g.introT > 0f) Text("${kotlin.math.ceil(g.introT.toDouble()).toInt().coerceIn(1, 3)}", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 60.sp,
             modifier = Modifier.align(Alignment.Center), style = androidx.compose.ui.text.TextStyle(fontFamily = VROUM_FONT, shadow = androidx.compose.ui.graphics.Shadow(Color(0xAA000000), Offset(0f, 3f), 8f)))
     }

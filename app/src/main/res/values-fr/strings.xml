@@ -58,10 +58,10 @@
     <string name="gz_t_e5">Tronçonneuse NUCLÉAIRE</string>
     <string name="vroum_play">Route de la forêt</string>
     <string name="vroum_endless">Arcade</string>
-    <string name="vroum_endless_locked">Arrive une fois au village pour débloquer l\'Arcade</string>
+    <string name="vroum_endless_locked">Franchis une fois la ligne d\'arrivée pour débloquer l\'Arcade</string>
     <string name="vroum_choose">Choisis ton bolide</string>
     <string name="vroum_go">C\'EST PARTI !</string>
-    <string name="vroum_stage_clear">Tu es arrivé au village !</string>
+    <string name="vroum_stage_clear">Ligne d\'arrivée franchie !</string>
     <string name="vroum_out_of_fuel">Plus d\'essence…</string>
     <string name="vroum_distance">%1$d m</string>
     <string name="vroum_tap_hint">Tape à gauche ou à droite pour changer de file</string>
@@ -272,10 +272,10 @@
     <string name="vroum_race">Course</string>
     <string name="vroum_route">Route</string>
     <string name="vroum_vehicle">Bolide</string>
-    <string name="vroum_mode_race_hint">Roule proprement pour prendre de la vitesse et arriver au village avant la fin du temps !</string>
+    <string name="vroum_mode_race_hint">Roule proprement pour prendre de la vitesse et franchir la ligne d\'arrivée avant la fin du temps !</string>
     <string name="vroum_mode_arcade_hint">Roule le plus loin possible : ça s\'arrête quand il n\'y a plus d\'essence.</string>
     <string name="vroum_duel">2 joueurs</string>
-    <string name="vroum_duel_hint">Chacun sa moitié d\'écran : le premier arrivé au village gagne !</string>
+    <string name="vroum_duel_hint">Chacun sa moitié d\'écran : le premier sur la ligne d\'arrivée gagne !</string>
     <string name="vroum_player_n">JOUEUR %1$d</string>
     <string name="vroum_duel_wins">Joueur %1$d gagne !</string>
     <string name="vroum_tuto_lane">Touche à gauche ou à droite pour changer de voie</string>
@@ -328,6 +328,7 @@
     <string name="vroum_tip_cyber">Portiques laser à sauter en rythme</string>
     <string name="vroum_rocket">DÉPART CANON !</string>
     <string name="vroum_rocket_hint">Appuie sur BOOST pile au GO !</string>
+    <string name="vroum_finish">ARRIVÉE !</string>
     <string name="vroum_takedown">TAKEDOWN !</string>
     <string name="vroum_strike">STRIKE !</string>
     <string name="vroum_revenge">REVANCHE !</string>

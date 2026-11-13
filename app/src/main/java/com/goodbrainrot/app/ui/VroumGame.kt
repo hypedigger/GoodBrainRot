@@ -110,7 +110,7 @@ internal class VText(var x: Float, var y: Float, var z: Float, @Volatile var tex
     var gain = 0                // > 0 : compteur de points (les gains rapprochés s'y additionnent)
     var style = 0               // 1 = message d'IMPACT (takedown, strike, revanche) : plus gros, éclat derrière
 }
-internal class VDecor(var z: Float, var lateral: Float, val kind: Int, val cheer: Int = -1, val flag: Boolean = false) { var arms = 0f }
+internal class VDecor(var z: Float, var lateral: Float, val kind: Int, val cheer: Int = -1, val flag: Boolean = false, val special: Int = 0 /* 1 = tribune de l'arrivée */) { var arms = 0f }
 
 /**
  * Réglages par difficulté. [floor]/[ceil] : vitesse plancher / plafond (m/s) ; [ceilGrow] : gain de plafond en Arcade ;
@@ -224,6 +224,8 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         const val PLAYER_Z = 18f
         const val LEVEL_LEN = 2000f
         const val INTRO_DUR = 3.6f
+        const val FINISH_DUR = 2.7f       // secondes entre la ligne franchie et l'écran de résultat
+        const val END_WALL = 46f          // la route s'arrête là, derrière la ligne : tribunes et mur de pneus
         const val ROCKET_WINDOW = 0.7f    // départ canon : on appuie sur BOOST dans cette fenêtre avant le GO…
         const val ROCKET_LATE = 0.3f      // … ou juste après (ceux qui réagissent au « GO! »)
         const val COMBO_T = 3.0f
@@ -299,6 +301,11 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
     var nextFlag = 500f
     var sputter = -1f
     var over = false; var cleared = false
+    // ---- ARRIVÉE (Course) : la ligne est un vrai lieu, à LEVEL_LEN. finishT ≥ 0 = ligne franchie, on freine devant le public.
+    var finishT = -1f; private var clearSent = false; private var finishDecor = false; private var fireCd = 0f
+    var finishLabel = "ARRIVÉE !"
+    /** distance (devant le bolide si > PLAYER_Z) de la ligne d'arrivée, dans le repère de la caméra */
+    val finishZ: Float get() = PLAYER_Z + LEVEL_LEN - dist
     var shake = 0f
     var hornCd = 0f
     var hitStop = 0f                // micro-gel à l'impact (s) : le coup « claque »
@@ -524,8 +531,8 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
                 if (boost <= 0f || burnLeft <= 0f) { boost = max(0f, boost); burnLeft = 0f; boosting = false; ev("boostOff") }
             }
         } else if (boosting) { boosting = false; burnLeft = 0f; ev("boostOff") }
-        val target = cruise * boostMul
-        spd += (target - spd) * min(1f, dt * (if (target > spd) 3.4f else 1.5f))
+        val target = if (cleared) 0f else cruise * boostMul        // ligne franchie : on freine et on s'arrête devant le public
+        spd += (target - spd) * min(1f, dt * (if (cleared) 1.55f else if (target > spd) 3.4f else 1.5f))
         val sp = mps
         val dz = sp * dt
         if (!over && sputter < 0f) dist += dz
@@ -615,9 +622,35 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         }
         if (sputter >= 0f) { sputter += dt; if (sputter > 2.8f && !over) { over = true; ev("over") } }
         if (!endless && !cleared && dist >= LEVEL_LEN) {
-            cleared = true
+            cleared = true; finishT = 0f
             if (timeLimit > 0f) { timeBonus = (timeLeft * 40f).toInt() * (diff + 1); score += timeBonus }
-            ev("clear")
+            ev("finishLine")
+            texts.add(VText(0f, 4.4f, PLAYER_Z + 4f, finishLabel, 2.4f, V_GOLD, big = true).also { it.style = 1 })
+            for (d in decor) if (d.cheer >= 0) d.arms = 99f
+            // le trafic encore devant nous s'efface dans un nuage (personne ne fonce dans les tribunes)
+            val eit = enemies.iterator()
+            while (eit.hasNext()) { val e = eit.next(); if (e.z > PLAYER_Z + 6f) { burst(laneX(e.lane.coerceIn(0, lanes - 1)), e.z, 1f, 1f, 1f, 5); eit.remove() } }
+            picks.clear()
+            confetti(60)
+        }
+        // séquence d'arrivée : confettis et feux d'artifice pendant que le bolide s'arrête, puis le résultat
+        if (finishT >= 0f) {
+            finishT += dtRaw
+            fireCd -= dtRaw
+            if (fireCd <= 0f) { fireCd = 0.24f; firework(); confetti(8) }
+            if (finishT > FINISH_DUR && !clearSent) { clearSent = true; ev("clear") }
+        }
+        // l'aire d'arrivée s'installe dès qu'elle entre dans le champ : spectateurs serrés, tribunes derrière eux
+        if (!endless && !finishDecor && finishZ < Z_FAR + 15f) {
+            finishDecor = true
+            val zl = finishZ
+            var z = zl - 110f
+            while (z < zl + END_WALL - 3f) {
+                for (side in intArrayOf(-1, 1)) decor.add(VDecor(z + Random.nextFloat() * 2f, side * (decorHalf + 1.0f + Random.nextFloat() * 1.4f), -1, cheer = Random.nextInt(CHEER_KEYS.size)).also { it.arms = 99f })
+                z += 4.5f
+            }
+            z = zl - 96f
+            while (z < zl + END_WALL - 8f) { for (side in intArrayOf(-1, 1)) decor.add(VDecor(z, side * (decorHalf + 7.2f), -1, special = 1)); z += 12.5f }
         }
         // paysage : 3 voies -> 5 à mi-course (700 m en sans fin), -> 7 loin en sans fin
         if (wide && !over && !cleared) {
@@ -1262,6 +1295,28 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         shake = 16f; invuln = 1.2f
         ev("giantEnd")
     }
+    /** Confettis : petits carrés de couleur qui tombent doucement sur la route, devant nous. */
+    private fun confetti(n: Int) {
+        val half = roadHalfFor(lanes) + 3f
+        repeat(n) {
+            if (parts.size > 280) return
+            val c = rainbow(Random.nextFloat())
+            val z = PLAYER_Z - 4f + Random.nextFloat() * 46f
+            parts.add(VPart((Random.nextFloat() - 0.5f) * 2f * half, groundY(dist + z) + 5f + Random.nextFloat() * 5f, z, (Random.nextFloat() - 0.5f) * 2.5f, -1.6f - Random.nextFloat() * 1.8f,
+                2.4f, 2.4f, 0.55f + 0.45f * c.first, 0.55f + 0.45f * c.second, 0.55f + 0.45f * c.third, 0.34f, floaty = true))
+        }
+    }
+    /** Feu d'artifice : une gerbe de couleur qui éclate haut dans le ciel, au-dessus de l'aire d'arrivée. */
+    private fun firework() {
+        if (parts.size > 260) return
+        val c = rainbow(Random.nextFloat())
+        val z = PLAYER_Z + 22f + Random.nextFloat() * 40f
+        val x = (Random.nextFloat() - 0.5f) * 30f; val y = groundY(dist + z) + 11f + Random.nextFloat() * 7f
+        for (i in 0 until 16) { val a = i * 0.3927f; val v = 5f + Random.nextFloat() * 3f
+            parts.add(VPart(x, y, z, cos(a) * v, sin(a) * v + 2f, 0.9f, 0.9f, 0.6f + 0.4f * c.first, 0.6f + 0.4f * c.second, 0.6f + 0.4f * c.third, 0.55f)) }
+        ev("firework")
+    }
+
     private fun burst(x: Float, z: Float, r: Float, g: Float, b: Float, n: Int) {
         if (parts.size > 170) return
         val gy = groundY(dist + z) + 1f

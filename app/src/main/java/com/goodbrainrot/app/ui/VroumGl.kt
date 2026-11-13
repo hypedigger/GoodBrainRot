@@ -49,6 +49,8 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
     private var white = 0
     private var disc: Tex? = null          // disque doux (ombres, particules, halos)
     private var ring: Tex? = null          // anneau doux (onde de choc d'atterrissage)
+    private var checker: Tex? = null       // damier 16 × 3 (bandeau de l'arche, bande sur la route)
+    private var checkerPole: Tex? = null   // damier 2 × 13 (piliers de l'arche)
     private val tex = HashMap<String, Tex>()
     private val proj = FloatArray(16); private val view = FloatArray(16); private val mvp = FloatArray(16); private val ident = FloatArray(16)
     private var aspectRatio = 1f
@@ -69,6 +71,8 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
         white = makeWhiteTexture()
         disc = Tex(makeSoftDisc(), 1f, 1f, 1f)
         ring = Tex(makeSoftRing(), 1f, 1f, 1f)
+        checker = Tex(makeChecker(16, 3), 1f, 1f, 3f / 16f)
+        checkerPole = Tex(makeChecker(2, 13), 1f, 1f, 13f / 2f)
         tex.clear()
         val names = ArrayList<String>()
         for (v in VEHICLES) names.add("vr_${v.key}")
@@ -81,6 +85,7 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
         names.add("vv_itembox"); names.add("vv_jg_boulder"); names.add("vr_rock")
         for (p in PASSENGER_KEYS) names.add("vv_$p")
         for (c in CHEER_KEYS) names.add("vv_$c")
+        names.add("vv_fin_stand"); names.add("vv_fin_tyres")
         for (n in listOf("vv_fuel", "vv_star", "vv_turbo", "vv_puddle", "vv_flag", "vv_cannon", "vv_superboost", "vv_hole", "vv_log")) names.add(n)
         for (n in names.distinct()) loadTexture(n)?.let { tex[n] = it }
         Matrix.setIdentityM(ident, 0)
@@ -336,6 +341,7 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
             val far = ((VroumGame.Z_FAR + 20f - d.z) / 60f).coerceIn(0f, 1f)
             val x = g.xCenter(d.z) + d.lateral
             when {
+                d.special == 1 -> { val t = tex["vv_fin_stand"]; if (t != null) bills.add(Bill(d.z, x, ground(d.z), 11f, t, far, 1f, 1f, 1f, flip = d.lateral > 0f)) }
                 d.flag -> { val t = tex["vv_flag"]; bills.add(Bill(d.z, x, ground(d.z), 2.4f, t, 1f, 1f, if (t == null) 0.8f else 1f, if (t == null) 0.2f else 1f)) }
                 d.cheer >= 0 -> {
                     val bounce = if (d.arms > 0f) abs(sin(d.arms * 14f)) * 0.5f else 0f
@@ -347,6 +353,37 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
                     val lit = dk.first.startsWith("lamp") || dk.first.startsWith("tk_") || dk.first == "owl_tree" || dk.first.startsWith("hw_") || dk.first.startsWith("cy_")
                     val sh = if (g.theme.night && !lit) 0.5f else 1f
                     bills.add(Bill(d.z, x, ground(d.z), dk.second * 3.2f, t, far, if (t == null) 0.19f else sh, if (t == null) 0.48f else sh, if (t == null) 0.21f else sh * 1.1f)) }
+            }
+        }
+        // ---- LIGNE D'ARRIVÉE (Course) : bande à damier sur la route, arche (deux piliers + bandeau), ballons ; et, au
+        //      bout, la route FERMÉE par un mur de pneus et des tribunes (on comprend que c'est la fin).
+        if (!g.endless) {
+            val fz = g.finishZ
+            val half = g.roadHalfFor(g.lanes)
+            val ck = checker; val pole = checkerPole
+            if (fz > 1.5f && fz < VroumGame.Z_FAR + 20f && ck != null && pole != null) {
+                val xc = g.xCenter(fz); val gy = ground(fz)
+                bills.add(Bill(fz, xc, gy + 0.03f, half * 2f, ck, 1f, 1f, 1f, 1f, squash = 0.62f, flat = true))
+                val bw = half * 2f + 3.0f
+                for (side in intArrayOf(-1, 1)) {
+                    val px = xc + side * (half + 0.9f)
+                    bills.add(Bill(fz, px, gy, 1.15f, pole, 1f, 1f, 1f, 1f))
+                    for (i in 0 until 3) { val c = g.rainbow(i * 0.31f + (if (side > 0) 0.5f else 0f))
+                        bills.add(Bill(fz - 0.05f, px + (i - 1) * 0.75f, gy + 7.4f + (if (i == 1) 0.7f else 0f) + 0.25f * sin(g.elapsed * 3f + i + side), 1.25f, disc, 1f, c.first, c.second, c.third)) }
+                }
+                bills.add(Bill(fz - 0.02f, xc, gy + 5.05f, bw, null, 1f, 1f, 0.78f, 0.12f, squash = 2.5f / bw))      // cadre doré
+                bills.add(Bill(fz - 0.03f, xc, gy + 5.25f, bw - 0.4f, ck, 1f, 1f, 1f, 1f, squash = 2.1f / ((bw - 0.4f) * ck.aspect)))
+            }
+            val wz = fz + VroumGame.END_WALL
+            if (wz > 1.5f && wz < VroumGame.Z_FAR + 20f) {
+                val xw = g.xCenter(wz); val gw = ground(wz)
+                val st = tex["vv_fin_stand"]; val ty = tex["vv_fin_tyres"]
+                if (st != null) for (i in -1..1) bills.add(Bill(wz + 0.6f, xw + i * 10.4f, gw + 0.5f, 11f, st, 1f, 1f, 1f, 1f))
+                if (ty != null) for (i in -1..1) bills.add(Bill(wz - 1.2f, xw + i * 7.4f, gw, 7.6f, ty, 1f, 1f, 1f, 1f))
+                else for (i in -6..6) bills.add(Bill(wz - 1.2f, xw + i * 1.6f, gw, 1.6f, null, 1f, if (i % 2 == 0) 0.92f else 1f, if (i % 2 == 0) 0.2f else 1f, if (i % 2 == 0) 0.2f else 1f, squash = 0.7f))
+                if (ck != null) bills.add(Bill(wz + 0.7f, xw, gw + (if (st != null) 11f * st.aspect + 0.7f else 5f), 22f, ck, 1f, 1f, 1f, 1f, squash = 0.7f))
+                for (i in 0 until 8) { val c = g.rainbow(i * 0.137f)
+                    bills.add(Bill(wz + 0.2f, xw + (i - 3.5f) * 3.1f, gw + 6.4f + 0.9f * sin(g.elapsed * 2.2f + i * 1.7f) + (i % 2) * 1.1f, 1.5f, disc, 1f, c.first, c.second, c.third)) }
             }
         }
         for (p in g.picks) {
@@ -814,6 +851,23 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
         GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bmp, 0); bmp.recycle()
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR)
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR)
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE)
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE)
+        return ids[0]
+    }
+    /** Damier noir et blanc de [cols] × [rows] cases (bandeau et piliers de l'arche d'arrivée, bande sur la route). */
+    private fun makeChecker(cols: Int, rows: Int): Int {
+        val cell = 16
+        val bmp = Bitmap.createBitmap(cols * cell, rows * cell, Bitmap.Config.ARGB_8888)
+        val px = IntArray(cols * cell * rows * cell)
+        for (y in 0 until rows * cell) for (x in 0 until cols * cell)
+            px[y * cols * cell + x] = if (((x / cell) + (y / cell)) % 2 == 0) 0xFFF6F6F6.toInt() else 0xFF17171C.toInt()
+        bmp.setPixels(px, 0, cols * cell, 0, 0, cols * cell, rows * cell)
+        val ids = IntArray(1); GLES20.glGenTextures(1, ids, 0)
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, ids[0])
+        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bmp, 0); bmp.recycle()
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR)
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST)
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE)
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE)
         return ids[0]

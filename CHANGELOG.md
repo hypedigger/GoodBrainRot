@@ -1,5 +1,9 @@
 # Nouveautés — GoodBrainRot
 
+## 4.01 — 2026-11-13
+- **Vroum — une vraie ligne d'arrivée.** En Course, la route se termine sur une aire d'arrivée : **arche et bande à damier**, **spectateurs et tribunes** sur les 110 derniers mètres, et la route **fermée** par des tribunes et un mur de pneus. En franchissant la ligne : « ARRIVÉE ! », confettis, feux d'artifice, le bolide freine et s'arrête devant le public, puis l'écran de résultat.
+- **Vroum — 2 joueurs remis à niveau** : chaque moitié d'écran a maintenant le bouton **BOOST** (une tape = un segment) et sa jauge, la **case d'objet**, le **compteur de takedowns**, les messages « TAKEDOWN! », plus de sons, et les libellés dans la langue de l'appli.
+- Les textes ne parlent plus de « village » mais de ligne d'arrivée.
 ## 4.00 — 2026-11-13
 - **Vroum — BOOST au tap.** Plus besoin de garder le doigt sur le bouton : **une tape brûle un segment de jauge** (deux tapes, deux segments). Le pouce reste libre pour changer de voie. En Facile, le boost part toujours tout seul quand la jauge est pleine.
 - **Vroum — nouvelle police et messages « arcade ».** Tout le jeu passe en **Rubik** (grasse, italique pour les messages). Les messages ont un contour épais, un dégradé et « claquent » en arrivant. **TAKEDOWN!** s'affiche désormais à chaque voiture sortie, sur un éclat de bande dessinée, avec un compteur de série (« TAKEDOWN! ×3 ») ; il a sa place fixe dans le ciel pour ne jamais cacher la route.

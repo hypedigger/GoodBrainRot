@@ -58,10 +58,10 @@
     <string name="gz_t_e5">Motosega NUCLEARE</string>
     <string name="vroum_play">Strada della foresta</string>
     <string name="vroum_endless">Arcade</string>
-    <string name="vroum_endless_locked">Arriva una volta al villaggio per sbloccare l\'Arcade</string>
+    <string name="vroum_endless_locked">Taglia una volta il traguardo per sbloccare l\'Arcade</string>
     <string name="vroum_choose">Scegli il tuo bolide</string>
     <string name="vroum_go">VIA!</string>
-    <string name="vroum_stage_clear">Sei arrivato al villaggio!</string>
+    <string name="vroum_stage_clear">Hai tagliato il traguardo!</string>
     <string name="vroum_out_of_fuel">Senza benzina…</string>
     <string name="vroum_distance">%1$d m</string>
     <string name="vroum_tap_hint">Tocca a sinistra o a destra per cambiare corsia</string>
@@ -272,10 +272,10 @@
     <string name="vroum_race">Gara</string>
     <string name="vroum_route">Percorso</string>
     <string name="vroum_vehicle">Bolide</string>
-    <string name="vroum_mode_race_hint">Guida pulito per prendere velocità e arriva al villaggio prima che finisca il tempo!</string>
+    <string name="vroum_mode_race_hint">Guida pulito per prendere velocità e taglia il traguardo prima che finisca il tempo!</string>
     <string name="vroum_mode_arcade_hint">Guida più lontano possibile: finisce quando non c\'è più benzina.</string>
     <string name="vroum_duel">2 giocatori</string>
-    <string name="vroum_duel_hint">Metà schermo a testa: vince chi arriva primo al villaggio!</string>
+    <string name="vroum_duel_hint">Metà schermo a testa: vince chi taglia per primo il traguardo!</string>
     <string name="vroum_player_n">GIOCATORE %1$d</string>
     <string name="vroum_duel_wins">Vince il giocatore %1$d!</string>
     <string name="vroum_tuto_lane">Tocca a sinistra o a destra per cambiare corsia</string>
@@ -328,6 +328,7 @@
     <string name="vroum_tip_cyber">Barriere laser da saltare a ritmo</string>
     <string name="vroum_rocket">PARTENZA A RAZZO!</string>
     <string name="vroum_rocket_hint">Premi BOOST proprio al via!</string>
+    <string name="vroum_finish">TRAGUARDO!</string>
     <string name="vroum_takedown">TAKEDOWN!</string>
     <string name="vroum_strike">STRIKE!</string>
     <string name="vroum_revenge">RIVINCITA!</string>

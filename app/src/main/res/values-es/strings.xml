@@ -58,10 +58,10 @@
     <string name="gz_t_e5">Motosierra NUCLEAR</string>
     <string name="vroum_play">Camino del bosque</string>
     <string name="vroum_endless">Arcade</string>
-    <string name="vroum_endless_locked">Llega una vez al pueblo para desbloquear Arcade</string>
+    <string name="vroum_endless_locked">Cruza una vez la meta para desbloquear Arcade</string>
     <string name="vroum_choose">Elige tu bólido</string>
     <string name="vroum_go">¡VAMOS!</string>
-    <string name="vroum_stage_clear">¡Llegaste al pueblo!</string>
+    <string name="vroum_stage_clear">¡Has cruzado la meta!</string>
     <string name="vroum_out_of_fuel">Sin gasolina…</string>
     <string name="vroum_distance">%1$d m</string>
     <string name="vroum_tap_hint">Toca a la izquierda o a la derecha para cambiar de carril</string>
@@ -272,10 +272,10 @@
     <string name="vroum_race">Carrera</string>
     <string name="vroum_route">Ruta</string>
     <string name="vroum_vehicle">Bólido</string>
-    <string name="vroum_mode_race_hint">¡Conduce limpio para ganar velocidad y llega al pueblo antes de que se acabe el tiempo!</string>
+    <string name="vroum_mode_race_hint">¡Conduce limpio para ganar velocidad y cruza la meta antes de que se acabe el tiempo!</string>
     <string name="vroum_mode_arcade_hint">Conduce lo más lejos posible: se acaba cuando no queda gasolina.</string>
     <string name="vroum_duel">2 jugadores</string>
-    <string name="vroum_duel_hint">Media pantalla para cada uno: ¡gana el primero en llegar al pueblo!</string>
+    <string name="vroum_duel_hint">Media pantalla para cada uno: ¡gana el primero en cruzar la meta!</string>
     <string name="vroum_player_n">JUGADOR %1$d</string>
     <string name="vroum_duel_wins">¡Gana el jugador %1$d!</string>
     <string name="vroum_tuto_lane">Toca a la izquierda o a la derecha para cambiar de carril</string>
@@ -328,6 +328,7 @@
     <string name="vroum_tip_cyber">Barreras láser que saltar a ritmo</string>
     <string name="vroum_rocket">¡SALIDA COHETE!</string>
     <string name="vroum_rocket_hint">¡Pulsa BOOST justo en la salida!</string>
+    <string name="vroum_finish">¡META!</string>
     <string name="vroum_takedown">¡TAKEDOWN!</string>
     <string name="vroum_strike">¡STRIKE!</string>
     <string name="vroum_revenge">¡REVANCHA!</string>

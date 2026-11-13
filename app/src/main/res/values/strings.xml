@@ -60,10 +60,10 @@
     <string name="gz_t_e5">NUCLEAR chainsaw</string>
     <string name="vroum_play">Forest road</string>
     <string name="vroum_endless">Arcade</string>
-    <string name="vroum_endless_locked">Reach the village once to unlock Arcade</string>
+    <string name="vroum_endless_locked">Cross the finish line once to unlock Arcade</string>
     <string name="vroum_choose">Pick your ride</string>
     <string name="vroum_go">GO!</string>
-    <string name="vroum_stage_clear">You made it to the village!</string>
+    <string name="vroum_stage_clear">You crossed the finish line!</string>
     <string name="vroum_out_of_fuel">Out of fuel…</string>
     <string name="vroum_distance">%1$d m</string>
     <string name="vroum_tap_hint">Tap left or right to change lane</string>
@@ -281,10 +281,10 @@
     <string name="vroum_race">Race</string>
     <string name="vroum_route">Route</string>
     <string name="vroum_vehicle">Ride</string>
-    <string name="vroum_mode_race_hint">Drive clean to build speed and reach the village before time runs out!</string>
+    <string name="vroum_mode_race_hint">Drive clean to build speed and reach the finish line before time runs out!</string>
     <string name="vroum_mode_arcade_hint">Drive as far as you can: it ends when the fuel is gone.</string>
     <string name="vroum_duel">2 players</string>
-    <string name="vroum_duel_hint">Half the screen each: first to reach the village wins!</string>
+    <string name="vroum_duel_hint">Half the screen each: first across the finish line wins!</string>
     <string name="vroum_player_n">PLAYER %1$d</string>
     <string name="vroum_duel_wins">Player %1$d wins!</string>
     <string name="vroum_tuto_lane">Tap left or right to change lane</string>
@@ -337,6 +337,7 @@
     <string name="vroum_tip_cyber">Laser gates to jump in rhythm</string>
     <string name="vroum_rocket">ROCKET START!</string>
     <string name="vroum_rocket_hint">Hit BOOST right on GO!</string>
+    <string name="vroum_finish">FINISH!</string>
     <string name="vroum_takedown">TAKEDOWN!</string>
     <string name="vroum_strike">STRIKE!</string>
     <string name="vroum_revenge">REVENGE!</string>

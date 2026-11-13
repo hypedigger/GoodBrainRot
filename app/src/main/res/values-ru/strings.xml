@@ -58,10 +58,10 @@
     <string name="gz_t_e5">ЯДЕРНАЯ бензопила</string>
     <string name="vroum_play">Лесная дорога</string>
     <string name="vroum_endless">Аркада</string>
-    <string name="vroum_endless_locked">Доберись до деревни один раз, чтобы открыть Аркаду</string>
+    <string name="vroum_endless_locked">Пересеки финиш один раз, чтобы открыть Аркаду</string>
     <string name="vroum_choose">Выбери машину</string>
     <string name="vroum_go">ПОЕХАЛИ!</string>
-    <string name="vroum_stage_clear">Ты доехал до деревни!</string>
+    <string name="vroum_stage_clear">Ты пересёк финиш!</string>
     <string name="vroum_out_of_fuel">Бензин кончился…</string>
     <string name="vroum_distance">%1$d м</string>
     <string name="vroum_tap_hint">Нажми слева или справа, чтобы сменить полосу</string>
@@ -272,10 +272,10 @@
     <string name="vroum_race">Гонка</string>
     <string name="vroum_route">Трасса</string>
     <string name="vroum_vehicle">Машина</string>
-    <string name="vroum_mode_race_hint">Езжай чисто, набирай скорость и доберись до деревни, пока не вышло время!</string>
+    <string name="vroum_mode_race_hint">Езжай чисто, набирай скорость и пересеки финиш, пока не вышло время!</string>
     <string name="vroum_mode_arcade_hint">Проезжай как можно дальше: игра кончается, когда кончается бензин.</string>
     <string name="vroum_duel">2 игрока</string>
-    <string name="vroum_duel_hint">У каждого своя половина экрана: побеждает тот, кто первым доедет до деревни!</string>
+    <string name="vroum_duel_hint">У каждого своя половина экрана: побеждает тот, кто первым пересечёт финиш!</string>
     <string name="vroum_player_n">ИГРОК %1$d</string>
     <string name="vroum_duel_wins">Игрок %1$d побеждает!</string>
     <string name="vroum_tuto_lane">Нажимай слева или справа, чтобы сменить полосу</string>
@@ -328,6 +328,7 @@
     <string name="vroum_tip_cyber">Лазерные ворота: прыгай в ритм</string>
     <string name="vroum_rocket">РАКЕТНЫЙ СТАРТ!</string>
     <string name="vroum_rocket_hint">Жми BOOST точно на старте!</string>
+    <string name="vroum_finish">ФИНИШ!</string>
     <string name="vroum_takedown">ТАРАН!</string>
     <string name="vroum_strike">СТРАЙК!</string>
     <string name="vroum_revenge">РЕВАНШ!</string>
