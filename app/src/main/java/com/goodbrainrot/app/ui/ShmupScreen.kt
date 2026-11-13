@@ -1157,7 +1157,8 @@ private class ShmupGame(
             if (e.hitFlash > 0f) e.hitFlash = max(0f, e.hitFlash - dt)
             // VERROU d'invincibilite d'entree : une fois assez visible, l'ennemi reste vulnerable
             // meme s'il repart vers un bord.
-            if (!e.vulnerable && entryVisibleNow(e)) e.vulnerable = true
+            // (un escadron sur trajectoire n'est vulnérable qu'après avoir parcouru un bout de sa courbe : on le voit arriver)
+            if (!e.vulnerable && entryVisibleNow(e) && (e.path == null || e.pathT > 0.09f)) e.vulnerable = true
             // escadrons : vol sur trajectoire, canonnière en poste, formation qui tient sa place
             if (e.path != null) { updatePathEnemy(e, dt); continue }
             if (e.gunship) { updateGunship(e, dt); continue }
@@ -2404,7 +2405,7 @@ fun ShmupScreen(onBack: () -> Unit) {
         // Escadrons : on attend qu'ils aient fini leur vol (détruits ou repartis) ; formation : qu'il n'en reste presque plus.
         suspend fun waitSquads(maxS: Float) {
             var acc = 0f; kotlinx.coroutines.delay(900)
-            while (acc < maxS * 1000 && !game.gameOver) { if (game.flyingCount() == 0) break; kotlinx.coroutines.delay(90); acc += 90 }
+            while (acc < maxS * 1000 && !game.gameOver) { if (game.flyingCount() == 0 && acc >= 2400f) break; kotlinx.coroutines.delay(90); acc += 90 }
         }
         suspend fun waitFormation(maxS: Float) {
             var acc = 0f; kotlinx.coroutines.delay(1500)

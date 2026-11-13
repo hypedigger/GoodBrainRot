@@ -245,7 +245,7 @@ fun VroumScreen(onBack: () -> Unit) {
 
     // dernière bulle du tutoriel (bonus / dangers) : disparaît toute seule après 4 s
     LaunchedEffect(tutoStep) {
-        if (tutoStep == 2) { delay(4000); if (tutoStep == 2) { tutoStep = -1; Settings.setVroumTutoSeen(true) } }
+        if (tutoStep == 2) { delay(7000); if (tutoStep == 2) { tutoStep = -1; Settings.setVroumTutoSeen(true) } }
     }
     LaunchedEffect(game) {
         val g = game ?: return@LaunchedEffect
@@ -256,6 +256,7 @@ fun VroumScreen(onBack: () -> Unit) {
         var engineCd = 0f
         var fxCd = 0f
         var roar = 0
+        var sndCd = 0f
         try {
             while (true) {
                 withFrameNanos { }
@@ -275,7 +276,9 @@ fun VroumScreen(onBack: () -> Unit) {
                         "near" -> { SoundEngine.playVvTick(1.5f); SoundEngine.playVvCoin(); Haptics.tap(ctx) }
                         "flowMax" -> SoundEngine.playVvSuccess()
                         // ---- Burnout : takedowns, boost, rivaux
-                        "takedown" -> { SoundEngine.playCrush(); SoundEngine.playBoom(); Haptics.tap(ctx) }
+                        // (pas plus d'un bruit de tôle toutes les 90 ms : le laser ou une bombe en déclenchent des rafales)
+                        "takedown", "zap" -> if (sndCd <= 0f) { sndCd = 0.09f; SoundEngine.playCrush(); if (e == "takedown") Haptics.tap(ctx) }
+                        "takedownBig" -> { SoundEngine.playCrush(); SoundEngine.playBoom(); Haptics.tap(ctx) }
                         "strike" -> { SoundEngine.playBoom(); SoundEngine.playVvCoin(); Haptics.tap(ctx) }
                         "stomp" -> SoundEngine.playCrush()
                         "bounce" -> { SoundEngine.playJump(); SoundEngine.playVvTick(1.0f + 0.12f * g.stompChain.coerceAtMost(8)); Haptics.tap(ctx) }
@@ -331,7 +334,7 @@ fun VroumScreen(onBack: () -> Unit) {
                 if (engine != 0 && engineCd <= 0f) { engineCd = 0.15f; Sfx.setStreamRate(engine, 0.75f + g.mps / 34f + (if (g.turboT > 0f) 0.15f else 0f) + (if (g.boosting) 0.4f else 0f)) }
                 // roulette de la boîte à objet : tic-tic-tic de plus en plus aigu ; laser : petit tir répété
                 if (roar != 0) Sfx.setStreamRate(roar, (0.85f + g.mps / 110f + 0.08f * g.boostSeg).coerceIn(0.8f, 1.6f))
-                fxCd -= 1f / 60f
+                fxCd -= 1f / 60f; sndCd -= 1f / 60f
                 if (fxCd <= 0f) {
                     if (g.roulette > 0f) { fxCd = 0.085f; SoundEngine.playVvTick(1.0f + (1f - g.roulette) * 0.9f) }
                     else if (g.weapon == VWeapon.LASER) { fxCd = 0.2f; SoundEngine.playShot() }

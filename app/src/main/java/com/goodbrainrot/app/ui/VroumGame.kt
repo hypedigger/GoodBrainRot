@@ -47,7 +47,7 @@ internal enum class VWeapon(val tex: String, val dur: Float) {
  * (pièces + série + takedowns + temps restant), seuils par difficulté calibrés par simulation (VroumBalanceTest).
  * Arcade : distance.
  */
-internal val VROUM_STAR_SCORE = listOf(intArrayOf(12000, 18000), intArrayOf(18000, 28000), intArrayOf(22000, 34000))
+internal val VROUM_STAR_SCORE = listOf(intArrayOf(6000, 12000), intArrayOf(18000, 28000), intArrayOf(22000, 34000))
 internal val VROUM_STAR_DIST = listOf(intArrayOf(4000, 7000), intArrayOf(4500, 7500), intArrayOf(3500, 6500))
 internal fun vroumStarCount(endless: Boolean, cleared: Boolean, score: Int, dist: Int, diff: Int = 1): Int {
     val d = diff.coerceIn(0, 2)
@@ -495,6 +495,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
             if (want && !boosting && boost > 0.12f) { boosting = true; shake = max(shake, 8f); ev("boostOn") }
             if (boosting) {
                 boost -= dt / BOOST_SEG_S
+                shake = max(shake, 2.5f)            // la caméra tremble tant qu'on brûle le boost
                 if (boost <= 0f || !want) { boost = max(0f, boost); boosting = false; autoBoost = false; ev("boostOff") }
             }
         } else if (boosting) { boosting = false; ev("boostOff") }
@@ -761,7 +762,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
             e.aiCd -= dt
             if (e.aiCd <= 0f) {
                 e.aiCd = 1.3f + rng.nextFloat() * 1.8f
-                e.want = listOf(2f, 9f, 18f, 30f, 44f)[rng.nextInt(5)]
+                e.want = listOf(7f, 14f, 24f, 36f, 50f)[rng.nextInt(5)]
                 // évite ce qui est juste devant lui, sinon flâne d'une voie
                 val blocked = enemies.any { it !== e && it.alive && !it.rival && it.lane == e.target && it.z > e.z && it.z - e.z < 22f }
                 if (blocked || rng.nextFloat() < 0.45f) e.target = (e.target + (if (rng.nextBoolean()) 1 else -1)).coerceIn(0, lanes - 1)
@@ -836,7 +837,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         shake = max(shake, if (big) 12f else 7f)
         burst(x, e.z, 1f, 0.75f, 0.3f, if (big) 18 else 10)
         if (parts.size < 170) repeat(6) { parts.add(VPart(x, groundY(dist + e.z) + 1f, e.z, (Random.nextFloat() - 0.5f) * 8f, 3f + Random.nextFloat() * 4f, 0.5f, 0.5f, 0.3f, 0.3f, 0.32f, 0.22f)) }
-        ev(if (how == 4) "strike" else if (how == 2) "stomp" else "takedown")
+        ev(if (how == 4) "strike" else if (how == 2) "stomp" else if (how == 3) "zap" else if (big) "takedownBig" else "takedown")
         if (combo % 6 == 0) { ev("cheer"); for (d in decor) if (d.cheer >= 0) d.arms = 1.8f }
     }
 

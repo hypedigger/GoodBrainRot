@@ -89,7 +89,7 @@ internal fun BoostButton(g: VroumGame, frame: Int, modifier: Modifier = Modifier
 internal fun BoostBar(g: VroumGame, frame: Int, modifier: Modifier = Modifier) {
     @Suppress("UNUSED_EXPRESSION") frame
     Row(modifier.clip(RoundedCornerShape(14.dp)).background(Color(0x88000000)).padding(horizontal = 8.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
-        Canvas(Modifier.size(width = (46 * VroumGame.MAX_SEG + 6 * (VroumGame.MAX_SEG - 1)).dp, height = 16.dp)) {
+        Canvas(Modifier.size(width = (54 * VroumGame.MAX_SEG + 7 * (VroumGame.MAX_SEG - 1)).dp, height = 20.dp)) {
             val n = VroumGame.MAX_SEG; val gap = size.height * 0.36f
             val sw = (size.width - gap * (n - 1)) / n
             for (i in 0 until n) {

@@ -1,5 +1,8 @@
 # Nouveautés — GoodBrainRot
 
+## 3.96 — 2026-11-14
+- **Vroum — finitions** : le bruit de tôle ne se répète plus en rafale (laser, bombe), la grosse explosion est réservée aux camions, bus et rivaux ; la caméra tremble tant qu'on brûle le boost ; les rivaux collent un peu moins ; jauge de boost plus grande ; étoiles plus faciles à gagner en Facile ; l'ombre verte parasite autour de la voiture de course a disparu.
+- **Crimson Sky** : les escadrons ne deviennent vulnérables qu'une fois entrés dans l'écran (on les voit arriver), et une vague dure quelques secondes même si elle est balayée tout de suite.
 ## 3.95 — 2026-11-14
 - **Vroum façon Burnout : le BOOST.** Une jauge à segments qu'on **brûle en tenant le bouton BOOST** (nouveau bouton à côté du saut). Elle se remplit en prenant des risques — frôler, percuter, rebondir — et **s'allonge avec les takedowns** (jusqu'à ×4) ; un accident en retire un segment. Pendant le boost : flammes bleues, traits de vitesse, champ de vision qui s'ouvre, et **le moteur hurle** (vrai enregistrement de voiture de course). En Facile le boost part tout seul quand la jauge est pleine.
 - **Takedowns.** On peut **rentrer dans tout ce qui roule dans notre sens** : les petites voitures toujours (anneau doré = cible), les camions et bus seulement en boost. La voiture percutée s'envole en tournoyant et peut en faucher d'autres (**STRIKE**). Ce qui arrive **en face** (vu de face, phares allumés, halo rouge) ne se percute pas : on l'esquive ou on saute.
