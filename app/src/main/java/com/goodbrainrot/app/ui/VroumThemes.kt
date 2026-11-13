@@ -176,3 +176,6 @@ internal fun vroumMusicKey(themeKey: String): String = when (themeKey) {
     "spooky" -> "vv_m_spooky"
     else -> "vv_synth"
 }
+
+/** Texture du RESSORT du circuit (tambour taiko, geyser, serpent enroulé…) ; l'océan garde sa bulle. */
+internal fun vroumSpringTex(t: VTheme): String = if (t.rampTex.contains("bubble")) t.rampTex else "vv_spring_${t.key}"

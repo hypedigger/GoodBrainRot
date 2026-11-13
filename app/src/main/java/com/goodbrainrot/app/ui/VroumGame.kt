@@ -96,6 +96,7 @@ internal class VEnemy(var lane: Int, var z: Float, val kind: Int, var mps: Float
 }
 internal class VPick(var lane: Int, var z: Float, val type: VItem, val variant: Int) {
     var t = 0f
+    var used = false   // ressort déjà déclenché (il reste en place et oscille)
     // obstacle MOBILE (chat, rocher, crabe, vache…) : voie flottante qui traverse la route
     var fLane = -999f; var fDir = 0
     var magnet = false; var mx = 0f     // aimant : la pièce glisse vers le bolide (mx = décalage latéral en voies)
@@ -107,6 +108,7 @@ internal class VText(var x: Float, var y: Float, var z: Float, @Volatile var tex
     @Volatile var sx = -1000f; @Volatile var sy = -1000f
     @Volatile var pop = 1f      // 1 → 0 : petit rebond d'échelle à l'apparition (et à chaque fusion de gains)
     var gain = 0                // > 0 : compteur de points (les gains rapprochés s'y additionnent)
+    var style = 0               // 1 = message d'IMPACT (takedown, strike, revanche) : plus gros, éclat derrière
 }
 internal class VDecor(var z: Float, var lateral: Float, val kind: Int, val cheer: Int = -1, val flag: Boolean = false) { var arms = 0f }
 
@@ -319,11 +321,14 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
     var boost = 0.5f                // contenu, en segments
     var boostSeg = 1                // capacité : 1..4 segments
     private var segProgress = 0     // takedowns depuis le dernier segment gagné
-    @Volatile var boostHeld = false // le doigt est sur le bouton
-    private var prevHeld = false; private var startPress = -1f   // départ canon : instant (introT) où BOOST a été enfoncé
+    // UNE TAPE = UN SEGMENT : chaque tape sur BOOST brûle un segment de jauge (ou ce qu'il en reste), sans rien tenir.
+    @Volatile private var boostTaps = 0                          // tapes reçues de l'écran (fil UI)
+    private var seenTaps = 0
+    private var burnLeft = 0f                                    // jauge qu'il reste à brûler pour les tapes en cours
+    fun tapBoost() { boostTaps++ }
+    private var startPress = -1f                                 // départ canon : instant (introT) de la dernière tape
     private var rocketLateT = 0f                                // … et délai de grâce après le GO
     var rocketStart = false; var rocketLabel = "DÉPART CANON !"
-    private var autoBoost = false   // Facile : part tout seul quand la jauge est pleine
     var boosting = false
     private val boostMul: Float get() = if (superT > 0f) 1.7f else if (boosting) 1.45f else if (turboT > 0f) 1.35f else if (giant > 0) 1.3f else 1f
     /** en boost (ou turbo) on défonce aussi les camions et les bus */
@@ -361,7 +366,9 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
 
     // ---- CHEF D'ORCHESTRE : pose les motifs devant le joueur (planD = mètres de route déjà composés)
     private val rng = Random(seed)
-    private var planD = tune.floor * 1.6f
+    // (le décompte fait parcourir ~2,3 s de route à vitesse plancher : le premier motif est posé au-delà, on ne
+    //  passe donc jamais à côté d'un objet qu'on ne pouvait pas encore attraper)
+    private var planD = tune.floor * INTRO_DUR * 0.75f + 14f
     private var lastPat: VPat? = null
     private var lastJumpAt = -999f          // distance du dernier saut obligatoire posé
     private var didX2 = false; private var didStar = false; private var didCannon = false; private var didSprint = false
@@ -482,24 +489,21 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         if (invuln > 0f) invuln -= dt
         if (landedT > 0f) landedT -= dt
         if (blastT > 0f) blastT -= dt
+        val newTaps = boostTaps - seenTaps; seenTaps += newTaps
         if (introT > 0f) {
             // DÉPART CANON : BOOST enfoncé dans la dernière demi-seconde avant le GO (un simple tap suffit ; tenu depuis
             // trop longtemps = rien, sans punition)
-            val held = boostHeld
-            if (held && !prevHeld) startPress = introT
-            prevHeld = held
+            if (newTaps > 0) startPress = introT
             introT -= dt
             val step = kotlin.math.ceil(introT.toDouble()).toInt()
             if (step < introStep && step >= 1) { introStep = step; ev("count") }
             if (introT <= 0f) {
                 introT = 0f; ev("go")
-                if (startPress > 0f && startPress <= ROCKET_WINDOW) grantRocketStart() else rocketLateT = ROCKET_LATE
+                if (startPress > 0f && startPress <= ROCKET_WINDOW) { grantRocketStart(); burnLeft = 1f } else rocketLateT = ROCKET_LATE
             }
         } else if (rocketLateT > 0f) {
             rocketLateT -= dt
-            val held = boostHeld
-            if (held && !prevHeld) { rocketLateT = 0f; grantRocketStart() }
-            prevHeld = held
+            if (newTaps > 0) { rocketLateT = 0f; grantRocketStart() }
         }
         val racing = !over && sputter < 0f && !cleared && !inIntro
         // élan : monte tout seul ; la vitesse rejoint la croisière (accélère vite, ralentit doucement après un boost)
@@ -508,17 +512,18 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
             if (flow >= 1f && !flowMaxSaid) { flowMaxSaid = true; texts.add(VText(lx * LANE_M, 4.2f, PLAYER_Z, maxLabel, 1.3f, V_GOLD, big = true)); ev("flowMax") }
             if (flow < 0.7f) flowMaxSaid = false
         }
-        // boost : on le brûle tant que le bouton est tenu (Facile : il part tout seul quand la jauge est pleine)
+        // boost : une tape brûle UN segment (plusieurs tapes s'additionnent) ; en Facile il part tout seul, jauge pleine
         if (racing) {
-            if (diff == 0 && boost >= boostSeg - 0.001f) autoBoost = true
-            val want = (boostHeld || autoBoost) && boost > 0f
-            if (want && !boosting && boost > 0.12f) { boosting = true; shake = max(shake, 8f); ev("boostOn") }
+            if (newTaps > 0 && boost > 0.12f) burnLeft = min(boost, burnLeft + newTaps)
+            if (diff == 0 && boost >= boostSeg - 0.001f) burnLeft = boost
+            if (burnLeft > 0f && !boosting) { boosting = true; shake = max(shake, 8f); ev("boostOn") }
             if (boosting) {
-                boost -= dt / BOOST_SEG_S
+                val d = dt / BOOST_SEG_S
+                boost -= d; burnLeft -= d
                 shake = max(shake, 2.5f)            // la caméra tremble tant qu'on brûle le boost
-                if (boost <= 0f || !want) { boost = max(0f, boost); boosting = false; autoBoost = false; ev("boostOff") }
+                if (boost <= 0f || burnLeft <= 0f) { boost = max(0f, boost); burnLeft = 0f; boosting = false; ev("boostOff") }
             }
-        } else if (boosting) { boosting = false; ev("boostOff") }
+        } else if (boosting) { boosting = false; burnLeft = 0f; ev("boostOff") }
         val target = cruise * boostMul
         spd += (target - spd) * min(1f, dt * (if (target > spd) 3.4f else 1.5f))
         val sp = mps
@@ -675,6 +680,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
             if (p.z > PLAYER_Z - 1.4f && p.z < PLAYER_Z + 1.6f && (p.lane in coveredLanes() || p.magnet)) {
                 val ground = p.type == VItem.PUDDLE || p.type == VItem.TURBO || p.type == VItem.RAMP
                 if (ground && airborne) continue
+                if (p.type == VItem.RAMP) { if (!p.used) { p.used = true; p.t = 0f; collect(p) }; continue }   // le ressort reste et oscille
                 collect(p); pit.remove()
             }
         }
@@ -834,6 +840,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
      * par une voiture éjectée) · 5 coup d'épaule. La voiture est éjectée (ou aplatie), la jauge de boost se remplit et
      * s'allonge (deux takedowns = un segment de plus), la série monte.
      */
+    private var tdChain = 0; private var tdChainAt = -9f; private var lastImpact: VText? = null
     private fun takedown(e: VEnemy, how: Int) {
         if (!e.alive) return
         takedowns++
@@ -843,10 +850,19 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         else { e.fly = 0f; if (e.flyVx == 0f) e.flyVx = (if (x - lx * LANE_M >= 0f) 1f else -1f) * (5f + Random.nextFloat() * 5f) * (if (how == 4 || how == 3) 1.3f else 1f) }
         chain(if (big) 2 else 1)
         var pts = when (how) { 0 -> 40; 4 -> 80; 5 -> 120; else -> 60 } * (if (big) 2 else 1)
-        var label = if (how == 4) strikeLabel else if (how == 0 || how == 2 || how == 3) "" else takedownLabel
+        // l'annonce : TAKEDOWN (percutée, coup d'épaule, arme), STRIKE (ricochet), REVANCHE ; l'écrasement a déjà son « REBOND ».
+        // Les takedowns qui s'enchaînent en moins de 2,5 s font monter un compteur « ×n » sur le MÊME message.
+        var label = if (how == 4) strikeLabel else if (how == 2) "" else takedownLabel
         if (e.rival && e.revenge) { pts *= 2; label = revengeLabel; revenges++; gainBoost(1f); ev("revenge") }
         addScore(pts, x, e.z, if (how == 4) V_GOLD else V_PINK)
-        if (label.isNotEmpty()) texts.add(VText(lx * LANE_M, 4.4f, PLAYER_Z + 4f, label, 1.2f, if (label == revengeLabel) V_RED else V_GOLD, big = true))
+        if (label.isNotEmpty()) {
+            tdChain = if (elapsed - tdChainAt < 2.5f) tdChain + 1 else 1
+            tdChainAt = elapsed
+            val shownLabel = if (tdChain > 1 && label != revengeLabel) "$label ×$tdChain" else label
+            val last = lastImpact
+            if (last != null && last.life > 0.3f && label != revengeLabel) { last.text = shownLabel; last.life = 1.15f; last.pop = 1f; last.x = lx * LANE_M; last.y = 4.4f }
+            else lastImpact = VText(lx * LANE_M, 4.4f, PLAYER_Z + 4f, shownLabel, 1.15f, if (label == revengeLabel) V_RED else V_GOLD, big = true).also { it.style = 1; texts.add(it) }
+        }
         // percuter sans boost rapporte peu ; en boost, en rebond, en strike ou d'un coup d'épaule, beaucoup plus
         gainBoost(when (how) { 0 -> 0.08f; 1 -> 0.20f; 2 -> 0.22f; 3 -> 0.04f; 4 -> 0.25f; else -> 0.45f } * (if (big) 1.5f else 1f))
         gainFlow(0.03f)

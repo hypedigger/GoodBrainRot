@@ -135,7 +135,7 @@ internal fun ChunkyButton(label: String, top: Color, bottom: Color, modifier: Mo
             Box(Modifier.fillMaxWidth(0.92f).height(height * 0.42f).align(Alignment.TopCenter).padding(top = 5.dp).clip(RoundedCornerShape(18.dp))
                 .background(Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.28f), Color.Transparent))))
             Text(label, color = Color.White, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = fontSize, letterSpacing = 1.5.sp,
-                maxLines = 1, style = TextStyle(shadow = Shadow(Color(0x66000000), Offset(0f, 3f), 5f)))
+                maxLines = 1, style = TextStyle(fontFamily = VROUM_FONT, shadow = Shadow(Color(0x66000000), Offset(0f, 3f), 5f)))
         }
     }
 }
@@ -148,7 +148,7 @@ private fun MenuHeader(title: String, step: Int, onBack: () -> Unit, trailing: @
         BackButton(onBack = onBack)
         Column(Modifier.weight(1f)) {
             Text(title.uppercase(), color = Color.White, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = 25.sp, letterSpacing = 1.sp,
-                maxLines = 1, overflow = TextOverflow.Ellipsis, style = TextStyle(shadow = TITLE_SHADOW))
+                maxLines = 1, overflow = TextOverflow.Ellipsis, style = TextStyle(fontFamily = VROUM_FONT, shadow = TITLE_SHADOW))
             // étapes : ● ○  /  ● ●
             Row(Modifier.padding(top = 3.dp), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                 for (i in 1..2) Box(Modifier.size(width = if (i == step) 26.dp else 10.dp, height = 5.dp).clip(CircleShape).background(if (i <= step) V_GOLD else Color.White.copy(alpha = 0.3f)))
@@ -222,7 +222,7 @@ internal fun GarageScreen(spr: VSprites, vehicle: Int, colors: List<Color>, onBa
     val name: @Composable () -> Unit = {
         Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(stringResource(VEHICLES[cur].nameRes).uppercase(), color = Color.White, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = 32.sp,
-                letterSpacing = 1.sp, textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis, style = TextStyle(shadow = TITLE_SHADOW))
+                letterSpacing = 1.sp, textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis, style = TextStyle(fontFamily = VROUM_FONT, shadow = TITLE_SHADOW))
             Box(Modifier.padding(top = 4.dp).size(width = 86.dp, height = 6.dp).clip(CircleShape).background(Brush.horizontalGradient(listOf(colors[cur], V_GOLD))))
             Text("${cur + 1} / ${VEHICLES.size}", color = Color.White.copy(alpha = 0.6f), fontWeight = FontWeight.Bold, fontSize = 13.sp, modifier = Modifier.padding(top = 6.dp))
         }
@@ -311,7 +311,7 @@ private fun ModeTab(kind: Int, label: String, selected: Boolean, locked: Boolean
 
 @Composable
 private fun StarRow(stars: Int, size: TextUnit, dim: Color = Color.White.copy(alpha = 0.3f)) {
-    Row { for (k in 0 until 3) Text("★", color = if (k < stars) V_GOLD else dim, fontSize = size, style = TextStyle(shadow = Shadow(Color(0x77000000), Offset(0f, 1.5f), 3f))) }
+    Row { for (k in 0 until 3) Text("★", color = if (k < stars) V_GOLD else dim, fontSize = size, style = TextStyle(fontFamily = VROUM_FONT, shadow = Shadow(Color(0x77000000), Offset(0f, 1.5f), 3f))) }
 }
 
 /** Bouton de difficulté : 1, 2 ou 3 barres allumées (langage universel des jeux), le nom, les étoiles déjà gagnées ici. */
@@ -359,7 +359,7 @@ private fun CircuitPager(spr: VSprites, pager: PagerState, endless: Boolean, due
                 Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.45f to Color.Transparent, 1f to Color(0xE6000000))))
                 Column(Modifier.align(Alignment.BottomStart).padding(18.dp)) {
                     Text(stringResource(th.nameRes).uppercase(), color = Color.White, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = 25.sp, lineHeight = 27.sp,
-                        letterSpacing = 0.5.sp, style = TextStyle(shadow = TITLE_SHADOW))
+                        letterSpacing = 0.5.sp, style = TextStyle(fontFamily = VROUM_FONT, shadow = TITLE_SHADOW))
                     // la spécificité du circuit, en une phrase
                     if (th.tip != 0) Box(Modifier.padding(top = 4.dp).clip(RoundedCornerShape(10.dp)).background(Color(0x99000000)).padding(horizontal = 9.dp, vertical = 3.dp)) {
                         Text(stringResource(th.tip), color = V_GOLD, fontWeight = FontWeight.Bold, fontSize = 13.sp, lineHeight = 15.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)

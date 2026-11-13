@@ -343,7 +343,7 @@
     <string name="vroum_w_shield">BOUCLIER !</string>
     <string name="vroum_boost">BOOST</string>
     <string name="vroum_res_takedowns">Takedowns : %1$d</string>
-    <string name="vroum_tuto_boost">Tiens BOOST pour foncer. Rentre dans les voitures par derrière, évite celles qui ont des phares !</string>
+    <string name="vroum_tuto_boost">Tape BOOST pour brûler une barre. Rentre dans les voitures par derrière, évite celles qui ont des phares !</string>
     <string name="vroum_best">Record</string>
     <string name="vroum_near">Frôlé !</string>
     <string name="vroum_flow_max">À fond !</string>

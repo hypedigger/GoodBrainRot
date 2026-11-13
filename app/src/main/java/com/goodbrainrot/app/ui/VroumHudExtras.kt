@@ -47,9 +47,9 @@ import kotlin.math.sin
 private val BOOST_BLUE = Color(0xFF39A8FF)
 private val BOOST_HOT = Color(0xFFFF7A1A)
 
-/** Bouton BOOST : on le TIENT pour brûler la jauge. Gris quand elle est vide, il palpite quand elle est pleine. */
+/** Bouton BOOST : UNE TAPE brûle un segment de jauge (rien à tenir). Gris quand elle est vide, il palpite quand elle est pleine. */
 @Composable
-internal fun BoostButton(g: VroumGame, frame: Int, modifier: Modifier = Modifier, onHold: (Boolean) -> Unit) {
+internal fun BoostButton(g: VroumGame, frame: Int, modifier: Modifier = Modifier, onTap: () -> Unit) {
     @Suppress("UNUSED_EXPRESSION") frame
     val ready = g.boost > 0.12f
     val on = g.boosting
@@ -60,7 +60,7 @@ internal fun BoostButton(g: VroumGame, frame: Int, modifier: Modifier = Modifier
                     else if (ready) Brush.verticalGradient(listOf(Color(0xFFFFB04A), Color(0xFFF2541B)))
                     else Brush.verticalGradient(listOf(Color(0xAA8A93A8), Color(0xAA5C6478))))
         .border(4.dp, Color.White.copy(alpha = if (ready) 0.9f else 0.5f), CircleShape)
-        .pointerInput(Unit) { detectTapGestures(onPress = { onHold(true); tryAwaitRelease(); onHold(false) }) },
+        .pointerInput(Unit) { detectTapGestures(onPress = { onTap() }) },   // (au contact du doigt : réponse immédiate)
         contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxSize()) {
             val w = size.width; val h = size.height

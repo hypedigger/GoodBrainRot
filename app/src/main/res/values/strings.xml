@@ -352,7 +352,7 @@
     <string name="vroum_w_shield">SHIELD!</string>
     <string name="vroum_boost">BOOST</string>
     <string name="vroum_res_takedowns">Takedowns: %1$d</string>
-    <string name="vroum_tuto_boost">Hold BOOST to go wild. Ram cars from behind, dodge the ones with headlights!</string>
+    <string name="vroum_tuto_boost">Tap BOOST to burn one bar. Ram cars from behind, dodge the ones with headlights!</string>
     <string name="vroum_best">Best</string>
     <string name="vroum_near">Close call!</string>
     <string name="vroum_flow_max">Full speed!</string>

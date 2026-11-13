@@ -343,7 +343,7 @@
     <string name="vroum_w_shield">SCUDO!</string>
     <string name="vroum_boost">BOOST</string>
     <string name="vroum_res_takedowns">Takedown: %1$d</string>
-    <string name="vroum_tuto_boost">Tieni BOOST per sfrecciare. Tampona le auto da dietro, evita quelle con i fari!</string>
+    <string name="vroum_tuto_boost">Tocca BOOST per bruciare una barra. Tampona le auto da dietro, evita quelle con i fari!</string>
     <string name="vroum_best">Record</string>
     <string name="vroum_near">Sfiorato!</string>
     <string name="vroum_flow_max">A tutta!</string>

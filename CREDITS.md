@@ -13,6 +13,9 @@
   cartoon pastel). Le cerveau zombie de l'easter egg est aussi un vector original.
 - **Police « Creepster »** (mode zombie « BrainRot ») : Google Fonts, licence
   SIL Open Font License 1.1 — `app/src/main/res/font/creepster.ttf`.
+- **Police « Rubik »** (jeu Vroum) : © 2015 The Rubik Project Authors, Google Fonts, licence
+  SIL Open Font License 1.1 — `app/src/main/res/font/rubik_*.ttf` (instances statiques réduites
+  au latin et au cyrillique).
 - **Sons du piano, victoire, erreur** : synthétisés programmatiquement par
   l'application (`SoundEngine`), aucun fichier audio tiers.
 - **Voix** : synthèse vocale Android (moteur TTS de l'appareil).

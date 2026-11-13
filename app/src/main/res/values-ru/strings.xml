@@ -343,7 +343,7 @@
     <string name="vroum_w_shield">ЩИТ!</string>
     <string name="vroum_boost">БУСТ</string>
     <string name="vroum_res_takedowns">Таранов: %1$d</string>
-    <string name="vroum_tuto_boost">Держи БУСТ, чтобы мчаться. Тарань машины сзади, уворачивайся от встречных с фарами!</string>
+    <string name="vroum_tuto_boost">Жми БУСТ — сгорает одна шкала. Тарань машины сзади, уворачивайся от встречных с фарами!</string>
     <string name="vroum_best">Рекорд</string>
     <string name="vroum_near">Впритирку!</string>
     <string name="vroum_flow_max">Полный газ!</string>

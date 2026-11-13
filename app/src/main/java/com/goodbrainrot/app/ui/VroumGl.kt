@@ -76,7 +76,7 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
         for (e in ENEMY_KEYS) names.add("vr_$e")
         for (e in ONCOMING_KEYS) names.add("vr_$e")
         // seulement le circuit en cours : avec 20 circuits, tout charger prendrait des dizaines de Mo de textures
-        game.theme.let { t -> for (d in t.decor) names.add("vr_${d.first}"); names.addAll(t.picks); names.add(t.holeTex); names.add(t.logTex); names.add(t.rampTex); names.addAll(t.crossers) }
+        game.theme.let { t -> for (d in t.decor) names.add("vr_${d.first}"); names.addAll(t.picks); names.add(t.holeTex); names.add(t.logTex); names.add(t.rampTex); names.add(vroumSpringTex(t)); names.addAll(t.crossers) }
         for (w in VWeapon.values()) if (w.tex.isNotEmpty()) names.add(w.tex)
         names.add("vv_itembox"); names.add("vv_jg_boulder"); names.add("vr_rock")
         for (p in PASSENGER_KEYS) names.add("vv_$p")
@@ -364,13 +364,16 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
                     bills.add(Bill(p.z - 0.01f, x, gy + bob, 2.0f, t, 1f, if (t == null) hr else 1f, if (t == null) hg else 1f, if (t == null) hb else 1f, rot = sin(p.t * 3f) * 10f))
                 }
                 VItem.RAMP -> {
-                    // tremplin (ou bulle-trampoline) : halo doré, flèches qui pulsent
+                    // RESSORT du circuit (ou bulle-trampoline) : il se balance doucement, se TASSE quand on roule dessus puis
+                    // se détend en oscillant ; halo doré au sol et chevron qui sautille au-dessus tant qu'il n'a pas servi
                     val pulse = 0.5f + 0.5f * sin(p.t * 9f)
-                    bills.add(Bill(p.z + 0.02f, x, gy, 3.6f, disc, 0.35f + 0.2f * pulse, 1f, 0.85f, 0.2f, squash = 1.1f, flat = true))
-                    val t = tex[g.theme.rampTex] ?: tex["vv_wk_ramp"]
-                    if (g.theme.rampTex.contains("bubble")) bills.add(Bill(p.z, x, gy + 0.15f + 0.12f * pulse, 2.5f, t, 0.9f, 1f, 1f, 1f, squash = 1f - 0.08f * pulse))
-                    else bills.add(Bill(p.z, x, gy, 2.9f, t, 1f, 1f, if (t == null) 0.8f else 1f, if (t == null) 0.1f else 1f, squash = if (t == null) 0.4f else 1f))
-                    bills.add(Bill(p.z - 0.02f, x, gy + 1.9f + 0.5f * pulse, 0.6f, disc, 0.9f, 1f, 0.9f, 0.3f))
+                    val name = vroumSpringTex(g.theme)
+                    val t = tex[name] ?: tex[g.theme.rampTex] ?: tex["vv_wk_ramp"]
+                    val sq = if (p.used) 1f + 0.55f * kotlin.math.exp(-5.5f * p.t) * cos(24f * p.t + 3.1416f) else 1f + 0.035f * sin(p.t * 5f)
+                    if (!p.used) bills.add(Bill(p.z + 0.02f, x, gy, 3.8f, disc, 0.35f + 0.2f * pulse, 1f, 0.85f, 0.2f, squash = 1.1f, flat = true))
+                    if (name.contains("bubble")) bills.add(Bill(p.z, x, gy + 0.15f + 0.12f * pulse, 2.5f, t, 0.9f, 1f, 1f, 1f, squash = (1f - 0.08f * pulse) * sq))
+                    else bills.add(Bill(p.z, x, gy, 2.7f, t, 1f, 1f, if (t == null) 0.8f else 1f, if (t == null) 0.1f else 1f, squash = (if (t == null) 0.4f else 1f) * sq))
+                    if (!p.used) for (i in -1..1) bills.add(Bill(p.z - 0.02f, x + i * 0.32f, gy + 3.3f + 0.45f * pulse + kotlin.math.abs(i) * 0.32f, 0.44f, disc, 0.95f, 1f, 0.9f, 0.3f))
                 }
                 VItem.HOLE -> {
                     // nid-de-poule / lave / glace (texture du thème) : décalque au sol + anneau rouge, à SAUTER

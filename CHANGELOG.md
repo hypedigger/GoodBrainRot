@@ -1,5 +1,12 @@
 # Nouveautés — GoodBrainRot
 
+## 4.00 — 2026-11-13
+- **Vroum — BOOST au tap.** Plus besoin de garder le doigt sur le bouton : **une tape brûle un segment de jauge** (deux tapes, deux segments). Le pouce reste libre pour changer de voie. En Facile, le boost part toujours tout seul quand la jauge est pleine.
+- **Vroum — nouvelle police et messages « arcade ».** Tout le jeu passe en **Rubik** (grasse, italique pour les messages). Les messages ont un contour épais, un dégradé et « claquent » en arrivant. **TAKEDOWN!** s'affiche désormais à chaque voiture sortie, sur un éclat de bande dessinée, avec un compteur de série (« TAKEDOWN! ×3 ») ; il a sa place fixe dans le ciel pour ne jamais cacher la route.
+- **Vroum — fini les « +30 » qui flottent.** Les chiffres de score ne s'affichent plus sur la route. À la place, la **zone de score encaisse** : sur un gros gain (takedown, strike…), des comètes dorées filent de l'action vers le compteur, la carte gonfle et s'illumine, et le score défile jusqu'au total.
+- **Vroum — des ressorts à la place des tremplins.** Chaque circuit a le sien : serpent enroulé dans la jungle, tambour taiko à Tokyo, geyser au volcan, cadeau à ressort dans la neige, champignon lumineux la nuit, citrouille en boîte au manoir, borne d'incendie en ville, flan qui tremblote au pays des bonbons, trampoline en os chez les dinosaures… Il se tasse quand on roule dessus puis se détend en oscillant.
+- **Vroum — départ** : plus aucun objet ni voiture sur la portion parcourue pendant le décompte ; le premier motif arrive juste après le GO.
+- **Vroum — véhicules vus droit de dos** : le camion de livraison, le bus scolaire et le camion de pompiers étaient dessinés de trois quarts ; ils sont refaits dans le même axe que les autres.
 ## 3.99 — 2026-11-13
 - **Vroum — départ canon plus tolérant** : il compte aussi si l'on appuie juste après le « GO! » (temps de réaction), et la fenêtre avant le GO est un peu plus large. Quand il réussit, « DÉPART CANON ! » remplace le « GO! » au centre de l'écran.
 - **Vroum — lancement d'une course** : l'illustration du circuit reste affichée pendant la fraction de seconde où la 3D se charge (plus d'écran vide) ; le décompte a une ombre portée et se lit sur les ciels clairs (neige, plage).

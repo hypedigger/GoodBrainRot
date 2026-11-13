@@ -41,8 +41,8 @@ class VroumBalanceTest {
     }
 
     private fun decide(g: VroumGame, bot: Bot, r: Random) {
-        // boost : le joueur le tient dès qu'il en a (plus ou moins assidûment selon son niveau)
-        g.boostHeld = g.boost > 0.3f && r.nextFloat() < bot.boosts || (g.boosting && r.nextFloat() < bot.boosts)
+        // boost : une tape dès qu'il y a de la jauge (plus ou moins assidûment selon son niveau)
+        if (!g.boosting && g.boost > 0.3f && r.nextFloat() < bot.boosts) g.tapBoost()
         if (r.nextFloat() < bot.err) { if (r.nextBoolean()) g.moveLane(if (r.nextBoolean()) 1 else -1); return }
         val sp = g.mps.coerceAtLeast(1f)
         val pz = VroumGame.PLAYER_Z
@@ -147,7 +147,7 @@ class VroumBalanceTest {
         run(a, 2f) { it.picks.clear() }
         org.junit.Assert.assertEquals("sans boost : accident", 1, a.bumpCount)
         val b = emptyRoad()
-        b.boost = 1f; b.boostHeld = true
+        b.boost = 1f; b.tapBoost()
         b.enemies.add(VEnemy(1, VroumGame.PLAYER_Z + 16f, 2, 7f).also { it.heavy = true })
         run(b, 2f) { it.picks.clear() }
         org.junit.Assert.assertEquals("en boost : takedown", 1, b.takedowns)
@@ -182,7 +182,8 @@ class VroumBalanceTest {
     fun pressing_boost_right_before_go_gives_a_rocket_start() {
         fun run(pressAt: Float): VroumGame {
             val g = VroumGame(false, 0, 1, THEMES[0], "T", "C", seed = 42L)
-            while (g.inIntro) { if (g.introT <= pressAt) g.boostHeld = true; g.update(1f / 60f) }
+            var tapped = false
+            while (g.inIntro) { if (!tapped && g.introT <= pressAt) { tapped = true; g.tapBoost() }; g.update(1f / 60f) }
             return g
         }
         org.junit.Assert.assertTrue("bon timing", run(0.3f).rocketStart)
@@ -194,11 +195,27 @@ class VroumBalanceTest {
             while (g.inIntro) g.update(1f / 60f)
             var t = 0f
             while (t < delay) { g.update(1f / 60f); t += 1f / 60f }
-            g.boostHeld = true; g.update(1f / 60f)
+            g.tapBoost(); g.update(1f / 60f)
             return g
         }
         org.junit.Assert.assertTrue("juste après le GO", late(0.15f).rocketStart)
         org.junit.Assert.assertFalse("trop tard", late(0.6f).rocketStart)
+    }
+
+    @Test
+    fun one_tap_burns_one_boost_segment() {
+        val g = emptyRoad()
+        g.boostSeg = 3; g.boost = 2.5f
+        g.tapBoost()
+        var t = 0f
+        while (t < VroumGame.BOOST_SEG_S + 0.5f) { g.update(1f / 60f); g.enemies.clear(); g.picks.clear(); t += 1f / 60f }
+        org.junit.Assert.assertFalse("le boost s'arrête tout seul", g.boosting)
+        org.junit.Assert.assertEquals("un segment brûlé", 1.5f, g.boost, 0.08f)
+        // deux tapes d'affilée = deux segments
+        g.boost = 2.5f; g.tapBoost(); g.tapBoost()
+        t = 0f
+        while (t < 2 * VroumGame.BOOST_SEG_S + 0.5f) { g.update(1f / 60f); g.enemies.clear(); g.picks.clear(); t += 1f / 60f }
+        org.junit.Assert.assertEquals("deux segments brûlés", 0.5f, g.boost, 0.1f)
     }
 
     @Test

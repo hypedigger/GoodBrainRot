@@ -343,7 +343,7 @@
     <string name="vroum_w_shield">¡ESCUDO!</string>
     <string name="vroum_boost">BOOST</string>
     <string name="vroum_res_takedowns">Takedowns: %1$d</string>
-    <string name="vroum_tuto_boost">Mantén BOOST para volar. Choca a los coches por detrás, ¡esquiva los de faros!</string>
+    <string name="vroum_tuto_boost">Toca BOOST para quemar una barra. Choca a los coches por detrás, ¡esquiva los de faros!</string>
     <string name="vroum_best">Récord</string>
     <string name="vroum_near">¡Por poco!</string>
     <string name="vroum_flow_max">¡A tope!</string>

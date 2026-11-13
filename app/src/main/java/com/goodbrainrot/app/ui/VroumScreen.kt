@@ -350,6 +350,7 @@ fun VroumScreen(onBack: () -> Unit) {
         } finally { Sfx.stopStream(engine); Sfx.stopStream(roar) }
     }
 
+    androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalTextStyle provides androidx.compose.material3.LocalTextStyle.current.copy(fontFamily = VROUM_FONT)) {
     Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF7FD4FF), Color(0xFFB39DFF))))) {
         when (phase) {
             VPhase.SELECT -> GarageScreen(spr, vehicle, VEHICLE_COLORS, onBack = onBack, onPick = { vehicle = it; hornFor(it) },
@@ -388,7 +389,7 @@ fun VroumScreen(onBack: () -> Unit) {
                     )
                     @Suppress("UNUSED_EXPRESSION") tick
                     val speedPath = remember { androidx.compose.ui.graphics.Path() }
-                    val textBoxes = remember { FloatArray(24 * 4) }   // boîtes des textes flottants déjà posés (anti-chevauchement)
+                    val fx = remember(g) { VroumFx(ctx) }
                     Canvas(Modifier.fillMaxSize()) {
                         @Suppress("UNUSED_EXPRESSION") tick
                         // LIGNES DE VITESSE : des pointes claires fuient du point de fuite vers les bords de l'écran. Discrètes à
@@ -417,37 +418,9 @@ fun VroumScreen(onBack: () -> Unit) {
                                 clipRect { drawPath(speedPath, col.copy(alpha = 0.20f + 0.45f * k)) }   // (sinon les pointes débordent sur les barres système)
                             }
                         }
-                        val snap = g.textSnap
                         val u = size.height / 100f
-                        if (snap.isNotEmpty()) drawIntoCanvas { c ->
-                            val paint = android.graphics.Paint().apply { isAntiAlias = true; textAlign = android.graphics.Paint.Align.CENTER; isFakeBoldText = true; setShadowLayer(6f, 0f, 3f, android.graphics.Color.argb(160, 0, 0, 0)) }
-                            // du plus récent au plus ancien : un texte qui en recouvrirait un autre est repoussé au-dessus
-                            var nb = 0
-                            for (i in snap.indices.reversed()) {
-                                val t = snap[i]
-                                if (t.sx < -500f) continue
-                                val a = (t.life / 0.9f).coerceIn(0f, 1f)
-                                val label = t.text; val col = t.color
-                                paint.textSize = u * (if (t.big) 6.5f else if (t.gain >= 100) 5f else 4f) * (1f + 0.4f * t.pop)
-                                var hw = paint.measureText(label) / 2f
-                                if (hw * 2f > size.width * 0.92f) { paint.textSize *= size.width * 0.92f / (hw * 2f); hw = paint.measureText(label) / 2f }
-                                val hh = paint.textSize
-                                val tx = if (hw * 2f + u * 2f < size.width) t.sx.coerceIn(hw + u, size.width - hw - u) else size.width / 2f
-                                var y = t.sy; var tries = 0
-                                while (tries < 6) {
-                                    var hit = false
-                                    for (b in 0 until nb) {
-                                        val o = b * 4
-                                        if (tx - hw < textBoxes[o + 2] && tx + hw > textBoxes[o] && y - hh < textBoxes[o + 3] && y > textBoxes[o + 1]) { y = textBoxes[o + 1] - u * 0.3f; hit = true }
-                                    }
-                                    if (!hit) break
-                                    tries++
-                                }
-                                if (nb < 24) { val o = nb * 4; textBoxes[o] = tx - hw; textBoxes[o + 1] = y - hh; textBoxes[o + 2] = tx + hw; textBoxes[o + 3] = y; nb++ }
-                                paint.color = android.graphics.Color.argb((a * 255).toInt(), (col.red * 255).toInt(), (col.green * 255).toInt(), (col.blue * 255).toInt())
-                                c.nativeCanvas.drawText(label, tx, y, paint)
-                            }
-                        }
+                        // messages « arcade » + comètes vers la carte de score (en haut à droite)
+                        fx.draw(this, g, Offset(size.width - 58.dp.toPx(), 38.dp.toPx()))
                         if (g.giant > 0) drawRect(V_GOLD.copy(alpha = 0.25f + 0.2f * sin(g.elapsed * 10f)), size = size, style = Stroke(u * 1.6f))
                         // éclair blanc de la bombe ; voile de sable pendant la tempête ; rafale de vent annoncée
                         if (g.flash > 0f) drawRect(Color.White.copy(alpha = (g.flash * 0.85f).coerceIn(0f, 1f)), size = size)
@@ -458,14 +431,14 @@ fun VroumScreen(onBack: () -> Unit) {
                         if (g.cannonT > 0f) drawRect(V_CYAN.copy(alpha = 0.15f + 0.1f * sin(g.elapsed * 14f)), size = size, style = Stroke(u * 1.2f))
                     }
                     BoostOverlay(g, tick)
-                    VroumHud(g, tick)
+                    VroumHud(g, tick, fx)
                     LaneHints(Modifier.align(Alignment.BottomCenter))
                     // BOOST (à tenir) à gauche, SAUT à droite ; la jauge de boost juste au-dessus
                     // (en paysage : dans le coin bas-droit, pour ne pas cacher le bolide au centre)
                     Column(Modifier.align(if (g.wide) Alignment.BottomEnd else Alignment.BottomCenter).padding(bottom = 20.dp, end = if (g.wide) 100.dp else 0.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         BoostBar(g, tick, Modifier.padding(bottom = 10.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(26.dp), verticalAlignment = Alignment.CenterVertically) {
-                            BoostButton(g, tick) { held -> g.boostHeld = held }
+                            BoostButton(g, tick) { g.tapBoost() }
                             JumpButton(cooldown = (g.jumpCd / g.JUMP_CD).coerceIn(0f, 1f), frame = tick) { glView.queueEvent { g.jump() } }
                         }
                     }
@@ -486,6 +459,7 @@ fun VroumScreen(onBack: () -> Unit) {
             }
         }
     }
+    }   // (police Rubik : CompositionLocalProvider)
 }
 
 // ---------------------------------------------------------------------------
@@ -634,7 +608,7 @@ private fun CountdownOverlay(count: Int, hint: Boolean = false, rocket: Boolean 
             label, color = if (count > 0) Color.White else if (boosted) V_CYAN else V_GOLD, fontWeight = FontWeight.ExtraBold,
             fontStyle = if (boosted) FontStyle.Italic else FontStyle.Normal,
             fontSize = if (count > 0) 120.sp else if (boosted) 40.sp else 64.sp, textAlign = TextAlign.Center, maxLines = 1,
-            style = androidx.compose.ui.text.TextStyle(shadow = androidx.compose.ui.graphics.Shadow(Color(0xCC000000), Offset(0f, 5f), 12f)),
+            style = androidx.compose.ui.text.TextStyle(fontFamily = VROUM_FONT, shadow = androidx.compose.ui.graphics.Shadow(Color(0xCC000000), Offset(0f, 5f), 12f)),
             modifier = Modifier.scale(scale.value)
         )
         // l'astuce du départ canon, glissée sous le « 1 » (les grands la lisent, les petits tombent dessus par hasard)
@@ -672,7 +646,7 @@ private fun ResultScreen(spr: VSprites, cleared: Boolean, score: Int, dist: Int,
             // titre : compact, ombre douce, largeur bornée (jamais coupé)
             Text(stringResource(if (cleared) R.string.vroum_stage_clear else if (timeUp) R.string.gz_time_up else R.string.vroum_out_of_fuel),
                 color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 26.sp, textAlign = TextAlign.Center, lineHeight = 30.sp,
-                style = androidx.compose.ui.text.TextStyle(shadow = androidx.compose.ui.graphics.Shadow(Color(0x66000000), Offset(0f, 4f), 10f)),
+                style = androidx.compose.ui.text.TextStyle(fontFamily = VROUM_FONT, shadow = androidx.compose.ui.graphics.Shadow(Color(0x66000000), Offset(0f, 4f), 10f)),
                 modifier = Modifier.fillMaxWidth(0.9f))
             Spacer(Modifier.height(10.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -680,7 +654,7 @@ private fun ResultScreen(spr: VSprites, cleared: Boolean, score: Int, dist: Int,
                     val on = i < stars && t > 0.4f + i * 0.35f
                     val pop = if (on) (1f + 0.5f * (1f - ((t - (0.4f + i * 0.35f)) / 0.25f).coerceIn(0f, 1f))) else 1f
                     Text("★", color = if (on) V_GOLD else Color.White.copy(alpha = 0.28f), fontSize = (if (i == 1) 54 else 42).sp, modifier = Modifier.scale(pop).padding(horizontal = 4.dp),
-                        style = androidx.compose.ui.text.TextStyle(shadow = androidx.compose.ui.graphics.Shadow(Color(0x55000000), Offset(0f, 3f), 6f)))
+                        style = androidx.compose.ui.text.TextStyle(fontFamily = VROUM_FONT, shadow = androidx.compose.ui.graphics.Shadow(Color(0x55000000), Offset(0f, 3f), 6f)))
                 }
             }
             if (cleared && frontImg != null) {
@@ -816,7 +790,7 @@ private fun DuelScreen(themeIdx: Int, vehicle: Int, onBack: () -> Unit) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("🏆", fontSize = 60.sp)
                 Text(stringResource(R.string.vroum_duel_wins, winner), color = V_GOLD, fontWeight = FontWeight.ExtraBold, fontSize = 28.sp, textAlign = TextAlign.Center,
-                    style = androidx.compose.ui.text.TextStyle(shadow = androidx.compose.ui.graphics.Shadow(Color(0xAA000000), Offset(0f, 2f), 8f)))
+                    style = androidx.compose.ui.text.TextStyle(fontFamily = VROUM_FONT, shadow = androidx.compose.ui.graphics.Shadow(Color(0xAA000000), Offset(0f, 2f), 8f)))
                 Spacer(Modifier.height(18.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     GlassButton("🔁  " + stringResource(R.string.replay)) { SoundEngine.playVroumUi(); winner = 0; runToken++ }
@@ -851,12 +825,12 @@ private fun DuelHalf(player: Int, g: VroumGame, v: VroumGlView, tick: Int) {
         }
         JumpButton(modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 14.dp), cooldown = (g.jumpCd / g.JUMP_CD).coerceIn(0f, 1f), frame = tick) { v.queueEvent { g.jump() } }
         if (g.introT > 0f) Text("${kotlin.math.ceil(g.introT.toDouble()).toInt().coerceIn(1, 3)}", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 60.sp,
-            modifier = Modifier.align(Alignment.Center), style = androidx.compose.ui.text.TextStyle(shadow = androidx.compose.ui.graphics.Shadow(Color(0xAA000000), Offset(0f, 3f), 8f)))
+            modifier = Modifier.align(Alignment.Center), style = androidx.compose.ui.text.TextStyle(fontFamily = VROUM_FONT, shadow = androidx.compose.ui.graphics.Shadow(Color(0xAA000000), Offset(0f, 3f), 8f)))
     }
 }
 
 @Composable
-private fun VroumHud(g: VroumGame, frame: Int) {
+private fun VroumHud(g: VroumGame, frame: Int, fx: VroumFx? = null) {
     @Suppress("UNUSED_EXPRESSION") frame   // force la recomposition à chaque image
     // Une seule rangée alignée sur le bouton retour (56 dp de haut, 10 dp de marge) : jauge d'essence
     // explicite (pompe + %), puis score / distance dans une même carte à droite.
@@ -866,9 +840,13 @@ private fun VroumHud(g: VroumGame, frame: Int) {
                 val s = g.timeLeft.toInt().coerceAtLeast(0)
                 Gauge(g.timeLeft / g.timeLimit, "⏱", "%d:%02d".format(s / 60, s % 60), V_CYAN, blink = s <= 10 && (g.elapsed * 4f).toInt() % 2 == 0, modifier = Modifier.width(150.dp).height(44.dp))
             } else FuelGauge(g.fuel, g.elapsed, modifier = Modifier.width(150.dp).height(44.dp))
-            Box(Modifier.clip(RoundedCornerShape(16.dp)).background(Color(0x77000000)).padding(horizontal = 12.dp, vertical = 5.dp)) {
+            // la carte de score ENCAISSE les gros gains : elle gonfle, s'illumine, et le compteur roule jusqu'au total
+            val punch = fx?.punch ?: 0f; val glow = fx?.glow ?: 0f
+            Box(Modifier.graphicsLayer { val k = 1f + 0.34f * punch; scaleX = k; scaleY = k; transformOrigin = androidx.compose.ui.graphics.TransformOrigin(1f, 0f) }
+                .clip(RoundedCornerShape(16.dp)).background(androidx.compose.ui.graphics.lerp(Color(0x77000000), Color(0xEEFFB300), (glow * 0.85f).coerceIn(0f, 1f)))
+                .border(2.dp, V_GOLD.copy(alpha = (0.25f + glow).coerceIn(0f, 1f)), RoundedCornerShape(16.dp)).padding(horizontal = 12.dp, vertical = 5.dp)) {
                 Column(horizontalAlignment = Alignment.End) {
-                    Text("${g.score}", color = V_GOLD, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
+                    Text("${(fx?.shown ?: g.score.toFloat()).toInt()}", color = androidx.compose.ui.graphics.lerp(V_GOLD, Color.White, (glow * 1.2f).coerceIn(0f, 1f)), fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = 24.sp)
                     Text("🏁 " + stringResource(R.string.vroum_distance, g.dist.toInt()), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                 }
             }
