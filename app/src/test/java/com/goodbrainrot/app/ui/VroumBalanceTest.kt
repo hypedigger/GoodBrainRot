@@ -250,6 +250,16 @@ class VroumBalanceTest {
         org.junit.Assert.assertTrue("le monster truck (poids 5) garde plus d'élan que la moto (poids 1)", crash(1) > crash(3) + 0.05f)
     }
     @Test
+    fun every_circuit_fires_its_set_piece_once_per_race() {
+        for (th in THEMES) {
+            val g = VroumGame(false, 0, 0, th, "T", "C", seed = 5L)
+            var steps = 0
+            while (!g.cleared && steps < 60 * 200) { steps++; g.update(1f / 60f); g.events.clear(); if (g.parts.size > 40) g.parts.clear() }
+            org.junit.Assert.assertTrue("circuit ${th.key} : pas arrivé", g.cleared)
+            org.junit.Assert.assertEquals("circuit ${th.key} : grand événement", 1, g.setsSeen)
+        }
+    }
+    @Test
     fun balance() {
         val n = 120
         val sb = StringBuilder("\n=== VROUM — équilibrage ($n parties par case) ===\n")

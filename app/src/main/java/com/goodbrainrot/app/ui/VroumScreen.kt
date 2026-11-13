@@ -180,6 +180,7 @@ fun VroumScreen(onBack: () -> Unit) {
         g.takedownLabel = vLabels[0]; g.strikeLabel = vLabels[1]; g.revengeLabel = vLabels[2]; g.stompLabel = vLabels[3]; g.crashLabel = vLabels[4]
         g.shoveLabel = vLabels[5]; g.ghostLabel = vLabels[6]; g.windLabel = vLabels[7]; g.weaponLabels = vLabels.subList(8, 13); g.rocketLabel = vLabels[13]
         g.finishLabel = vLabels[14]; g.draftLabel = vLabels[15]; g.stretchLabel = vLabels[16]; g.flipLabel = vLabels[17]
+        g.setDef?.let { d -> g.setLabel = ctx.getString(d.labelRes) }
     }
     val game = remember(runToken) {
         if (phase != VPhase.PLAYING) null
@@ -377,6 +378,14 @@ fun VroumScreen(onBack: () -> Unit) {
                         "posDown" -> SoundEngine.playVvTick(0.45f)
                         "draft" -> { SoundEngine.playTurbo(); Haptics.tap(ctx) }
                         "finalStretch" -> { GameMusic.setSpeed(1.13f); Sfx.play("vv_applause", 0.75f, 1.05f); SoundEngine.playVvFanfare() }
+                        // ---- Grand événement du circuit
+                        "set0" -> { Sfx.play("vv_accel", 0.9f, 0.8f); SoundEngine.playVvFanfare(); Haptics.tap(ctx) }
+                        "set1" -> { Sfx.play("vv_splash", 1f, 0.6f); Sfx.play("rumble", 0.8f, 1f); Haptics.success(ctx) }
+                        "set2" -> { Sfx.play("vv_roar", 1f, 0.85f); Haptics.success(ctx) }
+                        "set3" -> { Sfx.play("rumble", 1f, 0.9f); SoundEngine.playVvTick(0.5f); Haptics.success(ctx) }
+                        "setStep" -> { Sfx.play("vv_thud", 0.9f, 0.7f); Haptics.tap(ctx) }
+                        "bombFall" -> SoundEngine.playVvTick(0.45f)
+                        "bombHit" -> Sfx.play("vv_boom", 0.6f, 1.1f)
                         // ---- Mario Kart : boîtes à objets et armes
                         "box" -> SoundEngine.playPick(3)
                         "ramp" -> SoundEngine.playJump()

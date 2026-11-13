@@ -523,4 +523,19 @@
     <string name="vroum_stat_speed">Vitesse</string>
     <string name="vroum_stat_accel">Accélération</string>
     <string name="vroum_stat_weight">Poids</string>
+    <string name="vroum_set_trex">T-REX !</string>
+    <string name="vroum_set_whale">BALEINE !</string>
+    <string name="vroum_set_ufo">OVNI !</string>
+    <string name="vroum_set_balloon">MONTGOLFIÈRE !</string>
+    <string name="vroum_set_biplane">AVION !</string>
+    <string name="vroum_set_witch">SORCIÈRE !</string>
+    <string name="vroum_set_gorilla">GORILLE !</string>
+    <string name="vroum_set_dragon">DRAGON !</string>
+    <string name="vroum_set_blimp">DIRIGEABLE !</string>
+    <string name="vroum_set_jets">PATROUILLE !</string>
+    <string name="vroum_set_owl">HIBOU GÉANT !</string>
+    <string name="vroum_set_yeti">YÉTI !</string>
+    <string name="vroum_set_worm">VER DES SABLES !</string>
+    <string name="vroum_set_lava">PLUIE DE LAVE !</string>
+    <string name="vroum_set_avalanche">AVALANCHE !</string>
 </resources>

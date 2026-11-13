@@ -86,6 +86,7 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
         for (p in PASSENGER_KEYS) names.add("vv_$p")
         for (c in CHEER_KEYS) names.add("vv_$c")
         names.add("vv_fin_stand"); names.add("vv_fin_tyres")
+        game.setDef?.let { if (it.tex.isNotEmpty()) names.add(it.tex) }
         for (n in listOf("vv_fuel", "vv_star", "vv_turbo", "vv_puddle", "vv_flag", "vv_cannon", "vv_superboost", "vv_hole", "vv_log")) names.add(n)
         for (n in names.distinct()) loadTexture(n)?.let { tex[n] = it }
         // peinture du garage : le bolide du joueur a sa propre texture, teinte tournée
@@ -525,6 +526,31 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
                     else if (e.revenge) { bills.add(Bill(e.z - 0.02f, x, my, 1.3f, ring, 0.95f, 1f, 0.2f, 0.15f)); bills.add(Bill(e.z - 0.03f, x, my + 0.42f, 0.42f, disc, 1f, 1f, 0.2f, 0.15f)) }
                     else bills.add(Bill(e.z - 0.02f, x, my, 0.5f, disc, 0.9f, 1f, 0.6f, 0.1f))
                 }
+            }
+        }
+        // GRAND ÉVÉNEMENT : le géant (profil tourné vers la droite, retourné s'il passe dans l'autre sens) et son ombre sur la route
+        g.setDef?.let { def ->
+            if (g.setT >= 0f && def.kind != 3) {
+                val u = g.setT / g.setDur
+                val a = min(1f, min(u, 1f - u) * 9f)
+                val sx = g.xCenter(g.setZ) + g.setX; val gy = ground(g.setZ)
+                val t = tex[def.tex]
+                if (abs(g.setX) < g.roadHalfAt(g.dist + g.setZ) + def.width * 0.5f) bills.add(Bill(g.setZ + 0.03f, sx, gy, def.width * 0.9f, disc, 0.30f * a, 0f, 0f, 0f, squash = 0.5f, flat = true))
+                val tilt = when (def.kind) { 1 -> g.setDir * (0.5f - u) * -70f; 2 -> sin(g.setT * 7f) * 3f; else -> sin(g.setT * 2.2f) * 2.5f }
+                bills.add(Bill(g.setZ, sx, gy + g.setY, def.width, t, a, 1f, if (t == null) 0.8f else 1f, if (t == null) 0.3f else 1f, rot = tilt, flip = g.setDir < 0))
+            }
+            // pluie : disque rouge sur la voie visée, anneau qui se resserre, et le projectile qui tombe du ciel
+            for (b in g.bombs) {
+                if (b.z < 1.5f || b.z > VroumGame.Z_FAR) continue
+                val k = (b.t / VBomb.FALL).coerceIn(0f, 1f)
+                val x = g.xCenter(b.z) + g.laneX(b.lane.coerceIn(0, g.lanes - 1)); val gy = ground(b.z)
+                val pulse = 0.5f + 0.5f * sin(g.elapsed * 14f)
+                bills.add(Bill(b.z + 0.03f, x, gy, 3.4f, disc, 0.35f + 0.3f * pulse, 1f, 0.1f, 0.06f, squash = 0.9f, flat = true))
+                bills.add(Bill(b.z + 0.02f, x, gy, 6.5f - 3.6f * k, ring, 0.9f, 1f, 0.25f, 0.15f, squash = 0.9f, flat = true))
+                val py = gy + (1f - k * k) * 30f
+                bills.add(Bill(b.z, x, py, 2.6f, disc, 0.45f, def.r, def.g, def.b))
+                bills.add(Bill(b.z - 0.01f, x, py + 0.35f, 1.7f, disc, 1f, min(1f, def.r + 0.1f), min(1f, def.g + 0.35f), min(1f, def.b + 0.3f)))
+                bills.add(Bill(b.z + 0.01f, x, py + 2.2f, 1.3f, disc, 0.35f, def.r, def.g, def.b, stretch = 3f))
             }
         }
         // tirs des canons

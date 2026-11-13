@@ -1,5 +1,8 @@
 # Nouveautés — GoodBrainRot
 
+## 4.08 — 2026-11-14
+- **Vroum — un grand événement par circuit.** Vers le milieu de chaque course (et tous les 2 200 m en Arcade), le circuit a son moment « waouh », annoncé en grand : un **T-Rex géant**, un **gorille** ou un **yéti** traversent la route en faisant trembler l'écran à chaque pas ; une **baleine** ou un **ver des sables** la franchissent d'un bond ; une **montgolfière**, un **dirigeable**, une **soucoupe volante**, un **hibou géant**, un **dragon de fête**, une **sorcière**, un **avion** ou une **patrouille** la survolent. En passant, ils sèment une traînée de gros bonus sur les voies.
+- **Vroum — pluie de lave et avalanche.** Sur le volcan et la banquise, des projectiles tombent du ciel : un disque rouge et un anneau qui se resserre annoncent la voie visée une seconde et demie avant l'impact ; esquiver de près rapporte un bonus.
 ## 4.07 — 2026-11-13
 - **Vroum — figures en l'air.** Sur un ressort, un anneau doré s'allume autour du bouton SAUT : le retaper pendant le vol fait une **VRILLE** (le bolide tourne deux fois sur lui-même) qui remplit plus d'un demi-segment de boost. Une figure par saut.
 - **Vroum — ralenti sur les gros coups.** Un takedown ×3, un strike, une revanche ou une vrille déclenchent un court ralenti avec deux bandes de cinéma (au plus un toutes les 4 secondes).

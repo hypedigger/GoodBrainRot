@@ -523,4 +523,19 @@
     <string name="vroum_stat_speed">Velocidad</string>
     <string name="vroum_stat_accel">Aceleración</string>
     <string name="vroum_stat_weight">Peso</string>
+    <string name="vroum_set_trex">¡T-REX!</string>
+    <string name="vroum_set_whale">¡BALLENA!</string>
+    <string name="vroum_set_ufo">¡OVNI!</string>
+    <string name="vroum_set_balloon">¡GLOBO!</string>
+    <string name="vroum_set_biplane">¡AVIÓN!</string>
+    <string name="vroum_set_witch">¡BRUJA!</string>
+    <string name="vroum_set_gorilla">¡GORILA!</string>
+    <string name="vroum_set_dragon">¡DRAGÓN!</string>
+    <string name="vroum_set_blimp">¡DIRIGIBLE!</string>
+    <string name="vroum_set_jets">¡PATRULLA!</string>
+    <string name="vroum_set_owl">¡BÚHO GIGANTE!</string>
+    <string name="vroum_set_yeti">¡YETI!</string>
+    <string name="vroum_set_worm">¡GUSANO DE ARENA!</string>
+    <string name="vroum_set_lava">¡LLUVIA DE LAVA!</string>
+    <string name="vroum_set_avalanche">¡AVALANCHA!</string>
 </resources>

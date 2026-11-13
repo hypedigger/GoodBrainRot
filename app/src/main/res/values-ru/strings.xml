@@ -523,4 +523,19 @@
     <string name="vroum_stat_speed">Скорость</string>
     <string name="vroum_stat_accel">Разгон</string>
     <string name="vroum_stat_weight">Вес</string>
+    <string name="vroum_set_trex">ТИРАННОЗАВР!</string>
+    <string name="vroum_set_whale">КИТ!</string>
+    <string name="vroum_set_ufo">НЛО!</string>
+    <string name="vroum_set_balloon">ВОЗДУШНЫЙ ШАР!</string>
+    <string name="vroum_set_biplane">САМОЛЁТ!</string>
+    <string name="vroum_set_witch">ВЕДЬМА!</string>
+    <string name="vroum_set_gorilla">ГОРИЛЛА!</string>
+    <string name="vroum_set_dragon">ДРАКОН!</string>
+    <string name="vroum_set_blimp">ДИРИЖАБЛЬ!</string>
+    <string name="vroum_set_jets">ПАТРУЛЬ!</string>
+    <string name="vroum_set_owl">ГИГАНТСКАЯ СОВА!</string>
+    <string name="vroum_set_yeti">ЙЕТИ!</string>
+    <string name="vroum_set_worm">ПЕСЧАНЫЙ ЧЕРВЬ!</string>
+    <string name="vroum_set_lava">ЛАВОВЫЙ ДОЖДЬ!</string>
+    <string name="vroum_set_avalanche">ЛАВИНА!</string>
 </resources>

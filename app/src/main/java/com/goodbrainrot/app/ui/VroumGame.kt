@@ -753,6 +753,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         if (sputter >= 0f) { sputter += dt; if (sputter > 2.8f && !over) { over = true; ev("over") } }
         if (!endless && !cleared && dist >= LEVEL_LEN) {
             cleared = true; finishT = 0f; finishSpd = spd; finishTime = raceT
+            setT = -1f; bombs.clear()
             if (timeLimit > 0f) { timeBonus = (timeLeft * 40f).toInt() * (diff + 1); score += timeBonus }
             if (racers.isNotEmpty()) {
                 // la place est figée : ceux qui ont franchi la ligne avant nous sont devant, les autres finissent derrière
@@ -832,6 +833,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         }
 
         updateEnemies(dt, sp, racing)
+        updateSet(dt, dz, sp, racing)
 
         val pit = picks.iterator()
         while (pit.hasNext()) {
@@ -1019,6 +1021,64 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
             chain(); gainBoost(0.3f); addScore(40, laneX(e.lane), e.z, V_ORANGE)
             texts.add(VText(laneX(e.lane), 3.2f, e.z, shoveLabel, 0.9f, V_ORANGE, big = true))
             shake = max(shake, 7f); ev("shove")
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // GRAND ÉVÉNEMENT du circuit (voir VroumSets.kt) : une fois par Course vers le milieu, tous les 2 200 m en Arcade
+    // -----------------------------------------------------------------------
+    val setDef: VSetDef? = if (duel) null else VROUM_SETS[theme.key]
+    var setLabel = ""
+    /** secondes depuis le début de l'événement (-1 = rien) ; position du géant dans le repère de la caméra ; sens de passage */
+    var setT = -1f; var setX = 0f; var setY = 0f; var setZ = 0f; var setDir = 1
+    val setDur: Float get() = if (setDef?.kind == 3) 7.5f else 5.5f
+    val bombs = ArrayList<VBomb>()
+    var setsSeen = 0
+    private var nextSetAt = if (endless) 1300f else LEVEL_LEN * 0.42f
+    private var setStep = 0; private var setDrop = 0f; private var setLane = 0
+
+    private fun updateSet(dt: Float, dz: Float, sp: Float, racing: Boolean) {
+        val def = setDef ?: return
+        if (setT < 0f) {
+            if (racing && dist >= nextSetAt && !finalStretch) {
+                nextSetAt = if (endless) dist + 2200f else Float.MAX_VALUE
+                setT = 0f; setDir = if (rng.nextBoolean()) 1 else -1; setStep = 0; setDrop = 0.9f; setLane = rng.nextInt(lanes); setsSeen++
+                texts.add(VText(0f, 5.2f, 34f, setLabel, 2.2f, V_GOLD, big = true).also { it.style = 1 })
+                for (d in decor) if (d.cheer >= 0) d.arms = 6f
+                shake = max(shake, 10f); ev("set${def.kind}")
+            }
+        } else {
+            setT += dt
+            val u = (setT / setDur).coerceIn(0f, 1f)
+            when (def.kind) {
+                0 -> { setZ = 58f; setX = setDir * (-36f + 72f * u); setY = 9.5f + 1.2f * sin(setT * 3f) }
+                1 -> { setZ = 52f; setX = setDir * (-21f + 42f * u); setY = -5f + 15f * sin(PI.toFloat() * u) }
+                2 -> { setZ = 46f; setX = setDir * (-30f + 60f * u); setY = 0.6f * abs(sin(setT * 7f))
+                    val st = (setT / 0.45f).toInt()
+                    if (st != setStep) { setStep = st; shake = max(shake, 9f); burst(setX, setZ, 0.6f, 0.52f, 0.42f, 8); ev("setStep") } }
+            }
+            setDrop -= dt
+            if (def.kind != 3) {
+                // en passant au-dessus de la route, il sème une traînée de gros bonus, voie après voie
+                if (setDrop <= 0f && racing && abs(setX) < roadHalfFor(lanes) + 2f) { setDrop = 0.2f; setLane = (setLane + 1) % lanes; picks.add(VPick(setLane, setZ + 4f, VItem.BERRY, 0)) }
+            } else if (setDrop <= 0f && racing && setT < setDur - VBomb.FALL - 0.2f) {
+                // pluie : un projectile vise une voie (la nôtre une fois sur deux), annoncé par un disque rouge qui arrive sur nous
+                setDrop = if (diff == 0) 0.95f else if (diff == 1) 0.7f else 0.55f
+                val l = if (rng.nextFloat() < 0.5f) lane else rng.nextInt(lanes)
+                bombs.add(VBomb(l.coerceIn(0, lanes - 1), PLAYER_Z + max(sp, 12f) * VBomb.FALL)); ev("bombFall")
+            }
+            if (setT >= setDur) setT = -1f
+        }
+        val bit = bombs.iterator()
+        while (bit.hasNext()) {
+            val b = bit.next(); b.t += dt; b.z -= dz
+            if (b.t >= VBomb.FALL) {
+                bit.remove()
+                burst(laneX(b.lane.coerceIn(0, lanes - 1)), b.z, def.r, def.g, def.b, 16); shake = max(shake, 8f); ev("bombHit")
+                val onMe = b.lane in coveredLanes() && abs(b.z - PLAYER_Z) < 3.2f
+                if (onMe && !jumping && invuln <= 0f && giant == 0 && superT <= 0f) crash(VEnemy(b.lane, b.z, 0, 0f).also { it.boulder = true })
+                else if (!onMe && abs(b.z - PLAYER_Z) < 6f && abs(b.lane - lane) == 1 && racing) { chain(); gainBoost(0.12f); addScore(30, laneX(b.lane.coerceIn(0, lanes - 1)), b.z, V_PINK) }   // esquivé de près
+            } else if (b.z < 0.5f) bit.remove()
         }
     }
 
