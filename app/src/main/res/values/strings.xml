@@ -498,4 +498,13 @@
     <string name="vroum_final_stretch">FINAL STRETCH!</string>
     <string name="vroum_pts">%1$d pts</string>
     <string name="vroum_rival">RIVAL</string>
+    <string name="vroum_rank_0">Rookie</string>
+    <string name="vroum_rank_1">Driver</string>
+    <string name="vroum_rank_2">Ace</string>
+    <string name="vroum_rank_3">Champion</string>
+    <string name="vroum_rank_4">Superstar</string>
+    <string name="vroum_rank_5">Legend</string>
+    <string name="vroum_licence">Driver\'s licence</string>
+    <string name="vroum_unlock">Unlock  %1$d</string>
+    <string name="vroum_missing">%1$d more to go</string>
 </resources>

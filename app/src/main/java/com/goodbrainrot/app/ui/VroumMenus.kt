@@ -124,7 +124,7 @@ private fun MenuBackdrop(art: ImageBitmap?, glow: Color) {
 /** Bouton « console » : épais, avec une tranche sombre dessous ; il s'enfonce quand on appuie. */
 @Composable
 internal fun ChunkyButton(label: String, top: Color, bottom: Color, modifier: Modifier = Modifier, enabled: Boolean = true,
-                          height: Dp = 64.dp, fontSize: TextUnit = 24.sp, onClick: () -> Unit) {
+                          height: Dp = 64.dp, fontSize: TextUnit = 24.sp, trail: VIc? = null, onClick: () -> Unit) {
     var pressed by remember { mutableStateOf(false) }
     val dy by animateDpAsState(if (pressed) 6.dp else 0.dp, spring(stiffness = 1200f), label = "press")
     val shape = RoundedCornerShape(24.dp)
@@ -137,7 +137,10 @@ internal fun ChunkyButton(label: String, top: Color, bottom: Color, modifier: Mo
             // reflet en haut du bouton
             Box(Modifier.fillMaxWidth(0.92f).height(height * 0.42f).align(Alignment.TopCenter).padding(top = 5.dp).clip(RoundedCornerShape(18.dp))
                 .background(Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.28f), Color.Transparent))))
-            FitText(label, fontSize.value, weight = FontWeight.Black, italic = true, spacing = 1.5f, shadow = Shadow(Color(0x66000000), Offset(0f, 3f), 5f))
+            Row(Modifier.padding(horizontal = 14.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.weight(1f, fill = false)) { FitText(label, fontSize.value, weight = FontWeight.Black, italic = true, spacing = 1.5f, shadow = Shadow(Color(0x66000000), Offset(0f, 3f), 5f)) }
+                if (trail != null) VIcon(trail, (fontSize.value * 0.82f).dp, modifier = Modifier.padding(start = 6.dp))
+            }
         }
     }
 }
@@ -190,6 +193,8 @@ internal fun GarageScreen(spr: VSprites, vehicle: Int, colors: List<Color>, onBa
     LaunchedEffect(pager.settledPage) { if (pager.settledPage != vehicle) onPick(pager.settledPage) }
     LaunchedEffect(pager.currentPage) { strip.animateScrollToItem((pager.currentPage - 2).coerceAtLeast(0)) }
     val cur = pager.currentPage
+    val owned by Settings.vroumOwned; val look by Settings.vroumLook; val coins by Settings.vroumCoins
+    val curOwned = vroumOwnsVehicle(cur, owned); val curPrice = VROUM_VEHICLE_PRICE[VEHICLES[cur].key] ?: 0
     val bob = rememberInfiniteTransition(label = "bob").animateFloat(0f, 6.2832f, infiniteRepeatable(tween(2600, easing = LinearEasing)), label = "b").value
 
     // le bolide en grand sur son podium (carrousel) + flèches
@@ -210,9 +215,13 @@ internal fun GarageScreen(spr: VSprites, vehicle: Int, colors: List<Color>, onBa
                         drawOval(Color.White.copy(alpha = 0.16f), topLeft = Offset(c.x - size.width * 0.40f, c.y - size.width * 0.075f), size = Size(size.width * 0.80f, size.width * 0.15f))
                         drawOval(Color.Black.copy(alpha = 0.35f), topLeft = Offset(c.x - size.width * 0.26f, c.y - size.width * 0.035f), size = Size(size.width * 0.52f, size.width * 0.07f))
                     }
+                    val mine = vroumOwnsVehicle(page, owned)
                     if (img != null) Image(BitmapPainter(img), null, contentScale = ContentScale.Fit,
+                        colorFilter = if (mine) paintFilter(vroumPaintOf(page, look)) else androidx.compose.ui.graphics.ColorFilter.tint(Color(0xE6140F2B), androidx.compose.ui.graphics.BlendMode.SrcAtop),
                         modifier = Modifier.size(side * 0.86f).scale(1f - 0.32f * off).alpha(1f - 0.55f * off)
                             .offset(y = if (page == cur) (sin(bob) * 5f - 8f).dp else (-8).dp))
+                    // bolide pas encore acheté : silhouette + cadenas
+                    if (!mine) VIcon(VIc.LOCK, side * 0.2f, modifier = Modifier.alpha(1f - 0.7f * off))
                 }
             }
             ArrowButton(true, cur > 0, Modifier.align(Alignment.CenterStart).padding(start = 10.dp)) { scope.launch { pager.animateScrollToPage(cur - 1) } }
@@ -224,7 +233,9 @@ internal fun GarageScreen(spr: VSprites, vehicle: Int, colors: List<Color>, onBa
         Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             FitText(stringResource(VEHICLES[cur].nameRes).uppercase(), 32f, weight = FontWeight.Black, italic = true, spacing = 1f, shadow = TITLE_SHADOW)
             Box(Modifier.padding(top = 4.dp).size(width = 86.dp, height = 6.dp).clip(CircleShape).background(Brush.horizontalGradient(listOf(colors[cur], V_GOLD))))
-            Text("${cur + 1} / ${VEHICLES.size}", color = Color.White.copy(alpha = 0.6f), fontWeight = FontWeight.Bold, fontSize = 13.sp, modifier = Modifier.padding(top = 6.dp))
+            // à moi : peintures et traînées de boost ; sinon son prix
+            if (curOwned) GarageLook(cur, spr.paintBase[cur], onBought = { SoundEngine.playVroumUi() }, onRefused = { SoundEngine.playVvTick(0.5f) }, modifier = Modifier.padding(top = 8.dp))
+            else CoinChip(curPrice, Modifier.padding(top = 10.dp, bottom = 6.dp))
         }
     }
     // tous les bolides d'un coup d'œil : on tape pour y aller directement
@@ -238,29 +249,39 @@ internal fun GarageScreen(spr: VSprites, vehicle: Int, colors: List<Color>, onBa
                     .background(if (sel) Brush.verticalGradient(listOf(colors[i], lerpColor(colors[i], Color.Black, 0.35f))) else Brush.verticalGradient(listOf(M_GLASS, M_GLASS)))
                     .border(if (sel) 3.dp else 1.dp, if (sel) Color.White else Color.White.copy(alpha = 0.25f), RoundedCornerShape(18.dp))
                     .clickableNoRipple { scope.launch { pager.animateScrollToPage(i) } }, contentAlignment = Alignment.Center) {
-                    (spr.fronts.getOrNull(i) ?: spr.vehicles.getOrNull(i))?.let { Image(BitmapPainter(it), null, Modifier.fillMaxSize().padding(7.dp), contentScale = ContentScale.Fit) }
+                    val mine = vroumOwnsVehicle(i, owned)
+                    (spr.fronts.getOrNull(i) ?: spr.vehicles.getOrNull(i))?.let { Image(BitmapPainter(it), null, Modifier.fillMaxSize().padding(7.dp), contentScale = ContentScale.Fit,
+                        colorFilter = if (mine) paintFilter(vroumPaintOf(i, look)) else androidx.compose.ui.graphics.ColorFilter.tint(Color(0xD9140F2B), androidx.compose.ui.graphics.BlendMode.SrcAtop)) }
+                    if (!mine) VIcon(VIc.LOCK, 18.dp)
                 }
             }
         }
+    }
+    // SUIVANT si le bolide est à moi ; sinon DÉBLOQUER (assez de pièces) ou ce qu'il manque
+    val action: @Composable (Modifier) -> Unit = { m ->
+        if (curOwned) ChunkyButton(stringResource(R.string.vroum_next).uppercase(), V_GREEN, V_TEAL, trail = VIc.RIGHT, modifier = m, onClick = onNext)
+        else if (coins >= curPrice) ChunkyButton(stringResource(R.string.vroum_unlock, curPrice).uppercase(), Color(0xFFFFC83D), Color(0xFFE08A00), trail = VIc.COIN, modifier = m) {
+            if (Settings.buyVroum("v_${VEHICLES[cur].key}", curPrice)) { SoundEngine.playVvFanfare(); onPick(cur) } }
+        else ChunkyButton(stringResource(R.string.vroum_missing, curPrice - coins).uppercase(), Color(0xFF8A8AA0), Color(0xFF5A5A70), trail = VIc.COIN, modifier = m, enabled = false) { }
     }
     Box(Modifier.fillMaxSize()) {
         MenuBackdrop(spr.title, colors[cur])
         BoxWithConstraints(Modifier.fillMaxSize()) {
             if (maxWidth > maxHeight) Column(Modifier.fillMaxSize()) {
                 // paysage : le bolide à gauche, le reste à droite
-                MenuHeader(title ?: stringResource(R.string.vroum_choose), 2, onBack)
+                MenuHeader(title ?: stringResource(R.string.vroum_choose), 2, onBack) { CoinChip(coins) }
                 Row(Modifier.fillMaxSize()) {
                     hero(Modifier.weight(1.1f).fillMaxHeight())
                     Column(Modifier.weight(1f).fillMaxHeight().padding(end = 8.dp), verticalArrangement = Arrangement.Center) {
                         name(); thumbs()
-                        ChunkyButton(stringResource(R.string.vroum_next).uppercase() + "  ▶", V_GREEN, V_TEAL, Modifier.fillMaxWidth().padding(start = 22.dp, end = 22.dp, top = 16.dp, bottom = 10.dp), onClick = onNext)
+                        action(Modifier.fillMaxWidth().padding(start = 22.dp, end = 22.dp, top = 12.dp, bottom = 10.dp))
                     }
                 }
             } else Column(Modifier.fillMaxSize()) {
-                MenuHeader(title ?: stringResource(R.string.vroum_choose), 2, onBack)
+                MenuHeader(title ?: stringResource(R.string.vroum_choose), 2, onBack) { CoinChip(coins) }
                 hero(Modifier.fillMaxWidth().weight(1f))
                 name(); thumbs()
-                ChunkyButton(stringResource(R.string.vroum_next).uppercase() + "  ▶", V_GREEN, V_TEAL, Modifier.fillMaxWidth().padding(start = 22.dp, end = 22.dp, top = 16.dp, bottom = 18.dp), onClick = onNext)
+                action(Modifier.fillMaxWidth().padding(start = 22.dp, end = 22.dp, top = 12.dp, bottom = 18.dp))
             }
         }
     }
@@ -521,7 +542,7 @@ private fun PlayersButton(n: Int, label: String, selected: Boolean, enabled: Boo
 }
 
 @Composable
-internal fun ModeSelectScreen(spr: VSprites, mode: VMode, players: Int, onMode: (VMode) -> Unit, onPlayers: (Int) -> Unit, onBack: () -> Unit, onNext: () -> Unit) {
+internal fun ModeSelectScreen(spr: VSprites, vehicle: Int, mode: VMode, players: Int, onMode: (VMode) -> Unit, onPlayers: (Int) -> Unit, onBack: () -> Unit, onNext: () -> Unit) {
     val unlocked by Settings.vroumEndlessUnlocked
     val glow = when (mode) { VMode.CUP -> V_GOLD; VMode.RACE -> V_PINK; VMode.ARCADE -> V_CYAN }
     Box(Modifier.fillMaxSize()) {
@@ -543,18 +564,19 @@ internal fun ModeSelectScreen(spr: VSprites, mode: VMode, players: Int, onMode: 
                         PlayersButton(1, stringResource(R.string.vroum_players_1), players == 1 || mode != VMode.RACE, true, Modifier.weight(1f)) { onPlayers(1) }
                         PlayersButton(2, stringResource(R.string.vroum_duel), players == 2 && mode == VMode.RACE, mode == VMode.RACE, Modifier.weight(1f)) { onPlayers(2) }
                     }
-                    ChunkyButton(stringResource(R.string.vroum_next).uppercase() + "  ▶", V_GREEN, V_TEAL, Modifier.fillMaxWidth().padding(top = 14.dp), onClick = onNext)
+                    ChunkyButton(stringResource(R.string.vroum_next).uppercase(), V_GREEN, V_TEAL, trail = VIc.RIGHT, modifier = Modifier.fillMaxWidth().padding(top = 14.dp), onClick = onNext)
                 }
             }
             if (landscape) Column(Modifier.fillMaxSize()) {
                 MenuHeader(stringResource(R.string.vroum_pick_mode), 1, onBack)
                 Row(Modifier.fillMaxSize().padding(start = 16.dp, end = 20.dp, bottom = 14.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     cards(Modifier.weight(1.2f).fillMaxHeight())
-                    Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.Center) { bottom(Modifier.fillMaxWidth()) }
+                    Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.Center) { LicenceCard(spr, vehicle, Modifier.fillMaxWidth().padding(bottom = 14.dp)); bottom(Modifier.fillMaxWidth()) }
                 }
             } else Column(Modifier.fillMaxSize()) {
                 MenuHeader(stringResource(R.string.vroum_pick_mode), 1, onBack)
-                cards(Modifier.fillMaxWidth().weight(1f).padding(start = 16.dp, end = 16.dp, top = 14.dp))
+                LicenceCard(spr, vehicle, Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 10.dp))
+                cards(Modifier.fillMaxWidth().weight(1f).padding(start = 16.dp, end = 16.dp, top = 12.dp))
                 bottom(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 18.dp))
             }
         }
@@ -740,7 +762,7 @@ internal fun CupResultScreen(spr: VSprites, cupIdx: Int, stars: IntArray, scores
 }
 
 /** Texte sur UNE ligne, jamais coupé : la taille part de [maxSp] et rétrécit tant que le texte déborde (« CHOISIS TON
- *  BOLIDE », « Résultats de la coupe ▶ »… tiennent aussi sur un petit téléphone et dans les langues longues). */
+ *  BOLIDE », « Résultats de la coupe »… tiennent aussi sur un petit téléphone et dans les langues longues). */
 @Composable
 internal fun FitText(text: String, maxSp: Float, color: Color = Color.White, weight: FontWeight = FontWeight.ExtraBold, italic: Boolean = false,
                      spacing: Float = 0f, shadow: Shadow? = null, modifier: Modifier = Modifier) {

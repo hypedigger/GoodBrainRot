@@ -1,5 +1,10 @@
 # Nouveautés — GoodBrainRot
 
+## 4.05 — 2026-11-13
+- **Vroum — garage à débloquer.** Les pièces ramassées en course (plus une prime selon la place) remplissent un **porte-monnaie**. Quatre bolides sont offerts ; les huit autres s'achètent (de 150 à 1 300 pièces) : dans le garage, un bolide verrouillé apparaît en silhouette avec son cadenas et son prix. Cadeau de bienvenue : 100 pièces, plus 20 par étoile déjà gagnée.
+- **Vroum — peintures et traînées.** Sous le nom du bolide, deux rangées de pastilles : six **peintures** (le bolide change de teinte dans le garage, en course et sur le podium) et cinq **traînées de boost** (feu, toxique, bonbon, or, arc-en-ciel).
+- **Vroum — permis de pilote.** Le cumul des pièces gagnées donne un **rang** (Apprenti, Pilote, As du volant, Champion, Superstar, Légende), affiché sur un permis illustré à l'écran des modes ; un nouveau rang s'annonce à l'arrivée, où les pièces de la course roulent dans le total.
+- **Vroum — pictogrammes dessinés.** Tous les émojis du jeu (drapeau, trophée, rejouer, carte, éclair, pompe, chrono, fantôme, flèches du tutoriel) sont remplacés par des pictogrammes dessinés, identiques sur tous les téléphones.
 ## 4.04 — 2026-11-13
 - **Vroum — de vraies positions de course.** En Course et en Championnat, on ne court plus contre le chrono mais contre **7 concurrents** : on part dernier sur la grille, la place s'affiche en grand (« 3e / 8 ») et saute en vert quand on double, en rouge quand on est doublé. Les concurrents roulent leur propre course, contournent le trafic, se font sortir par un takedown (ils perdent du temps) et apparaissent sur la frise d'arrivée. On finit toujours la course : reste à la finir devant. 1er = 3 étoiles, podium = 2.
 - **Vroum — podium.** À l'arrivée, la place en très gros et un **podium animé** : le 3e, le 2e puis le vainqueur montent sur leur marche, une flèche dorée désigne ton bolide.

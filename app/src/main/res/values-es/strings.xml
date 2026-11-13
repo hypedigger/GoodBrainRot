@@ -489,4 +489,13 @@
     <string name="vroum_final_stretch">¡RECTA FINAL!</string>
     <string name="vroum_pts">%1$d pts</string>
     <string name="vroum_rival">RIVAL</string>
+    <string name="vroum_rank_0">Aprendiz</string>
+    <string name="vroum_rank_1">Piloto</string>
+    <string name="vroum_rank_2">As del volante</string>
+    <string name="vroum_rank_3">Campeón</string>
+    <string name="vroum_rank_4">Superestrella</string>
+    <string name="vroum_rank_5">Leyenda</string>
+    <string name="vroum_licence">Carné de piloto</string>
+    <string name="vroum_unlock">Desbloquear  %1$d</string>
+    <string name="vroum_missing">Faltan %1$d</string>
 </resources>

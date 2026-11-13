@@ -118,6 +118,8 @@ internal class VSprites(private val ctx: android.content.Context) {
     val vehicles = VEHICLES.map { load("vr_${it.key}") ?: load("vv_${it.key}") }
     /** bolides vus de FACE (garage, photo finish) ; null si le sprite n'existe pas encore */
     val fronts = VEHICLES.map { load("vf_${it.key}") }
+    /** couleur dominante de chaque bolide (base des pastilles de peinture du garage) */
+    val paintBase: List<Color> by lazy { VEHICLES.indices.map { i -> dominantColor(fronts[i] ?: vehicles[i]) } }
     /** icônes des objets (case d'objet du HUD) */
     val items = VWeapon.values().associateWith { if (it.tex.isEmpty()) null else load(it.tex) }
     val title = load("vv_title"); val village = load("vv_village"); val empty = load("vv_empty")
@@ -183,6 +185,7 @@ fun VroumScreen(onBack: () -> Unit) {
             // le RIVAL de la coupe colle à notre score : il pousse si on le distance au classement, il lève le pied s'il s'envole
             rivalBoost = if (mode == VMode.CUP) 1f + ((cupPts[7] - cupPts[0]) / 8f).coerceIn(-1f, 1f) * 0.025f else 1f).also { g ->
             applyLabels(g)
+            g.trail = vroumTrailIdx(Settings.vroumLook.value); g.paintHue = vroumPaintOf(vehicle, Settings.vroumLook.value).hue
             // charge le fantôme pour ce circuit / cette difficulté : meilleur temps en Course, distance max en Arcade
             Settings.vroumGhost(if (endless) "${THEMES[themeIdx].key}_a$diff" else "${THEMES[themeIdx].key}_$diff")?.let { s ->
                 val p = s.split(";")
@@ -231,6 +234,8 @@ fun VroumScreen(onBack: () -> Unit) {
     var resTimeUp by remember { mutableStateOf(false) }
     var resTakedowns by remember { mutableIntStateOf(0) }
     var resPlace by remember { mutableIntStateOf(0) }
+    var resCoins by remember { mutableIntStateOf(0) }
+    var resRankUp by remember { mutableIntStateOf(-1) }
     var resResults by remember { mutableStateOf<List<VResult>>(emptyList()) }
     fun startCupField() {
         cupCast = VEHICLES.indices.filter { it != vehicle }.shuffled(Random(cupIdx * 131L + vehicle * 7L + diff)).take(7).toIntArray()
@@ -241,6 +246,11 @@ fun VroumScreen(onBack: () -> Unit) {
         resScore = g.score; resDist = if (cleared) VroumGame.LEVEL_LEN.toInt() else g.dist.toInt(); resCleared = cleared; resTimeUp = g.timeUp; resTakedowns = g.takedowns
         val raced = cleared && g.racers.isNotEmpty()
         resPlace = if (raced) g.place else 0; resResults = if (raced) g.raceResults() else emptyList()
+        // pièces de la course : ramassées + prime de place ; elles alimentent le garage et le rang de pilote
+        resCoins = vroumRaceCoins(g.coins, resPlace, g.endless, g.dist.toInt())
+        val rankBefore = vroumRank(Settings.vroumCoinsTotal.intValue)
+        Settings.addVroumCoins(resCoins)
+        resRankUp = vroumRank(Settings.vroumCoinsTotal.intValue).let { if (it > rankBefore) it else -1 }
         val best = HighScores.best(gameKey)
         // le mode Facile (invincible) n'entre pas au tableau des records
         resRecord = g.diff >= 1 && g.score > 0 && g.score > best
@@ -400,7 +410,7 @@ fun VroumScreen(onBack: () -> Unit) {
     androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalTextStyle provides androidx.compose.material3.LocalTextStyle.current.copy(fontFamily = VROUM_FONT)) {
     Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF7FD4FF), Color(0xFFB39DFF))))) {
         when (phase) {
-            VPhase.MODE -> ModeSelectScreen(spr, mode, players,
+            VPhase.MODE -> ModeSelectScreen(spr, vehicle, mode, players,
                 onMode = { SoundEngine.playVroumUi(); mode = it; if (it != VMode.RACE) players = 1 },
                 onPlayers = { SoundEngine.playVroumUi(); players = it }, onBack = onBack,
                 onNext = { SoundEngine.playVroumUi(); endless = mode == VMode.ARCADE; duelMode = mode == VMode.RACE && players == 2; garageStep = 1; phase = VPhase.SELECT })
@@ -513,7 +523,7 @@ fun VroumScreen(onBack: () -> Unit) {
             }
             VPhase.CLEAR, VPhase.END -> {
                 ResultScreen(spr, cleared = resCleared, score = resScore, dist = resDist, record = resRecord, endless = endless, diff = diff, timeUp = resTimeUp, takedowns = resTakedowns,
-                    place = resPlace, results = resResults, standings = if (mode == VMode.CUP && cupRows.isNotEmpty()) cupRows else null,
+                    place = resPlace, results = resResults, coins = resCoins, wallet = Settings.vroumCoins.intValue, rankUp = resRankUp, standings = if (mode == VMode.CUP && cupRows.isNotEmpty()) cupRows else null,
                     vehicleImg = spr.vehicles.getOrNull(vehicle), frontImg = spr.fronts.getOrNull(vehicle), best = HighScores.best(gameKey), bg = if (themeIdx == 0) spr.village else spr.cards.getOrNull(themeIdx),
                     onReplay = {
                         SoundEngine.playVroumUi()
@@ -537,7 +547,7 @@ fun VroumScreen(onBack: () -> Unit) {
 
 /** Bouton secondaire « verre » (translucide, liseré clair), texte sur UNE ligne. */
 @Composable
-private fun GlassButton(label: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+private fun GlassButton(label: String, modifier: Modifier = Modifier, icon: VIc? = null, onClick: () -> Unit) {
     val press = remember { Animatable(1f) }
     val scope = rememberCoroutineScope()
     Box(
@@ -546,11 +556,16 @@ private fun GlassButton(label: String, modifier: Modifier = Modifier, onClick: (
             .pointerInput(Unit) { detectTapGestures(onPress = { scope.launch { press.snapTo(0.94f); press.animateTo(1f, spring(dampingRatio = 0.45f, stiffness = 600f)) }; onClick(); tryAwaitRelease() }) }
             .padding(vertical = 13.dp, horizontal = 8.dp),
         contentAlignment = Alignment.Center
-    ) { FitText(label, 15f) }
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (icon != null) VIcon(icon, 17.dp, modifier = Modifier.padding(end = 7.dp))
+            Box(Modifier.weight(1f, fill = false)) { FitText(label, 15f) }
+        }
+    }
 }
 
 @Composable
-private fun PillButton(label: String, colors: List<Color>, enabled: Boolean = true, wide: Boolean = false, onClick: () -> Unit) {
+private fun PillButton(label: String, colors: List<Color>, enabled: Boolean = true, wide: Boolean = false, icon: VIc? = null, trail: VIc? = null, onClick: () -> Unit) {
     val press = remember { Animatable(1f) }
     val scope = rememberCoroutineScope()
     Box(
@@ -569,7 +584,11 @@ private fun PillButton(label: String, colors: List<Color>, enabled: Boolean = tr
             .padding(horizontal = 22.dp, vertical = 16.dp),
         contentAlignment = Alignment.Center
     ) {
-        FitText(label, 20f)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (icon != null) VIcon(icon, 22.dp, modifier = Modifier.padding(end = 9.dp))
+            Box(Modifier.weight(1f, fill = false)) { FitText(label, 20f) }
+            if (trail != null) VIcon(trail, 18.dp, modifier = Modifier.padding(start = 6.dp))
+        }
     }
 }
 
@@ -693,7 +712,8 @@ private fun CountdownOverlay(count: Int, hint: Boolean = false, rocket: Boolean 
 @Composable
 private fun ResultScreen(spr: VSprites, cleared: Boolean, score: Int, dist: Int, record: Boolean, endless: Boolean, diff: Int, timeUp: Boolean, takedowns: Int, vehicleImg: ImageBitmap?, frontImg: ImageBitmap?, best: Int, bg: ImageBitmap?,
                          onReplay: () -> Unit, onOther: () -> Unit, onVehicle: () -> Unit, cupLine: String? = null, nextLabel: String? = null,
-                         place: Int = 0, results: List<VResult> = emptyList(), standings: List<VStandRow>? = null) {
+                         place: Int = 0, results: List<VResult> = emptyList(), standings: List<VStandRow>? = null,
+                         coins: Int = 0, wallet: Int = 0, rankUp: Int = -1) {
     val stars = vroumStarCount(endless, cleared, score, dist, diff, place)
     var t by remember { mutableStateOf(0f) }
     LaunchedEffect(Unit) { var last = 0L; while (t < 30f) { val now = withFrameNanos { it }; if (last != 0L) t += (now - last) / 1e9f; last = now } }
@@ -774,28 +794,42 @@ private fun ResultScreen(spr: VSprites, cleared: Boolean, score: Int, dist: Int,
                 .background(Brush.verticalGradient(listOf(Color(0xF7FFFFFF), Color(0xE6F4F1FF)))).padding(horizontal = 22.dp, vertical = if (place > 0) 8.dp else 16.dp)) {
                 Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("$shownScore", color = V_INK, fontWeight = FontWeight.ExtraBold, fontSize = (if (place > 0) 34 else 44).sp, lineHeight = (if (place > 0) 36 else 46).sp)
-                    FitText("🏁 " + stringResource(R.string.vroum_distance, dist) + (if (takedowns > 0) "   ·   " + stringResource(R.string.vroum_res_takedowns, takedowns) else ""),
+                    FitText(stringResource(R.string.vroum_distance, dist) + (if (takedowns > 0) "   ·   " + stringResource(R.string.vroum_res_takedowns, takedowns) else ""),
                         15f, color = V_INK.copy(alpha = 0.65f), weight = FontWeight.Bold)
                     if (record && t > 1.5f) Box(Modifier.padding(top = 8.dp).clip(RoundedCornerShape(14.dp)).background(Brush.horizontalGradient(listOf(V_PINK, V_ORANGE))).padding(horizontal = 14.dp, vertical = 5.dp)) {
-                        Text("🏆 " + stringResource(R.string.new_high_score), color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 13.sp, maxLines = 1)
-                    } else if (best > 0) Text("🏆 $best", color = V_INK.copy(alpha = 0.55f), fontWeight = FontWeight.Bold, fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp))
+                        Text(stringResource(R.string.new_high_score), color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 13.sp, maxLines = 1)
+                    } else if (best > 0) Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                        VIcon(VIc.TROPHY, 15.dp, Color(0xFFD08A00)); Text(" $best", color = V_INK.copy(alpha = 0.55f), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    }
                 }
             }
             Spacer(Modifier.weight(1f))
             // actions : un bouton principal plein, deux boutons « verre » de même taille dessous (texte sur une ligne)
             if (nextLabel != null) {
                 // championnat : un seul bouton, on enchaîne (course suivante, puis bilan de la coupe)
-                Box(Modifier.fillMaxWidth(0.82f)) { PillButton(nextLabel + "  ▶", listOf(V_PINK, V_ORANGE), wide = true, onClick = onReplay) }
+                Box(Modifier.fillMaxWidth(0.82f)) { PillButton(nextLabel, listOf(V_PINK, V_ORANGE), wide = true, trail = VIc.RIGHT, onClick = onReplay) }
                 Spacer(Modifier.height(if (standings != null) 12.dp else 58.dp))
             } else {
-            Box(Modifier.fillMaxWidth(0.82f)) { PillButton("🔁  " + stringResource(R.string.replay), listOf(V_GREEN, V_TEAL), wide = true, onClick = onReplay) }
+            Box(Modifier.fillMaxWidth(0.82f)) { PillButton(stringResource(R.string.replay), listOf(V_GREEN, V_TEAL), wide = true, icon = VIc.REPLAY, onClick = onReplay) }
             Spacer(Modifier.height(10.dp))
             Row(Modifier.fillMaxWidth(0.82f), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                GlassButton("🗺  " + stringResource(R.string.vroum_route), Modifier.weight(1f), onClick = onOther)
-                GlassButton("🚗  " + stringResource(R.string.vroum_vehicle), Modifier.weight(1f), onClick = onVehicle)
+                GlassButton(stringResource(R.string.vroum_route), Modifier.weight(1f), icon = VIc.MAP, onClick = onOther)
+                GlassButton(stringResource(R.string.vroum_vehicle), Modifier.weight(1f), icon = VIc.WHEEL, onClick = onVehicle)
             }
             }
             Spacer(Modifier.height(6.dp))
+        }
+        // porte-monnaie : les pièces de la course roulent dans le total ; un nouveau rang de pilote s'annonce dessous
+        if (coins > 0) Column(Modifier.align(Alignment.TopEnd).padding(top = 12.dp, end = 12.dp), horizontalAlignment = Alignment.End) {
+            val k = ((t - 0.9f) / 0.9f).coerceIn(0f, 1f)
+            CoinChip(wallet - coins + (coins * k).toInt())
+            Text("+$coins", color = V_GOLD, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = 15.sp, modifier = Modifier.padding(end = 6.dp).alpha(1f - ((t - 2.4f) / 0.5f).coerceIn(0f, 1f)),
+                style = androidx.compose.ui.text.TextStyle(fontFamily = VROUM_FONT, shadow = androidx.compose.ui.graphics.Shadow(Color(0xAA000000), Offset(0f, 2f), 4f)))
+            if (rankUp >= 0 && t > 1.6f) Row(Modifier.scale(1f + 0.4f * (1f - ((t - 1.6f) / 0.3f).coerceIn(0f, 1f))).clip(RoundedCornerShape(12.dp)).background(VROUM_RANK_COLORS[rankUp]).padding(horizontal = 8.dp, vertical = 3.dp),
+                verticalAlignment = Alignment.CenterVertically) {
+                VIcon(VIc.STAR, 13.dp, Color.White)
+                Text(" " + stringResource(VROUM_RANK_NAMES[rankUp]), color = Color.White, fontWeight = FontWeight.Black, fontSize = 13.sp, maxLines = 1, style = androidx.compose.ui.text.TextStyle(fontFamily = VROUM_FONT))
+            }
         }
         if (cleared && frontImg != null && place == 0 && t < 0.45f) Box(Modifier.fillMaxSize().background(Color.White.copy(alpha = 0.9f * (1f - t / 0.45f))))
     }
@@ -814,7 +848,6 @@ private fun Illustration(img: ImageBitmap?) {
 @Composable
 private fun VroumTutoOverlay(step: Int) {
     val txt = when (step) { 0 -> stringResource(R.string.vroum_tuto_lane); 1 -> stringResource(R.string.vroum_tuto_jump); else -> stringResource(R.string.vroum_tuto_boost) }
-    val icon = when (step) { 0 -> "👈      👉"; 1 -> "⬇️"; else -> "🍄 ⛽ 💨  ✅      🕳 🪵  ❌" }
     val pulse by rememberInfiniteTransition(label = "tuto").animateFloat(0.96f, 1.05f, infiniteRepeatable(tween(500), RepeatMode.Reverse), label = "tutoP")
     Box(Modifier.fillMaxSize()) {
         Column(
@@ -824,10 +857,16 @@ private fun VroumTutoOverlay(step: Int) {
             Box(Modifier.clip(RoundedCornerShape(22.dp)).background(Color(0xDD241A45)).border(2.dp, V_GOLD, RoundedCornerShape(22.dp)).padding(horizontal = 20.dp, vertical = 12.dp)) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(txt, color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 17.sp, textAlign = TextAlign.Center)
-                    Text(icon, fontSize = 24.sp, modifier = Modifier.padding(top = 4.dp))
+                    Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        when (step) {
+                            0 -> { VIcon(VIc.LEFT, 26.dp, V_GOLD); Spacer(Modifier.width(34.dp)); VIcon(VIc.RIGHT, 26.dp, V_GOLD) }
+                            1 -> VIcon(VIc.DOWN, 24.dp, V_GOLD)
+                            else -> { VIcon(VIc.COIN, 24.dp); VIcon(VIc.BOLT, 24.dp); VIcon(VIc.CHECK, 24.dp); Spacer(Modifier.width(22.dp)); VIcon(VIc.CROSS, 24.dp) }
+                        }
+                    }
                 }
             }
-            if (step == 1) Text("⬇", color = V_GOLD, fontSize = 30.sp, fontWeight = FontWeight.ExtraBold)
+            if (step == 1) VIcon(VIc.DOWN, 30.dp, V_GOLD)
         }
     }
 }
@@ -846,8 +885,8 @@ private fun DuelScreen(themeIdx: Int, vehicle: Int, vehicle2: Int, spr: VSprites
     val veh2 = vehicle2      // chacun a choisi son bolide au garage
     // même graine : les deux joueurs ont exactement la même route, c'est la conduite qui fait la différence
     val seed = remember(runToken) { Random.nextLong() }
-    val g1 = remember(runToken) { VroumGame(false, vehicle, 0, THEMES[themeIdx], trickLabel, cannonLabel, duel = true, seed = seed).also(labels) }
-    val g2 = remember(runToken) { VroumGame(false, veh2, 0, THEMES[themeIdx], trickLabel, cannonLabel, duel = true, seed = seed).also(labels) }
+    val g1 = remember(runToken) { VroumGame(false, vehicle, 0, THEMES[themeIdx], trickLabel, cannonLabel, duel = true, seed = seed).also(labels).also { it.paintHue = vroumPaintOf(it.vehicle, Settings.vroumLook.value).hue; it.trail = vroumTrailIdx(Settings.vroumLook.value) } }
+    val g2 = remember(runToken) { VroumGame(false, veh2, 0, THEMES[themeIdx], trickLabel, cannonLabel, duel = true, seed = seed).also(labels).also { it.paintHue = vroumPaintOf(it.vehicle, Settings.vroumLook.value).hue; it.trail = vroumTrailIdx(Settings.vroumLook.value) } }
     val v1 = remember(g1) { VroumGlView(ctx, g1) }
     val v2 = remember(g2) { VroumGlView(ctx, g2) }
     DisposableEffect(v1, v2) { onDispose { v1.onPause(); v2.onPause() } }
@@ -892,13 +931,13 @@ private fun DuelScreen(themeIdx: Int, vehicle: Int, vehicle2: Int, spr: VSprites
         BackButton(onBack = onBack, modifier = Modifier.align(Alignment.TopStart))
         if (winner != 0) Box(Modifier.fillMaxSize().background(Color(0xB3000000)), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("🏆", fontSize = 60.sp)
+                VIcon(VIc.TROPHY, 76.dp)
                 Text(stringResource(R.string.vroum_duel_wins, winner), color = V_GOLD, fontWeight = FontWeight.ExtraBold, fontSize = 28.sp, textAlign = TextAlign.Center,
                     style = androidx.compose.ui.text.TextStyle(fontFamily = VROUM_FONT, shadow = androidx.compose.ui.graphics.Shadow(Color(0xAA000000), Offset(0f, 2f), 8f)))
                 Spacer(Modifier.height(18.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    GlassButton("🔁  " + stringResource(R.string.replay)) { SoundEngine.playVroumUi(); winner = 0; runToken++ }
-                    GlassButton("🗺  " + stringResource(R.string.vroum_route)) { SoundEngine.playVroumUi(); onBack() }
+                    GlassButton(stringResource(R.string.replay), icon = VIc.REPLAY) { SoundEngine.playVroumUi(); winner = 0; runToken++ }
+                    GlassButton(stringResource(R.string.vroum_route), icon = VIc.MAP) { SoundEngine.playVroumUi(); onBack() }
                 }
             }
         }
@@ -927,7 +966,7 @@ private fun DuelHalf(player: Int, g: VroumGame, v: VroumGlView, tick: Int, spr: 
                 Box(Modifier.fillMaxSize().clip(RoundedCornerShape(5.dp)).background(Color(0x66000000)))
                 Box(Modifier.fillMaxWidth((g.dist / VroumGame.LEVEL_LEN).coerceIn(0.02f, 1f)).fillMaxHeight().clip(RoundedCornerShape(5.dp)).background(col))
             }
-            Text(" 🏁", fontSize = 14.sp)
+            VIcon(VIc.FLAG, 15.dp, modifier = Modifier.padding(start = 4.dp))
         }
         // mêmes messages « arcade » qu'en solo (takedowns, rebonds…) et éclair de la bombe
         Canvas(Modifier.fillMaxSize()) {
@@ -960,7 +999,7 @@ private fun VroumHud(g: VroumGame, frame: Int, fx: VroumFx? = null) {
             if (g.racers.isNotEmpty()) PlaceBadge(g, frame, Modifier.height(48.dp))
             else if (g.timeLimit > 0f) {
                 val s = g.timeLeft.toInt().coerceAtLeast(0)
-                Gauge(g.timeLeft / g.timeLimit, "⏱", "%d:%02d".format(s / 60, s % 60), V_CYAN, blink = s <= 10 && (g.elapsed * 4f).toInt() % 2 == 0, modifier = Modifier.width(150.dp).height(44.dp))
+                Gauge(g.timeLeft / g.timeLimit, VIc.CLOCK, "%d:%02d".format(s / 60, s % 60), V_CYAN, blink = s <= 10 && (g.elapsed * 4f).toInt() % 2 == 0, modifier = Modifier.width(150.dp).height(44.dp))
             } else FuelGauge(g.fuel, g.elapsed, modifier = Modifier.width(150.dp).height(44.dp))
             // la carte de score ENCAISSE les gros gains : elle gonfle, s'illumine, et le compteur roule jusqu'au total
             val punch = fx?.punch ?: 0f; val glow = fx?.glow ?: 0f
@@ -969,7 +1008,7 @@ private fun VroumHud(g: VroumGame, frame: Int, fx: VroumFx? = null) {
                 .border(2.dp, V_GOLD.copy(alpha = (0.25f + glow).coerceIn(0f, 1f)), RoundedCornerShape(16.dp)).padding(horizontal = 12.dp, vertical = 5.dp)) {
                 Column(horizontalAlignment = Alignment.End) {
                     Text("${(fx?.shown ?: g.score.toFloat()).toInt()}", color = androidx.compose.ui.graphics.lerp(V_GOLD, Color.White, (glow * 1.2f).coerceIn(0f, 1f)), fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = 24.sp)
-                    Text("🏁 " + stringResource(R.string.vroum_distance, g.dist.toInt()), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    Text(stringResource(R.string.vroum_distance, g.dist.toInt()), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                 }
             }
         }
@@ -985,10 +1024,10 @@ private fun VroumHud(g: VroumGame, frame: Int, fx: VroumFx? = null) {
                     for (k in 1..3) Box(Modifier.fillMaxWidth(k / 4f)) { Box(Modifier.align(Alignment.CenterEnd).size(4.dp, 12.dp).background(Color.White.copy(alpha = 0.7f))) }
                     RacerDots(g, frame)
                     // fantôme du meilleur temps : son avancée sur la même frise
-                    if (g.ghostFrac >= 0f) Box(Modifier.fillMaxWidth(g.ghostFrac.coerceAtLeast(0.02f))) { Text("👻", fontSize = 12.sp, modifier = Modifier.align(Alignment.CenterEnd).offset(x = 6.dp, y = (-1).dp).alpha(0.85f)) }
-                    Box(Modifier.fillMaxWidth(frac.coerceAtLeast(0.02f))) { Text("🚗", fontSize = 13.sp, modifier = Modifier.align(Alignment.CenterEnd).offset(x = 6.dp, y = (-1).dp)) }
+                    if (g.ghostFrac >= 0f) Box(Modifier.fillMaxWidth(g.ghostFrac.coerceAtLeast(0.02f))) { VIcon(VIc.GHOST, 13.dp, Color(0xFFBFE6FF), Modifier.align(Alignment.CenterEnd).offset(x = 6.dp, y = (-1).dp).alpha(0.9f)) }
+                    Box(Modifier.fillMaxWidth(frac.coerceAtLeast(0.02f))) { Box(Modifier.align(Alignment.CenterEnd).offset(x = 6.dp).size(13.dp).clip(RoundedCornerShape(7.dp)).background(Color.White).padding(2.5.dp).clip(RoundedCornerShape(5.dp)).background(V_PINK)) }
                 }
-                Text(" 🏁", fontSize = 15.sp)
+                VIcon(VIc.FLAG, 16.dp, modifier = Modifier.padding(start = 5.dp))
                 Box(Modifier.padding(start = 4.dp).clip(RoundedCornerShape(10.dp)).background(Color(0x66000000)).padding(horizontal = 8.dp, vertical = 2.dp)) {
                     Text(if (left <= 300 && (g.elapsed * 3f).toInt() % 2 == 0) stringResource(R.string.vroum_finish_soon) else stringResource(R.string.vroum_distance, left),
                         color = if (left <= 300) V_GOLD else Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 12.sp, maxLines = 1)
@@ -1000,7 +1039,7 @@ private fun VroumHud(g: VroumGame, frame: Int, fx: VroumFx? = null) {
         Row(Modifier.fillMaxWidth(if (g.wide) 0.46f else 1f).padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             val hot = g.flow >= 0.999f
             Row(Modifier.width(150.dp).height(30.dp).clip(RoundedCornerShape(15.dp)).background(Color(0x77000000)).padding(start = 8.dp, end = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("⚡", fontSize = 14.sp, modifier = Modifier.padding(end = 5.dp))
+                VIcon(VIc.BOLT, 15.dp, modifier = Modifier.padding(end = 5.dp))
                 Box(Modifier.weight(1f).height(10.dp).clip(RoundedCornerShape(5.dp)).background(Color(0x55FFFFFF))) {
                     Box(Modifier.fillMaxWidth(g.flow.coerceIn(0.02f, 1f)).fillMaxHeight().background(
                         if (hot && (g.elapsed * 6f).toInt() % 2 == 0) Brush.horizontalGradient(listOf(Color.White, V_GOLD)) else Brush.horizontalGradient(listOf(V_CYAN, V_GOLD, V_ORANGE))))
@@ -1025,14 +1064,14 @@ private fun VroumHud(g: VroumGame, frame: Int, fx: VroumFx? = null) {
 private fun FuelGauge(fuel: Float, t: Float, modifier: Modifier) {
     val f = (fuel / 100f).coerceIn(0f, 1f)
     val col = when { f > 0.5f -> V_GREEN; f > 0.25f -> V_ORANGE; else -> V_RED }
-    Gauge(f, "⛽", "${(f * 100).toInt()}%", col, blink = f <= 0.25f && ((t * 4f).toInt() % 2 == 0), modifier = modifier)
+    Gauge(f, VIc.FUEL, "${(f * 100).toInt()}%", col, blink = f <= 0.25f && ((t * 4f).toInt() % 2 == 0), modifier = modifier)
 }
 
 /** Jauge générique (icône + barre + valeur) : essence, ou chrono en mode Facile. */
 @Composable
-private fun Gauge(frac: Float, icon: String, label: String, col: Color, blink: Boolean, modifier: Modifier) {
+private fun Gauge(frac: Float, icon: VIc, label: String, col: Color, blink: Boolean, modifier: Modifier) {
     Row(modifier.clip(RoundedCornerShape(22.dp)).background(Color(0x77000000)).padding(start = 8.dp, end = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(icon, fontSize = 20.sp, modifier = Modifier.padding(end = 6.dp))
+        VIcon(icon, 20.dp, modifier = Modifier.padding(end = 6.dp))
         Box(Modifier.weight(1f).height(16.dp).clip(RoundedCornerShape(8.dp)).background(Color(0x55FFFFFF))) {
             Box(Modifier.fillMaxWidth(frac.coerceIn(0f, 1f)).fillMaxHeight().background(if (blink) Color.White else col))
         }

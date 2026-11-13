@@ -489,4 +489,13 @@
     <string name="vroum_final_stretch">ФИНИШНАЯ ПРЯМАЯ!</string>
     <string name="vroum_pts">%1$d очк.</string>
     <string name="vroum_rival">СОПЕРНИК</string>
+    <string name="vroum_rank_0">Новичок</string>
+    <string name="vroum_rank_1">Пилот</string>
+    <string name="vroum_rank_2">Ас</string>
+    <string name="vroum_rank_3">Чемпион</string>
+    <string name="vroum_rank_4">Суперзвезда</string>
+    <string name="vroum_rank_5">Легенда</string>
+    <string name="vroum_licence">Права пилота</string>
+    <string name="vroum_unlock">Открыть  %1$d</string>
+    <string name="vroum_missing">Не хватает %1$d</string>
 </resources>

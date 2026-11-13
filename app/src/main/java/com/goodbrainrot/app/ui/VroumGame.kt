@@ -363,6 +363,9 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
     /** multiplicateur de points : il monte avec la SÉRIE (pièces, frôlements, takedowns, rebonds), un accident la casse */
     val mult: Int get() = when { combo >= 40 -> 5; combo >= 24 -> 4; combo >= 12 -> 3; combo >= 5 -> 2; else -> 1 }
     var nearCount = 0; var bumpCount = 0; var takedowns = 0; var revenges = 0
+    var coins = 0                   // pièces ramassées (1, 2 ou 3 par objet) : la monnaie du garage
+    var trail = 0                   // traînée de boost choisie (indice dans VTRAILS)
+    var paintHue = 0f               // peinture du bolide (rotation de teinte, degrés)
     var dist = 0f
     var elapsed = 0f
     var nextFlag = 500f
@@ -666,7 +669,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
             val x = lx * LANE_M; val gy = groundY(dist + PLAYER_Z)
             repeat(if (boostLevel == 2 || boosting) 3 else 2) {
                 val k = Random.nextFloat()
-                val (cr, cg, cb) = if (boostLevel == 2) rainbow(elapsed * 3f + k) else if (boosting) Triple(0.35f + 0.65f * k, 0.55f + 0.4f * k, 1f) else Triple(0.3f + 0.7f * k, 0.6f + 0.3f * k, 1f)
+                val (cr, cg, cb) = if (boostLevel == 2) rainbow(elapsed * 3f + k) else if (boosting) VTRAILS[trail].let { t -> if (t.rainbow) rainbow(elapsed * 2f + k) else Triple(t.a.red + (t.b.red - t.a.red) * k, t.a.green + (t.b.green - t.a.green) * k, t.a.blue + (t.b.blue - t.a.blue) * k) } else Triple(0.3f + 0.7f * k, 0.6f + 0.3f * k, 1f)
                 parts.add(VPart(x + (Random.nextFloat() - 0.5f) * 1.4f, gy + 0.3f + Random.nextFloat() * 0.8f, PLAYER_Z - 1.2f, (Random.nextFloat() - 0.5f) * 2f, 1.5f + Random.nextFloat() * 2f, 0.3f + Random.nextFloat() * 0.25f, 0.5f, cr, cg, cb, 0.3f + Random.nextFloat() * 0.35f, floaty = true))
             }
         }
@@ -717,7 +720,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
             if (trait.wind) {
                 if (windT > 0f) { windT -= dt; if (windT <= 0f) { windT = -1f; if (!jumping && giant == 0) { val n = (lane + windDir).coerceIn(laneLo, laneHi); if (n != lane) { lane = n; slideT = 0.5f; slideDir = windDir; ev("wind") } } } }
                 else if (raceT > nextWindAt) { nextWindAt = raceT + 9f + Random.nextFloat() * 7f; windT = 1.3f; windDir = if (Random.nextBoolean()) 1 else -1
-                    texts.add(VText(0f, 5f, 34f, (if (windDir < 0) "◀◀ " else "") + windLabel + (if (windDir > 0) " ▶▶" else ""), 1.3f, V_CYAN, big = true)); ev("windWarn") }
+                    texts.add(VText(0f, 5f, 34f, (if (windDir < 0) "« " else "") + windLabel + (if (windDir > 0) " »" else ""), 1.3f, V_CYAN, big = true)); ev("windWarn") }
             }
         }
         if (sputter >= 0f) { sputter += dt; if (sputter > 2.8f && !over) { over = true; ev("over") } }
@@ -1415,6 +1418,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
     }
 
     private fun coin(n: Int, flowGain: Float, x: Float, z: Float, evName: String, r: Float, g: Float, b: Float) {
+        coins += n / 10
         chain(); gainFlow(flowGain); gainBoost(0.004f * n / 10f)
         addScore(n * trait.coinMul, x, z, V_GOLD); ev(evName); burst(x, z, r, g, b, 6)
     }

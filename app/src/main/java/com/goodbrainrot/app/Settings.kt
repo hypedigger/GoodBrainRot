@@ -63,6 +63,11 @@ object Settings {
 
     // Jardinier Zen : pièces, paliers d'outils débloqués (manuel / électrique), outil actif, streak
     val gardenCoins = mutableIntStateOf(0)
+    // Vroum : porte-monnaie (pièces gagnées en course), cumul à vie (rang de pilote), achats du garage, apparence choisie
+    val vroumCoins = mutableIntStateOf(0)
+    val vroumCoinsTotal = mutableIntStateOf(0)
+    val vroumOwned = mutableStateOf<Set<String>>(emptySet())
+    val vroumLook = mutableStateOf<Map<String, String>>(emptyMap())      // "paint_<bolide>" -> peinture, "trail" -> traînée
     val gardenManualTier = mutableIntStateOf(0)      // 0..5 = dernier palier acheté (0 = coupe-ongles)
     val gardenElectricTier = mutableIntStateOf(-1)   // -1 = filière pas encore ouverte
     val gardenActiveTool = mutableIntStateOf(0)      // 0..5 manuel, 10..15 électrique
@@ -121,6 +126,11 @@ object Settings {
             val p = e.split(":"); if (p.size == 2) p[1].toIntOrNull()?.let { p[0] to it } else null
         }.toMap()
         gardenCoins.intValue = sp.getInt("garden_coins", 0)
+        // première ouverture du garage : cadeau de bienvenue, plus 20 pièces par étoile déjà gagnée dans Vroum
+        if (!sp.contains("vroum_coins")) { val gift = 100 + 20 * vroumStars.value.values.sum(); sp.edit().putInt("vroum_coins", gift).putInt("vroum_coins_total", gift).apply() }
+        vroumCoins.intValue = sp.getInt("vroum_coins", 0); vroumCoinsTotal.intValue = sp.getInt("vroum_coins_total", 0)
+        vroumOwned.value = (sp.getString("vroum_owned", "") ?: "").split("|").filter { it.isNotEmpty() }.toSet()
+        vroumLook.value = (sp.getString("vroum_look", "") ?: "").split("|").mapNotNull { e -> val q = e.split(":"); if (q.size == 2) q[0] to q[1] else null }.toMap()
         gardenManualTier.intValue = sp.getInt("garden_manual", 0)
         gardenElectricTier.intValue = sp.getInt("garden_electric", -1)
         gardenActiveTool.intValue = sp.getInt("garden_tool", 0)
@@ -239,6 +249,23 @@ object Settings {
         sp.edit().putString("garden_prec", m.entries.joinToString("|") { "${it.key}:${it.value}" }).apply()
     }
 
+    fun addVroumCoins(n: Int) {
+        if (n <= 0) return
+        vroumCoins.intValue += n; vroumCoinsTotal.intValue += n
+        sp.edit().putInt("vroum_coins", vroumCoins.intValue).putInt("vroum_coins_total", vroumCoinsTotal.intValue).apply()
+    }
+    /** Achat du garage : débite le porte-monnaie et mémorise l'objet ; false s'il manque des pièces. */
+    fun buyVroum(key: String, price: Int): Boolean {
+        if (key in vroumOwned.value) return true
+        if (vroumCoins.intValue < price) return false
+        vroumCoins.intValue -= price; vroumOwned.value = vroumOwned.value + key
+        sp.edit().putInt("vroum_coins", vroumCoins.intValue).putString("vroum_owned", vroumOwned.value.joinToString("|")).apply()
+        return true
+    }
+    fun setVroumLook(k: String, v: String) {
+        val m = vroumLook.value.toMutableMap(); m[k] = v; vroumLook.value = m
+        sp.edit().putString("vroum_look", m.entries.joinToString("|") { "${it.key}:${it.value}" }).apply()
+    }
     fun setVroumTutoSeen(value: Boolean) {
         vroumTutoSeen.value = value
         sp.edit().putBoolean("vroum_tuto_seen", value).apply()

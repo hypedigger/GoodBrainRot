@@ -88,6 +88,9 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
         names.add("vv_fin_stand"); names.add("vv_fin_tyres")
         for (n in listOf("vv_fuel", "vv_star", "vv_turbo", "vv_puddle", "vv_flag", "vv_cannon", "vv_superboost", "vv_hole", "vv_log")) names.add(n)
         for (n in names.distinct()) loadTexture(n)?.let { tex[n] = it }
+        // peinture du garage : le bolide du joueur a sa propre texture, teinte tournée
+        if (game.paintHue != 0f) { val k = VEHICLES[game.vehicle].key
+            loadTexture("vr_$k", game.paintHue)?.let { tex["me"] = it }; loadTexture("vr_${k}_cannon", game.paintHue)?.let { tex["me_cannon"] = it } }
         Matrix.setIdentityM(ident, 0)
         GLES20.glEnable(GLES20.GL_BLEND)
         // Les bitmaps Android sont PRÉ-MULTIPLIÉS (GLUtils les envoie tels quels) : blending (1, 1-a).
@@ -612,8 +615,8 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
             val blink = g.invuln <= 0f || ((g.invuln * 14f).toInt() % 2 == 0)
             if (blink) {
                 val key = VEHICLES[g.vehicle].key
-                val cannonTex = if (g.cannonT > 0f) tex["vr_${key}_cannon"] else null
-                val vt = cannonTex ?: tex["vr_$key"]
+                val cannonTex = if (g.cannonT > 0f) tex["me_cannon"] ?: tex["vr_${key}_cannon"] else null
+                val vt = cannonTex ?: tex["me"] ?: tex["vr_$key"]
                 val (cr, cg, cb) = if (vt == null) VEHICLE_RGB[g.vehicle % VEHICLE_RGB.size] else Triple(1f, 1f, 1f)
                 // nuit : phares (nappe lumineuse au sol devant le bolide)
                 if (g.theme.night) bills.add(Bill(z + 5.5f, x, gy, 5.2f, disc, 0.32f, 1f, 0.95f, 0.72f, squash = 1f, stretch = 2.4f, flat = true))
@@ -886,14 +889,14 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST)
         return ids[0]
     }
-    private fun loadTexture(name: String): Tex? {
+    private fun loadTexture(name: String, hue: Float = 0f): Tex? {
         val id = ctx.resources.getIdentifier(name, "drawable", ctx.packageName)
         if (id == 0) return null
         val opts = BitmapFactory.Options().apply { inScaled = false; inPreferredConfig = Bitmap.Config.ARGB_8888 }
         val src = BitmapFactory.decodeResource(ctx.resources, id, opts) ?: return null
         var pot = 64; while (pot < max(src.width, src.height)) pot *= 2
         val padded = Bitmap.createBitmap(pot, pot, Bitmap.Config.ARGB_8888)
-        Canvas(padded).drawBitmap(src, 0f, 0f, null)
+        Canvas(padded).drawBitmap(src, 0f, 0f, if (hue == 0f) null else android.graphics.Paint().apply { colorFilter = android.graphics.ColorMatrixColorFilter(hueMatrix(hue)) })
         val ids = IntArray(1); GLES20.glGenTextures(1, ids, 0)
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, ids[0])
         GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, padded, 0)
