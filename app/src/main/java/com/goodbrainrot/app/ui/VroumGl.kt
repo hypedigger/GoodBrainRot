@@ -363,16 +363,18 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
             val ck = checker; val pole = checkerPole
             if (fz > 1.5f && fz < VroumGame.Z_FAR + 20f && ck != null && pole != null) {
                 val xc = g.xCenter(fz); val gy = ground(fz)
+                // l'arche s'efface en passant au-dessus de la caméra (sinon son damier remplit l'écran une fraction de seconde)
+                val fa = ((fz - 2.5f) / 6f).coerceIn(0f, 1f)
                 bills.add(Bill(fz, xc, gy + 0.03f, half * 2f, ck, 1f, 1f, 1f, 1f, squash = 0.62f, flat = true))
                 val bw = half * 2f + 3.0f
                 for (side in intArrayOf(-1, 1)) {
                     val px = xc + side * (half + 0.9f)
-                    bills.add(Bill(fz, px, gy, 1.15f, pole, 1f, 1f, 1f, 1f))
+                    bills.add(Bill(fz, px, gy, 1.15f, pole, fa, 1f, 1f, 1f))
                     for (i in 0 until 3) { val c = g.rainbow(i * 0.31f + (if (side > 0) 0.5f else 0f))
-                        bills.add(Bill(fz - 0.05f, px + (i - 1) * 0.75f, gy + 7.4f + (if (i == 1) 0.7f else 0f) + 0.25f * sin(g.elapsed * 3f + i + side), 1.25f, disc, 1f, c.first, c.second, c.third)) }
+                        bills.add(Bill(fz - 0.05f, px + (i - 1) * 0.75f, gy + 7.4f + (if (i == 1) 0.7f else 0f) + 0.25f * sin(g.elapsed * 3f + i + side), 1.25f, disc, fa, c.first, c.second, c.third)) }
                 }
-                bills.add(Bill(fz - 0.02f, xc, gy + 5.05f, bw, null, 1f, 1f, 0.78f, 0.12f, squash = 2.5f / bw))      // cadre doré
-                bills.add(Bill(fz - 0.03f, xc, gy + 5.25f, bw - 0.4f, ck, 1f, 1f, 1f, 1f, squash = 2.1f / ((bw - 0.4f) * ck.aspect)))
+                bills.add(Bill(fz - 0.02f, xc, gy + 5.05f, bw, null, fa, 1f, 0.78f, 0.12f, squash = 2.5f / bw))      // cadre doré
+                bills.add(Bill(fz - 0.03f, xc, gy + 5.25f, bw - 0.4f, ck, fa, 1f, 1f, 1f, squash = 2.1f / ((bw - 0.4f) * ck.aspect)))
             }
             val wz = fz + VroumGame.END_WALL
             if (wz > 1.5f && wz < VroumGame.Z_FAR + 20f) {
@@ -381,7 +383,10 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
                 if (st != null) for (i in -1..1) bills.add(Bill(wz + 0.6f, xw + i * 10.4f, gw + 0.5f, 11f, st, 1f, 1f, 1f, 1f))
                 if (ty != null) for (i in -1..1) bills.add(Bill(wz - 1.2f, xw + i * 7.4f, gw, 7.6f, ty, 1f, 1f, 1f, 1f))
                 else for (i in -6..6) bills.add(Bill(wz - 1.2f, xw + i * 1.6f, gw, 1.6f, null, 1f, if (i % 2 == 0) 0.92f else 1f, if (i % 2 == 0) 0.2f else 1f, if (i % 2 == 0) 0.2f else 1f, squash = 0.7f))
-                if (ck != null) bills.add(Bill(wz + 0.7f, xw, gw + (if (st != null) 11f * st.aspect + 0.7f else 5f), 22f, ck, 1f, 1f, 1f, 1f, squash = 0.7f))
+                // au-dessus des tribunes : une guirlande de fanions (PAS de damier ici : le seul damier, c'est la ligne)
+                val top = gw + (if (st != null) 11f * st.aspect + 1.0f else 5f)
+                for (i in -8..8) { val c = g.rainbow(i * 0.21f + 0.1f)
+                    bills.add(Bill(wz + 0.7f, xw + i * 1.9f, top + 0.35f * kotlin.math.abs(sin(i * 1.3f)) + 0.12f * sin(g.elapsed * 4f + i), 1.15f, null, 1f, c.first, c.second, c.third, rot = 45f)) }
                 for (i in 0 until 8) { val c = g.rainbow(i * 0.137f)
                     bills.add(Bill(wz + 0.2f, xw + (i - 3.5f) * 3.1f, gw + 6.4f + 0.9f * sin(g.elapsed * 2.2f + i * 1.7f) + (i % 2) * 1.1f, 1.5f, disc, 1f, c.first, c.second, c.third)) }
             }
@@ -585,7 +590,7 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
             val pw = 2.15f * (cover.last - cover.first + 1) * wf
             val x = g.xCenter(z) + g.lx * VroumGame.LANE_M
             val gy = ground(z)
-            val lift = jf * 3.2f
+            val lift = jf * g.jumpH
             val vkey = VEHICLES[g.vehicle].key
             val walker = vkey in WALKER_KEYS                  // lion, t-rex, ours : foulée (jambes)
             val flyer = vkey == "dragon"                      // dragon : battement d'ailes

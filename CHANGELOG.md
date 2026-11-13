@@ -1,5 +1,11 @@
 # Nouveautés — GoodBrainRot
 
+## 4.03 — 2026-11-13
+- **Vroum — sauts courts et vifs.** Le saut est un petit bond de kart, presque deux fois plus rapide et un peu moins haut : on retombe sur la voiture qui roule juste devant. Après un écrasement, le rebond vise tout seul la voiture suivante de la file. La pause entre deux sauts est réduite de moitié ; les ressorts gardent leur grand saut.
+- **Vroum — arrivée.** On franchit l'arche lancé, puis le bolide freine et s'arrête au pied des tribunes, au bout de la route (il s'arrêtait sous l'arche, dont le damier remplissait l'écran). Le second damier du fond est remplacé par une guirlande de fanions : le seul damier, c'est la ligne. Le décor ordinaire passe derrière les tribunes.
+- **Vroum — décors.** Les grands décors (grange et moulin de la ferme, tours, châteaux…) ne mordent plus sur la route : leur distance au bord tient compte de leur largeur, sur les 20 circuits et après l'élargissement en paysage.
+- **Vroum — musiques.** Cinq nouveaux morceaux pour les circuits qui tournaient sur la musique par défaut : Forêt, Forêt de nuit, Centre-ville, Chantier et Grand Prix. La course à 2 joueurs joue maintenant la musique du circuit.
+- Les libellés des boutons (« Course suivante », « Résultats de la coupe »…) rétrécissent au lieu d'être coupés sur les petits écrans.
 ## 4.02 — 2026-11-13
 - **Vroum — menu façon Mario Kart.** On choisit d'abord le **mode de jeu** (Championnat, Course, Arcade) et le **nombre de joueurs** quand le mode le permet, puis le **bolide**, puis la **coupe** ou le **circuit**. En 2 joueurs, chacun choisit maintenant son bolide.
 - **Vroum — mode Championnat.** Cinq **coupes de quatre courses** enchaînées : Noisette (forêt, nuit, ferme, plage), Soleil (canyon, jungle, dinosaures, volcan), Flocon (neige, banquise, nuages, bonbons), Néon (centre-ville, Tokyo, cyber, chantier) et Étoile (océan, manoir, étoiles, Grand Prix). Chaque course rapporte jusqu'à 3 étoiles ; à la fin, un écran de coupe affiche les quatre courses, le total et une **note globale sur 3 étoiles**, mémorisée par coupe et par difficulté.

@@ -167,13 +167,19 @@ internal val THEMES = listOf(
         listOf("vv_cy_p1", "vv_cy_p2", "vv_cy_p3"), 8, logTex = "vv_cy_gate", trait = VTrait(gates = true), tip = R.string.vroum_tip_cyber),
 )
 
-/** Musique de course du circuit (ressource raw) ; les circuits sans ambiance propre gardent la synthwave d'origine. */
+/** Musique de course du circuit (ressource raw) : chaque circuit a la sienne ou celle de sa famille ; la synthwave
+ *  d'origine ne sert plus que de repli (fichier manquant). */
 internal fun vroumMusicKey(themeKey: String): String = when (themeKey) {
     "beach", "ocean", "jungle" -> "vv_m_tropic"
     "desert", "dino", "volcano", "farm" -> "vv_m_west"
     "snow", "ice", "sky", "candy" -> "vv_m_frost"
     "tokyo", "cyber", "space" -> "vv_m_neon"
     "spooky" -> "vv_m_spooky"
+    "forest" -> "vv_m_woods"
+    "night" -> "vv_m_night"
+    "city" -> "vv_m_city"
+    "works" -> "vv_m_works"
+    "circuit" -> "vv_m_gp"
     else -> "vv_synth"
 }
 

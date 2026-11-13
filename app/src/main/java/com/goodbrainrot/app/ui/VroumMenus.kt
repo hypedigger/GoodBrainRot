@@ -137,8 +137,7 @@ internal fun ChunkyButton(label: String, top: Color, bottom: Color, modifier: Mo
             // reflet en haut du bouton
             Box(Modifier.fillMaxWidth(0.92f).height(height * 0.42f).align(Alignment.TopCenter).padding(top = 5.dp).clip(RoundedCornerShape(18.dp))
                 .background(Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.28f), Color.Transparent))))
-            Text(label, color = Color.White, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = fontSize, letterSpacing = 1.5.sp,
-                maxLines = 1, style = TextStyle(fontFamily = VROUM_FONT, shadow = Shadow(Color(0x66000000), Offset(0f, 3f), 5f)))
+            FitText(label, fontSize.value, weight = FontWeight.Black, italic = true, spacing = 1.5f, shadow = Shadow(Color(0x66000000), Offset(0f, 3f), 5f))
         }
     }
 }
@@ -150,8 +149,7 @@ private fun MenuHeader(title: String, step: Int, onBack: () -> Unit, trailing: @
     Row(Modifier.fillMaxWidth().padding(end = 16.dp), verticalAlignment = Alignment.CenterVertically) {
         BackButton(onBack = onBack)
         Column(Modifier.weight(1f)) {
-            Text(title.uppercase(), color = Color.White, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = 25.sp, letterSpacing = 1.sp,
-                maxLines = 1, overflow = TextOverflow.Ellipsis, style = TextStyle(fontFamily = VROUM_FONT, shadow = TITLE_SHADOW))
+            FitText(title.uppercase(), 25f, weight = FontWeight.Black, italic = true, spacing = 1f, shadow = TITLE_SHADOW)
             // étapes : ● ○  /  ● ●
             Row(Modifier.padding(top = 3.dp), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                 for (i in 1..3) Box(Modifier.size(width = if (i == step) 26.dp else 10.dp, height = 5.dp).clip(CircleShape).background(if (i <= step) V_GOLD else Color.White.copy(alpha = 0.3f)))
@@ -224,8 +222,7 @@ internal fun GarageScreen(spr: VSprites, vehicle: Int, colors: List<Color>, onBa
     // nom du bolide, en grand, souligné à sa couleur
     val name: @Composable () -> Unit = {
         Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(stringResource(VEHICLES[cur].nameRes).uppercase(), color = Color.White, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = 32.sp,
-                letterSpacing = 1.sp, textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis, style = TextStyle(fontFamily = VROUM_FONT, shadow = TITLE_SHADOW))
+            FitText(stringResource(VEHICLES[cur].nameRes).uppercase(), 32f, weight = FontWeight.Black, italic = true, spacing = 1f, shadow = TITLE_SHADOW)
             Box(Modifier.padding(top = 4.dp).size(width = 86.dp, height = 6.dp).clip(CircleShape).background(Brush.horizontalGradient(listOf(colors[cur], V_GOLD))))
             Text("${cur + 1} / ${VEHICLES.size}", color = Color.White.copy(alpha = 0.6f), fontWeight = FontWeight.Bold, fontSize = 13.sp, modifier = Modifier.padding(top = 6.dp))
         }
@@ -372,7 +369,7 @@ private fun CircuitPager(spr: VSprites, pager: PagerState, endless: Boolean, due
                         letterSpacing = 0.5.sp, style = TextStyle(fontFamily = VROUM_FONT, shadow = TITLE_SHADOW))
                     // la spécificité du circuit, en une phrase
                     if (th.tip != 0) Box(Modifier.padding(top = 4.dp).clip(RoundedCornerShape(10.dp)).background(Color(0x99000000)).padding(horizontal = 9.dp, vertical = 3.dp)) {
-                        Text(stringResource(th.tip), color = V_GOLD, fontWeight = FontWeight.Bold, fontSize = 13.sp, lineHeight = 15.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        Text(stringResource(th.tip), color = V_GOLD, fontWeight = FontWeight.Bold, fontSize = 13.sp, lineHeight = 15.sp, maxLines = 3, overflow = TextOverflow.Ellipsis)
                     }
                     if (!duel) Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                         StarRow(starsMap["${th.key}_${if (endless) "a" else "c"}$diff"] ?: 0, 22.sp)
@@ -403,7 +400,7 @@ private fun RaceOptions(diff: Int, endless: Boolean, duel: Boolean, themeKey: St
         Box(Modifier.fillMaxWidth().height(40.dp).padding(top = 5.dp), contentAlignment = Alignment.Center) {
             Text(if (duel) stringResource(R.string.vroum_duel_hint) else if (endless) stringResource(R.string.vroum_mode_arcade_hint)
                  else if (!unlocked) stringResource(R.string.vroum_mode_race_hint) + "  " + stringResource(R.string.vroum_endless_locked) else stringResource(R.string.vroum_mode_race_hint),
-                color = Color.White.copy(alpha = 0.85f), fontWeight = FontWeight.Medium, fontSize = 12.sp, lineHeight = 14.sp, textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                color = Color.White.copy(alpha = 0.85f), fontWeight = FontWeight.Medium, fontSize = 12.sp, lineHeight = 14.sp, textAlign = TextAlign.Center, maxLines = 4, overflow = TextOverflow.Ellipsis)
         }
         Spacer(Modifier.height(6.dp))
         val labels = listOf(R.string.vroum_diff_easy, R.string.vroum_diff_medium, R.string.vroum_diff_hard)
@@ -499,9 +496,8 @@ private fun ModeCard(kind: Int, title: String, desc: String, selected: Boolean, 
             Canvas(Modifier.size(36.dp)) { modeIcon(if (locked) 3 else kind, if (selected) lerpColor(color, M_NIGHT, 0.35f) else Color.White.copy(alpha = 0.9f)) }
         }
         Column(Modifier.weight(1f).padding(start = 14.dp)) {
-            Text(title.uppercase(), color = Color.White, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = 25.sp, letterSpacing = 0.5.sp, maxLines = 1,
-                overflow = TextOverflow.Ellipsis, style = TextStyle(fontFamily = VROUM_FONT, shadow = TITLE_SHADOW))
-            Text(desc, color = Color.White.copy(alpha = 0.9f), fontWeight = FontWeight.Medium, fontSize = 13.sp, lineHeight = 15.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            FitText(title.uppercase(), 25f, weight = FontWeight.Black, italic = true, spacing = 0.5f, shadow = TITLE_SHADOW)
+            Text(desc, color = Color.White.copy(alpha = 0.9f), fontWeight = FontWeight.Medium, fontSize = 13.sp, lineHeight = 15.sp, maxLines = 4, overflow = TextOverflow.Ellipsis)
         }
     }
 }
@@ -577,7 +573,7 @@ private fun CupRaceThumb(spr: VSprites, themeIdx: Int, n: Int, stars: Int, modif
         }
         Column(Modifier.align(Alignment.BottomStart).padding(horizontal = 7.dp, vertical = 5.dp)) {
             if (stars >= 0) StarRow(stars, 13.sp)
-            Text(stringResource(THEMES[themeIdx].nameRes), color = Color.White, fontWeight = FontWeight.Black, fontSize = 12.sp, lineHeight = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            FitText(stringResource(THEMES[themeIdx].nameRes), 12f, weight = FontWeight.Black)
         }
     }
 }
@@ -689,8 +685,7 @@ internal fun CupResultScreen(spr: VSprites, cupIdx: Int, stars: IntArray, scores
             val landscape = maxWidth > maxHeight
             val head: @Composable (Modifier) -> Unit = { m ->
                 Column(m, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                    Text(stringResource(cup.nameRes).uppercase(), color = Color.White, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = 30.sp, textAlign = TextAlign.Center,
-                        maxLines = 1, overflow = TextOverflow.Ellipsis, style = TextStyle(fontFamily = VROUM_FONT, shadow = TITLE_SHADOW))
+                    FitText(stringResource(cup.nameRes).uppercase(), 30f, weight = FontWeight.Black, italic = true, shadow = TITLE_SHADOW)
                     spr.cups.getOrNull(cupIdx)?.let {
                         Image(BitmapPainter(it), null, Modifier.weight(1f).aspectRatio(1f, matchHeightConstraintsFirst = true).scale(0.9f + 0.1f * min(1f, t * 2f)).offset(y = (sin(t * 2.4f) * 5f).dp), contentScale = ContentScale.Fit)
                     }
@@ -728,4 +723,17 @@ internal fun CupResultScreen(spr: VSprites, cupIdx: Int, stars: IntArray, scores
             }
         }
     }
+}
+
+/** Texte sur UNE ligne, jamais coupé : la taille part de [maxSp] et rétrécit tant que le texte déborde (« CHOISIS TON
+ *  BOLIDE », « Résultats de la coupe ▶ »… tiennent aussi sur un petit téléphone et dans les langues longues). */
+@Composable
+internal fun FitText(text: String, maxSp: Float, color: Color = Color.White, weight: FontWeight = FontWeight.ExtraBold, italic: Boolean = false,
+                     spacing: Float = 0f, shadow: Shadow? = null, modifier: Modifier = Modifier) {
+    var sp by remember(text, maxSp) { mutableStateOf(maxSp) }
+    var fits by remember(text, maxSp) { mutableStateOf(false) }
+    Text(text, color = color, fontWeight = weight, fontStyle = if (italic) FontStyle.Italic else FontStyle.Normal, fontSize = sp.sp,
+        letterSpacing = (spacing * sp / maxSp).sp, maxLines = 1, softWrap = false, style = TextStyle(fontFamily = VROUM_FONT, shadow = shadow),
+        modifier = modifier.alpha(if (fits) 1f else 0f),
+        onTextLayout = { if (it.hasVisualOverflow && sp > maxSp * 0.5f) sp *= 0.93f else fits = true })
 }

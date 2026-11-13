@@ -209,7 +209,9 @@ fun VroumScreen(onBack: () -> Unit) {
     }
     LaunchedEffect(phase) {
         glView?.renderer?.paused = phase != VPhase.PLAYING
-        if (phase != VPhase.PLAYING && synthRes != 0) GameMusic.playRes(ctx, synthRes)
+        // menus : synthwave ; course à 2 joueurs : la musique du circuit, comme en solo
+        val duelRes = if (phase == VPhase.DUEL) ctx.resources.getIdentifier(vroumMusicKey(THEMES[themeIdx].key), "raw", ctx.packageName) else 0
+        if (phase != VPhase.PLAYING) { val r = if (duelRes != 0) duelRes else synthRes; if (r != 0) GameMusic.playRes(ctx, r) }
     }
 
     val cheers = listOf(R.string.vroum_cheer1, R.string.vroum_cheer2, R.string.vroum_cheer3)
@@ -221,7 +223,8 @@ fun VroumScreen(onBack: () -> Unit) {
     var resTimeUp by remember { mutableStateOf(false) }
     var resTakedowns by remember { mutableIntStateOf(0) }
     fun finishRun(g: VroumGame, cleared: Boolean) {
-        resScore = g.score; resDist = g.dist.toInt(); resCleared = cleared; resTimeUp = g.timeUp; resTakedowns = g.takedowns
+        // la distance affichée s'arrête à la ligne (le bolide roule encore jusqu'aux tribunes après l'avoir franchie)
+        resScore = g.score; resDist = if (cleared) VroumGame.LEVEL_LEN.toInt() else g.dist.toInt(); resCleared = cleared; resTimeUp = g.timeUp; resTakedowns = g.takedowns
         val best = HighScores.best(gameKey)
         // le mode Facile (invincible) n'entre pas au tableau des records
         resRecord = g.diff >= 1 && g.score > 0 && g.score > best
@@ -517,7 +520,7 @@ private fun GlassButton(label: String, modifier: Modifier = Modifier, onClick: (
             .pointerInput(Unit) { detectTapGestures(onPress = { scope.launch { press.snapTo(0.94f); press.animateTo(1f, spring(dampingRatio = 0.45f, stiffness = 600f)) }; onClick(); tryAwaitRelease() }) }
             .padding(vertical = 13.dp, horizontal = 8.dp),
         contentAlignment = Alignment.Center
-    ) { Text(label, color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp, maxLines = 1, softWrap = false) }
+    ) { FitText(label, 15f) }
 }
 
 @Composable
@@ -537,10 +540,10 @@ private fun PillButton(label: String, colors: List<Color>, enabled: Boolean = tr
                     onClick(); tryAwaitRelease()
                 })
             }
-            .padding(horizontal = 34.dp, vertical = 16.dp),
+            .padding(horizontal = 22.dp, vertical = 16.dp),
         contentAlignment = Alignment.Center
     ) {
-        Text(label, color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp, maxLines = 1, softWrap = false)
+        FitText(label, 20f)
     }
 }
 
@@ -699,7 +702,7 @@ private fun ResultScreen(spr: VSprites, cleared: Boolean, score: Int, dist: Int,
             }
             // championnat : rappel de la coupe et du numéro de la course
             if (cupLine != null) Box(Modifier.padding(top = 6.dp).clip(RoundedCornerShape(14.dp)).background(Color(0xAA000000)).padding(horizontal = 14.dp, vertical = 4.dp)) {
-                Text(cupLine, color = V_GOLD, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = 15.sp, maxLines = 1)
+                FitText(cupLine, 15f, color = V_GOLD, weight = FontWeight.Black, italic = true)
             }
             if (cleared && frontImg != null) {
                 // PHOTO FINISH : un polaroïd qui claque à l'écran, le bolide vu de face sous le damier d'arrivée
@@ -732,8 +735,8 @@ private fun ResultScreen(spr: VSprites, cleared: Boolean, score: Int, dist: Int,
                 .background(Brush.verticalGradient(listOf(Color(0xF7FFFFFF), Color(0xE6F4F1FF)))).padding(horizontal = 22.dp, vertical = 16.dp)) {
                 Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("$shownScore", color = V_INK, fontWeight = FontWeight.ExtraBold, fontSize = 44.sp, lineHeight = 46.sp)
-                    Text("🏁 " + stringResource(R.string.vroum_distance, dist) + (if (takedowns > 0) "   ·   " + stringResource(R.string.vroum_res_takedowns, takedowns) else ""),
-                        color = V_INK.copy(alpha = 0.65f), fontWeight = FontWeight.Bold, fontSize = 15.sp, maxLines = 1)
+                    FitText("🏁 " + stringResource(R.string.vroum_distance, dist) + (if (takedowns > 0) "   ·   " + stringResource(R.string.vroum_res_takedowns, takedowns) else ""),
+                        15f, color = V_INK.copy(alpha = 0.65f), weight = FontWeight.Bold)
                     if (record && t > 1.5f) Box(Modifier.padding(top = 8.dp).clip(RoundedCornerShape(14.dp)).background(Brush.horizontalGradient(listOf(V_PINK, V_ORANGE))).padding(horizontal = 14.dp, vertical = 5.dp)) {
                         Text("🏆 " + stringResource(R.string.new_high_score), color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 13.sp, maxLines = 1)
                     } else if (best > 0) Text("🏆 $best", color = V_INK.copy(alpha = 0.55f), fontWeight = FontWeight.Bold, fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp))

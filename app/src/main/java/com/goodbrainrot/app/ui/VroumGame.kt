@@ -224,8 +224,9 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         const val PLAYER_Z = 18f
         const val LEVEL_LEN = 2000f
         const val INTRO_DUR = 3.6f
-        const val FINISH_DUR = 2.7f       // secondes entre la ligne franchie et l'écran de résultat
+        const val FINISH_DUR = 3.0f       // secondes entre la ligne franchie et l'écran de résultat
         const val END_WALL = 46f          // la route s'arrête là, derrière la ligne : tribunes et mur de pneus
+        const val FINISH_STOP = 39f      // le bolide s'arrête là, après la ligne : devant le public, l'arche loin derrière
         const val ROCKET_WINDOW = 0.7f    // départ canon : on appuie sur BOOST dans cette fenêtre avant le GO…
         const val ROCKET_LATE = 0.3f      // … ou juste après (ceux qui réagissent au « GO! »)
         const val COMBO_T = 3.0f
@@ -265,10 +266,14 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
     // ---- SAUT : plus de délai d'attente. Retomber SUR un véhicule ou un obstacle fait REBONDIR (chaîne) ; retomber
     //      sur la route met fin à la chaîne et impose une courte pause avant le saut suivant.
     var jumpT = -1f
-    /** durée d'un saut = deux rangées de motif : une file de voitures espacées d'une rangée sur deux s'enchaîne pile */
-    private val baseJump = 2f * tune.row / 0.85f * trait.jumpMul
+    /** saut COURT et vif (petit bond de kart) : juste assez long pour retomber sur la voiture qui roule devant */
+    private val baseJump = (0.26f + 0.9f * tune.row) * trait.jumpMul
+    /** grand saut (ressort) et plafond d'un rebond : deux rangées de motif, une file de voitures s'enchaîne pile */
+    private val longJump = 2f * tune.row / 0.85f * trait.jumpMul
     var JUMP_DUR = baseJump
-    val JUMP_CD = 1.1f
+    /** hauteur du saut en cours (m) : bas pour un bond, haut sur un ressort */
+    var jumpH = 2.3f
+    val JUMP_CD = 0.5f
     var jumpCd = 0f
     var stompChain = 0              // rebonds enchaînés sans toucher la route
     var bestStomp = 0
@@ -303,6 +308,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
     var over = false; var cleared = false
     // ---- ARRIVÉE (Course) : la ligne est un vrai lieu, à LEVEL_LEN. finishT ≥ 0 = ligne franchie, on freine devant le public.
     var finishT = -1f; private var clearSent = false; private var finishDecor = false; private var fireCd = 0f
+    private var finishSpd = 0f      // vitesse au passage de la ligne
     var finishLabel = "ARRIVÉE !"
     /** distance (devant le bolide si > PLAYER_Z) de la ligne d'arrivée, dans le repère de la caméra */
     val finishZ: Float get() = PLAYER_Z + LEVEL_LEN - dist
@@ -389,7 +395,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         while (z < Z_FAR + 40f) {
             for (side in listOf(-1f, 1f)) {
                 val k = Random.nextInt(theme.decor.size)
-                decor.add(VDecor(z + Random.nextFloat() * 6f, side * (roadHalfFor(3) + 1.5f + Random.nextFloat() * 7f), k))
+                decor.add(VDecor(z + Random.nextFloat() * 6f, side * (decorMin(k, roadHalfFor(3)) + Random.nextFloat() * 6.5f), k))
             }
             z += 11f
         }
@@ -397,6 +403,10 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         nextBoxAt = tune.floor * 5f
         plan()      // la route n'est pas vide au décompte
     }
+
+    /** Distance minimale à l'axe d'un décor : son bord intérieur reste à 0,5 m de la route (une grange large de 10 m
+     *  posée « à 1,5 m du bord » débordait sur la voie). */
+    private fun decorMin(kind: Int, half: Float): Float = half + 0.5f + theme.decor[kind % theme.decor.size].second * 3.2f * 0.45f
 
     /** Passage à [n] voies : la route s'élargit 40 m devant, les entités existantes gardent leur position (ré-indexation). */
     private fun widenTo(n: Int) {
@@ -409,7 +419,8 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         shots.clear()
         // les arbres trop proches de la future route sont repoussés
         val half = roadHalfFor(n)
-        for (d in decor) if (d.cheer < 0 && !d.flag && abs(d.lateral) < half + 1.2f) d.lateral = (if (d.lateral < 0) -1f else 1f) * (half + 1.2f + Random.nextFloat() * 4f)
+        for (d in decor) if (d.kind >= 0 && d.cheer < 0 && !d.flag) { val m = decorMin(d.kind, half)
+            if (abs(d.lateral) < m) d.lateral = (if (d.lateral < 0) -1f else 1f) * (m + Random.nextFloat() * 4f) }
         texts.add(VText(0f, 4.5f, 40f, "$n ${lanesLabel}", 2.0f, V_CYAN, big = true))
         ev("widen")
     }
@@ -458,7 +469,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
     val jumpFrac: Float get() = if (jumping) sin(PI.toFloat() * (jumpT / JUMP_DUR).coerceIn(0f, 1f)) else 0f
     private val airborne: Boolean get() = jumping && jumpT > JUMP_DUR * 0.12f && jumpT < JUMP_DUR * 0.88f
     /** phase de descente : si un véhicule ou un obstacle passe dessous, on rebondit dessus */
-    private val descending: Boolean get() = jumping && jumpT > JUMP_DUR * 0.62f
+    private val descending: Boolean get() = jumping && jumpT > JUMP_DUR * 0.5f
 
     fun moveLane(d: Int) {
         if (over || sputter >= 0f || inIntro) return
@@ -474,7 +485,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
     }
     fun jump() {
         if (over || jumping || sputter >= 0f || inIntro || jumpCd > 0f) return
-        jumpT = 0f; JUMP_DUR = baseJump; trickDone = false; rampJump = false; ev("jump")
+        jumpT = 0f; JUMP_DUR = baseJump; jumpH = 2.3f; trickDone = false; rampJump = false; ev("jump")
     }
     fun horn() { if (hornCd <= 0f) { hornCd = 1.2f; ev("horn") } }
 
@@ -531,8 +542,9 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
                 if (boost <= 0f || burnLeft <= 0f) { boost = max(0f, boost); burnLeft = 0f; boosting = false; ev("boostOff") }
             }
         } else if (boosting) { boosting = false; burnLeft = 0f; ev("boostOff") }
-        val target = if (cleared) 0f else cruise * boostMul        // ligne franchie : on freine et on s'arrête devant le public
-        spd += (target - spd) * min(1f, dt * (if (cleared) 1.55f else if (target > spd) 3.4f else 1.5f))
+        // ligne franchie : on continue sur l'élan puis on freine pour s'arrêter pile devant le public, au bout de la route
+        val target = if (cleared) ((LEVEL_LEN + FINISH_STOP - dist) * 3f).coerceIn(0f, max(finishSpd, 24f)) else cruise * boostMul
+        spd += (target - spd) * min(1f, dt * (if (cleared) 6f else if (target > spd) 3.4f else 1.5f))
         val sp = mps
         val dz = sp * dt
         if (!over && sputter < 0f) dist += dz
@@ -622,7 +634,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         }
         if (sputter >= 0f) { sputter += dt; if (sputter > 2.8f && !over) { over = true; ev("over") } }
         if (!endless && !cleared && dist >= LEVEL_LEN) {
-            cleared = true; finishT = 0f
+            cleared = true; finishT = 0f; finishSpd = spd
             if (timeLimit > 0f) { timeBonus = (timeLeft * 40f).toInt() * (diff + 1); score += timeBonus }
             ev("finishLine")
             texts.add(VText(0f, 4.4f, PLAYER_Z + 4f, finishLabel, 2.4f, V_GOLD, big = true).also { it.style = 1 })
@@ -721,6 +733,11 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         while (dit.hasNext()) {
             val d = dit.next(); d.z -= dz
             if (d.arms > 0f) d.arms -= dt
+            // aire d'arrivée : le décor ordinaire passe DERRIÈRE les tribunes (pas de grange devant l'arche ou le public)
+            if (finishDecor && d.kind >= 0 && d.cheer < 0 && !d.flag && d.z > finishZ - 114f && d.z < finishZ + END_WALL + 8f) {
+                val m = decorMin(d.kind, decorHalf) + 13f
+                if (abs(d.lateral) < m) d.lateral = (if (d.lateral < 0) -1f else 1f) * (m + Random.nextFloat() * 5f)
+            }
             if (d.z < -3f) { if (d.kind >= 0 && d.cheer < 0 && !d.flag) d.z += Z_FAR + 40f + Random.nextFloat() * 8f else dit.remove() }
         }
         val prt = parts.iterator()
@@ -946,7 +963,13 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         }
         if (!found) return
         stompChain++; if (stompChain > bestStomp) bestStomp = stompChain
-        jumpT = 0f; JUMP_DUR = baseJump; rampJump = false; trickDone = false; jumpCd = 0f
+        // REBOND : il vise la prochaine voiture de la file (durée calée pour retomber dessus), sinon simple petit bond
+        var next = 999f
+        val spNow = mps
+        for (e in enemies) if (e.alive && !e.ghost && e.lane in cover) { val d = e.z - PLAYER_Z; val c = spNow - e.mps; if (d > 4f && c > 3f && d / c < next) next = d / c }
+        JUMP_DUR = if (next < longJump * 1.05f) (next / 0.78f).coerceIn(baseJump * 0.8f, longJump * 1.25f) else baseJump
+        jumpH = 2.3f * (JUMP_DUR / baseJump).coerceIn(0.9f, 1.5f)
+        jumpT = 0f; rampJump = false; trickDone = false; jumpCd = 0f
         chain(stompChain); gainBoost(0.18f + 0.07f * min(stompChain, 5)); gainFlow(0.04f)
         addScore(30 * stompChain, hitX, hitZ, V_CYAN)
         texts.add(VText(lx * LANE_M, 4.6f, PLAYER_Z, if (stompChain > 1) "$stompLabel ×$stompChain" else stompLabel, 1.0f, V_CYAN, big = true))
@@ -1254,7 +1277,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
             VItem.SUPERBOOST -> superBoost(x, z)
             VItem.ITEMBOX -> { openBox(); gainBoost(0.10f); burst(x, z, 1f, 0.9f, 0.4f, 16); ev("box") }
             // tremplin : grand saut gratuit (plus long), sans pause derrière
-            VItem.RAMP -> if (!jumping) { jumpT = 0f; JUMP_DUR = baseJump * 1.3f; trickDone = false; rampJump = true; gainBoost(0.15f); ev("ramp") }
+            VItem.RAMP -> if (!jumping) { jumpT = 0f; JUMP_DUR = longJump * 1.05f; jumpH = 3.5f; trickDone = false; rampJump = true; gainBoost(0.15f); ev("ramp") }
             VItem.HOLE, VItem.LOG -> {
                 if (airborne || jumping) { chain(); gainFlow(0.05f); gainBoost(0.15f); addScore(20, x, z, V_CYAN); texts.add(VText(x, 3.2f, z, jumpedLabel, 1.0f, V_CYAN, big = true)); ev("trick") }
                 else if (giant > 0 || superT > 0f) { burst(x, z, 0.6f, 0.4f, 0.25f, 12); ev("crush") }
