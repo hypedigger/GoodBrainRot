@@ -1,5 +1,9 @@
 # Nouveautés — GoodBrainRot
 
+## 4.02 — 2026-11-13
+- **Vroum — menu façon Mario Kart.** On choisit d'abord le **mode de jeu** (Championnat, Course, Arcade) et le **nombre de joueurs** quand le mode le permet, puis le **bolide**, puis la **coupe** ou le **circuit**. En 2 joueurs, chacun choisit maintenant son bolide.
+- **Vroum — mode Championnat.** Cinq **coupes de quatre courses** enchaînées : Noisette (forêt, nuit, ferme, plage), Soleil (canyon, jungle, dinosaures, volcan), Flocon (neige, banquise, nuages, bonbons), Néon (centre-ville, Tokyo, cyber, chantier) et Étoile (océan, manoir, étoiles, Grand Prix). Chaque course rapporte jusqu'à 3 étoiles ; à la fin, un écran de coupe affiche les quatre courses, le total et une **note globale sur 3 étoiles**, mémorisée par coupe et par difficulté.
+- L'écran de choix du circuit n'a plus les onglets de mode (le mode se choisit avant).
 ## 4.01 — 2026-11-13
 - **Vroum — une vraie ligne d'arrivée.** En Course, la route se termine sur une aire d'arrivée : **arche et bande à damier**, **spectateurs et tribunes** sur les 110 derniers mètres, et la route **fermée** par des tribunes et un mur de pneus. En franchissant la ligne : « ARRIVÉE ! », confettis, feux d'artifice, le bolide freine et s'arrête devant le public, puis l'écran de résultat.
 - **Vroum — 2 joueurs remis à niveau** : chaque moitié d'écran a maintenant le bouton **BOOST** (une tape = un segment) et sa jauge, la **case d'objet**, le **compteur de takedowns**, les messages « TAKEDOWN! », plus de sons, et les libellés dans la langue de l'appli.

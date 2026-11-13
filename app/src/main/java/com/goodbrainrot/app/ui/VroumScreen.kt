@@ -108,7 +108,7 @@ import kotlin.random.Random
 // ===========================================================================
 
 
-private enum class VPhase { SELECT, LEVEL, PLAYING, DUEL, CLEAR, END }
+private enum class VPhase { MODE, SELECT, LEVEL, PLAYING, DUEL, CLEAR, END, CUP_END }
 
 internal class VSprites(private val ctx: android.content.Context) {
     private fun load(name: String): ImageBitmap? {
@@ -122,6 +122,8 @@ internal class VSprites(private val ctx: android.content.Context) {
     val items = VWeapon.values().associateWith { if (it.tex.isEmpty()) null else load(it.tex) }
     val title = load("vv_title"); val village = load("vv_village"); val empty = load("vv_empty")
     val cards = THEMES.map { load(it.card) }
+    /** trophées des coupes du Championnat */
+    val cups = CUPS.map { load("vv_cup_${it.key}") }
 }
 
 // ---------------------------------------------------------------------------
@@ -132,7 +134,16 @@ internal class VSprites(private val ctx: android.content.Context) {
 fun VroumScreen(onBack: () -> Unit) {
     val ctx = LocalContext.current
     val spr = remember { VSprites(ctx) }
-    var phase by remember { mutableStateOf(VPhase.SELECT) }
+    var phase by remember { mutableStateOf(VPhase.MODE) }
+    // menu façon Mario Kart : mode de jeu, nombre de joueurs, bolide(s), puis coupe ou circuit
+    var mode by remember { mutableStateOf(VMode.CUP) }
+    var players by remember { mutableIntStateOf(1) }
+    var garageStep by remember { mutableIntStateOf(1) }      // 1 = bolide du joueur 1, 2 = bolide du joueur 2
+    var vehicle2 by remember { mutableIntStateOf(1) }
+    // championnat : coupe en cours, n° de course (0..3), étoiles et scores des courses déjà faites
+    var cupIdx by remember { mutableIntStateOf(0) }
+    var cupRace by remember { mutableIntStateOf(0) }
+    val cupStars = remember { IntArray(4) }; val cupScores = remember { IntArray(4) }
     var vehicle by remember { mutableIntStateOf(0) }
     var endless by remember { mutableStateOf(false) }
     var duelMode by remember { mutableStateOf(false) }     // mode 2 joueurs sur écran partagé
@@ -232,6 +243,7 @@ fun VroumScreen(onBack: () -> Unit) {
                 Settings.setVroumGhost(key, "${g.vehicle};${"%.1f".format(java.util.Locale.US, g.dist)};" + d.indices.joinToString(",") { "${d[it]}:${l[it]}" })
         }
         if (tutoStep >= 0) { tutoStep = -1; Settings.setVroumTutoSeen(true) }
+        if (mode == VMode.CUP) { cupStars[cupRace] = vroumStarCount(false, cleared, g.score, g.dist.toInt(), g.diff); cupScores[cupRace] = g.score }
         phase = VPhase.END
     }
     fun hornFor(v: Int) {
@@ -360,12 +372,26 @@ fun VroumScreen(onBack: () -> Unit) {
     androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalTextStyle provides androidx.compose.material3.LocalTextStyle.current.copy(fontFamily = VROUM_FONT)) {
     Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF7FD4FF), Color(0xFFB39DFF))))) {
         when (phase) {
-            VPhase.SELECT -> GarageScreen(spr, vehicle, VEHICLE_COLORS, onBack = onBack, onPick = { vehicle = it; hornFor(it) },
-                onNext = { SoundEngine.playVroumUi(); phase = VPhase.LEVEL })
-            VPhase.LEVEL -> RaceSetupScreen(spr, vehicle, themeIdx, diff, endless, duelMode, onDiff = { SoundEngine.playVroumUi(); diff = it },
-                onEndless = { SoundEngine.playVroumUi(); endless = it }, onDuel = { SoundEngine.playVroumUi(); duelMode = it }, onBack = { phase = VPhase.SELECT },
+            VPhase.MODE -> ModeSelectScreen(spr, mode, players,
+                onMode = { SoundEngine.playVroumUi(); mode = it; if (it != VMode.RACE) players = 1 },
+                onPlayers = { SoundEngine.playVroumUi(); players = it }, onBack = onBack,
+                onNext = { SoundEngine.playVroumUi(); endless = mode == VMode.ARCADE; duelMode = mode == VMode.RACE && players == 2; garageStep = 1; phase = VPhase.SELECT })
+            VPhase.SELECT -> androidx.compose.runtime.key(garageStep) {
+                if (garageStep == 1) GarageScreen(spr, vehicle, VEHICLE_COLORS, onBack = { phase = VPhase.MODE }, onPick = { vehicle = it; hornFor(it) },
+                    onNext = { SoundEngine.playVroumUi(); if (duelMode) { if (vehicle2 == vehicle) vehicle2 = (vehicle + 1) % VEHICLES.size; garageStep = 2 } else phase = VPhase.LEVEL },
+                    title = if (duelMode) stringResource(R.string.vroum_player_pick, 1) else null)
+                else GarageScreen(spr, vehicle2, VEHICLE_COLORS, onBack = { garageStep = 1 }, onPick = { vehicle2 = it; hornFor(it) },
+                    onNext = { SoundEngine.playVroumUi(); phase = VPhase.LEVEL }, title = stringResource(R.string.vroum_player_pick, 2))
+            }
+            VPhase.LEVEL -> if (mode == VMode.CUP) CupSelectScreen(spr, vehicle, cupIdx, diff, onDiff = { SoundEngine.playVroumUi(); diff = it }, onBack = { phase = VPhase.SELECT },
+                onPlay = { c -> SoundEngine.playVroumUi(); cupIdx = c; cupRace = 0; cupStars.fill(0); cupScores.fill(0); themeIdx = cupThemeIdx(CUPS[c], 0); phase = VPhase.PLAYING; runToken++ })
+            else RaceSetupScreen(spr, vehicle, themeIdx, diff, endless, duelMode, onDiff = { SoundEngine.playVroumUi(); diff = it },
+                onEndless = { }, onDuel = { }, onBack = { garageStep = if (duelMode) 2 else 1; phase = VPhase.SELECT },
                 onPlay = { t -> SoundEngine.playVroumUi(); themeIdx = t; phase = if (duelMode) VPhase.DUEL else VPhase.PLAYING; runToken++ })
-            VPhase.DUEL -> DuelScreen(themeIdx, vehicle, spr, applyLabels, onBack = { phase = VPhase.LEVEL })
+            VPhase.DUEL -> DuelScreen(themeIdx, vehicle, vehicle2, spr, applyLabels, onBack = { phase = VPhase.LEVEL })
+            VPhase.CUP_END -> CupResultScreen(spr, cupIdx, cupStars, cupScores,
+                onAgain = { SoundEngine.playVroumUi(); cupRace = 0; cupStars.fill(0); cupScores.fill(0); themeIdx = cupThemeIdx(CUPS[cupIdx], 0); phase = VPhase.PLAYING; runToken++ },
+                onOther = { SoundEngine.playVroumUi(); phase = VPhase.LEVEL })
             VPhase.PLAYING -> {
                 val g = game
                 if (g != null && glView != null) {
@@ -460,9 +486,16 @@ fun VroumScreen(onBack: () -> Unit) {
             VPhase.CLEAR, VPhase.END -> {
                 ResultScreen(spr, cleared = resCleared, score = resScore, dist = resDist, record = resRecord, endless = endless, diff = diff, timeUp = resTimeUp, takedowns = resTakedowns,
                     vehicleImg = spr.vehicles.getOrNull(vehicle), frontImg = spr.fronts.getOrNull(vehicle), best = HighScores.best(gameKey), bg = if (themeIdx == 0) spr.village else spr.cards.getOrNull(themeIdx),
-                    onReplay = { SoundEngine.playVroumUi(); phase = VPhase.PLAYING; runToken++ },
+                    onReplay = {
+                        SoundEngine.playVroumUi()
+                        if (mode != VMode.CUP) { phase = VPhase.PLAYING; runToken++ }
+                        else if (cupRace < 3) { cupRace++; themeIdx = cupThemeIdx(CUPS[cupIdx], cupRace); phase = VPhase.PLAYING; runToken++ }
+                        else { Settings.setVroumStars("cup_${CUPS[cupIdx].key}_$diff", cupGlobalStars(cupStars.sum())); phase = VPhase.CUP_END }
+                    },
                     onOther = { SoundEngine.playVroumUi(); phase = VPhase.LEVEL },
-                    onVehicle = { SoundEngine.playVroumUi(); phase = VPhase.SELECT })
+                    onVehicle = { SoundEngine.playVroumUi(); garageStep = 1; phase = VPhase.SELECT },
+                    cupLine = if (mode == VMode.CUP) stringResource(CUPS[cupIdx].nameRes) + "  ·  " + stringResource(R.string.vroum_cup_race, cupRace + 1) else null,
+                    nextLabel = if (mode != VMode.CUP) null else if (cupRace < 3) stringResource(R.string.vroum_next_race) else stringResource(R.string.vroum_cup_results))
             }
         }
     }
@@ -630,7 +663,7 @@ private fun CountdownOverlay(count: Int, hint: Boolean = false, rocket: Boolean 
  */
 @Composable
 private fun ResultScreen(spr: VSprites, cleared: Boolean, score: Int, dist: Int, record: Boolean, endless: Boolean, diff: Int, timeUp: Boolean, takedowns: Int, vehicleImg: ImageBitmap?, frontImg: ImageBitmap?, best: Int, bg: ImageBitmap?,
-                         onReplay: () -> Unit, onOther: () -> Unit, onVehicle: () -> Unit) {
+                         onReplay: () -> Unit, onOther: () -> Unit, onVehicle: () -> Unit, cupLine: String? = null, nextLabel: String? = null) {
     val stars = vroumStarCount(endless, cleared, score, dist, diff)
     var t by remember { mutableStateOf(0f) }
     LaunchedEffect(Unit) { var last = 0L; while (t < 30f) { val now = withFrameNanos { it }; if (last != 0L) t += (now - last) / 1e9f; last = now } }
@@ -663,6 +696,10 @@ private fun ResultScreen(spr: VSprites, cleared: Boolean, score: Int, dist: Int,
                     Text("★", color = if (on) V_GOLD else Color.White.copy(alpha = 0.28f), fontSize = (if (i == 1) 54 else 42).sp, modifier = Modifier.scale(pop).padding(horizontal = 4.dp),
                         style = androidx.compose.ui.text.TextStyle(fontFamily = VROUM_FONT, shadow = androidx.compose.ui.graphics.Shadow(Color(0x55000000), Offset(0f, 3f), 6f)))
                 }
+            }
+            // championnat : rappel de la coupe et du numéro de la course
+            if (cupLine != null) Box(Modifier.padding(top = 6.dp).clip(RoundedCornerShape(14.dp)).background(Color(0xAA000000)).padding(horizontal = 14.dp, vertical = 4.dp)) {
+                Text(cupLine, color = V_GOLD, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = 15.sp, maxLines = 1)
             }
             if (cleared && frontImg != null) {
                 // PHOTO FINISH : un polaroïd qui claque à l'écran, le bolide vu de face sous le damier d'arrivée
@@ -704,11 +741,17 @@ private fun ResultScreen(spr: VSprites, cleared: Boolean, score: Int, dist: Int,
             }
             Spacer(Modifier.weight(1f))
             // actions : un bouton principal plein, deux boutons « verre » de même taille dessous (texte sur une ligne)
+            if (nextLabel != null) {
+                // championnat : un seul bouton, on enchaîne (course suivante, puis bilan de la coupe)
+                Box(Modifier.fillMaxWidth(0.82f)) { PillButton(nextLabel + "  ▶", listOf(V_PINK, V_ORANGE), wide = true, onClick = onReplay) }
+                Spacer(Modifier.height(58.dp))
+            } else {
             Box(Modifier.fillMaxWidth(0.82f)) { PillButton("🔁  " + stringResource(R.string.replay), listOf(V_GREEN, V_TEAL), wide = true, onClick = onReplay) }
             Spacer(Modifier.height(10.dp))
             Row(Modifier.fillMaxWidth(0.82f), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 GlassButton("🗺  " + stringResource(R.string.vroum_route), Modifier.weight(1f), onClick = onOther)
                 GlassButton("🚗  " + stringResource(R.string.vroum_vehicle), Modifier.weight(1f), onClick = onVehicle)
+            }
             }
             Spacer(Modifier.height(6.dp))
         }
@@ -752,14 +795,13 @@ private fun VroumTutoOverlay(step: Int) {
 // Deux parties invincibles, sans chrono ni fantôme : premier arrivé au village !
 // ---------------------------------------------------------------------------
 @Composable
-private fun DuelScreen(themeIdx: Int, vehicle: Int, spr: VSprites, labels: (VroumGame) -> Unit, onBack: () -> Unit) {
+private fun DuelScreen(themeIdx: Int, vehicle: Int, vehicle2: Int, spr: VSprites, labels: (VroumGame) -> Unit, onBack: () -> Unit) {
     val ctx = LocalContext.current
     var runToken by remember { mutableIntStateOf(0) }
     var winner by remember { mutableIntStateOf(0) }   // 0 = course en cours, sinon 1 ou 2
     var tick by remember { mutableIntStateOf(0) }
     val trickLabel = stringResource(R.string.vroum_trick); val cannonLabel = stringResource(R.string.vroum_cannons)
-    // joueur 2 : un bolide différent de celui du joueur 1, au hasard
-    val veh2 = remember(runToken) { (vehicle + 1 + Random.nextInt(VEHICLES.size - 1)) % VEHICLES.size }
+    val veh2 = vehicle2      // chacun a choisi son bolide au garage
     // même graine : les deux joueurs ont exactement la même route, c'est la conduite qui fait la différence
     val seed = remember(runToken) { Random.nextLong() }
     val g1 = remember(runToken) { VroumGame(false, vehicle, 0, THEMES[themeIdx], trickLabel, cannonLabel, duel = true, seed = seed).also(labels) }

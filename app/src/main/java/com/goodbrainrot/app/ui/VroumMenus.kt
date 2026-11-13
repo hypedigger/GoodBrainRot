@@ -78,6 +78,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.graphics.drawscope.rotate
+import kotlin.math.min
 import com.goodbrainrot.app.R
 import com.goodbrainrot.app.Settings
 import com.goodbrainrot.app.audio.SoundEngine
@@ -151,7 +154,7 @@ private fun MenuHeader(title: String, step: Int, onBack: () -> Unit, trailing: @
                 maxLines = 1, overflow = TextOverflow.Ellipsis, style = TextStyle(fontFamily = VROUM_FONT, shadow = TITLE_SHADOW))
             // étapes : ● ○  /  ● ●
             Row(Modifier.padding(top = 3.dp), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                for (i in 1..2) Box(Modifier.size(width = if (i == step) 26.dp else 10.dp, height = 5.dp).clip(CircleShape).background(if (i <= step) V_GOLD else Color.White.copy(alpha = 0.3f)))
+                for (i in 1..3) Box(Modifier.size(width = if (i == step) 26.dp else 10.dp, height = 5.dp).clip(CircleShape).background(if (i <= step) V_GOLD else Color.White.copy(alpha = 0.3f)))
             }
         }
         trailing()
@@ -181,7 +184,7 @@ private fun PagerState.offsetOf(page: Int): Float = abs((currentPage - page) + c
 // ---------------------------------------------------------------------------
 
 @Composable
-internal fun GarageScreen(spr: VSprites, vehicle: Int, colors: List<Color>, onBack: () -> Unit, onPick: (Int) -> Unit, onNext: () -> Unit) {
+internal fun GarageScreen(spr: VSprites, vehicle: Int, colors: List<Color>, onBack: () -> Unit, onPick: (Int) -> Unit, onNext: () -> Unit, title: String? = null) {
     val pager = rememberPagerState(initialPage = vehicle) { VEHICLES.size }
     val strip = rememberLazyListState()
     val scope = rememberCoroutineScope()
@@ -248,7 +251,7 @@ internal fun GarageScreen(spr: VSprites, vehicle: Int, colors: List<Color>, onBa
         BoxWithConstraints(Modifier.fillMaxSize()) {
             if (maxWidth > maxHeight) Column(Modifier.fillMaxSize()) {
                 // paysage : le bolide à gauche, le reste à droite
-                MenuHeader(stringResource(R.string.vroum_choose), 1, onBack)
+                MenuHeader(title ?: stringResource(R.string.vroum_choose), 2, onBack)
                 Row(Modifier.fillMaxSize()) {
                     hero(Modifier.weight(1.1f).fillMaxHeight())
                     Column(Modifier.weight(1f).fillMaxHeight().padding(end = 8.dp), verticalArrangement = Arrangement.Center) {
@@ -257,7 +260,7 @@ internal fun GarageScreen(spr: VSprites, vehicle: Int, colors: List<Color>, onBa
                     }
                 }
             } else Column(Modifier.fillMaxSize()) {
-                MenuHeader(stringResource(R.string.vroum_choose), 1, onBack)
+                MenuHeader(title ?: stringResource(R.string.vroum_choose), 2, onBack)
                 hero(Modifier.fillMaxWidth().weight(1f))
                 name(); thumbs()
                 ChunkyButton(stringResource(R.string.vroum_next).uppercase() + "  ▶", V_GREEN, V_TEAL, Modifier.fillMaxWidth().padding(start = 22.dp, end = 22.dp, top = 16.dp, bottom = 18.dp), onClick = onNext)
@@ -287,6 +290,13 @@ private fun DrawScope.modeIcon(kind: Int, col: Color) {
         2 -> for (x in listOf(0.3f, 0.7f)) {
             drawCircle(col, w * 0.14f, Offset(w * x, h * 0.3f))
             drawRoundRect(col, Offset(w * (x - 0.19f), h * 0.5f), Size(w * 0.38f, h * 0.42f), CornerRadius(w * 0.16f, w * 0.16f))
+        }
+        4 -> {   // coupe : bol, deux anses, pied, socle
+            drawArc(col, 0f, 180f, true, Offset(w * 0.24f, h * -0.22f), Size(w * 0.52f, h * 0.84f))
+            drawArc(col, 90f, 180f, false, Offset(w * 0.06f, h * 0.12f), Size(w * 0.3f, h * 0.3f), style = Stroke(w * 0.08f))
+            drawArc(col, -90f, 180f, false, Offset(w * 0.64f, h * 0.12f), Size(w * 0.3f, h * 0.3f), style = Stroke(w * 0.08f))
+            drawRect(col, Offset(w * 0.44f, h * 0.58f), Size(w * 0.12f, h * 0.2f))
+            drawRoundRect(col, Offset(w * 0.26f, h * 0.78f), Size(w * 0.48f, h * 0.16f), CornerRadius(w * 0.05f, w * 0.05f))
         }
         else -> {
             drawArc(col, 180f, 180f, false, Offset(w * 0.3f, h * 0.12f), Size(w * 0.4f, h * 0.5f), style = Stroke(w * 0.11f, cap = StrokeCap.Round))
@@ -389,11 +399,6 @@ private fun CircuitPager(spr: VSprites, pager: PagerState, endless: Boolean, due
 private fun RaceOptions(diff: Int, endless: Boolean, duel: Boolean, themeKey: String, starsMap: Map<String, Int>, unlocked: Boolean,
                         onDiff: (Int) -> Unit, onEndless: (Boolean) -> Unit, onDuel: (Boolean) -> Unit, modifier: Modifier) {
     Column(modifier) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            ModeTab(0, stringResource(R.string.vroum_race), !endless && !duel, false, Modifier.weight(1f)) { onDuel(false); onEndless(false) }
-            ModeTab(1, stringResource(R.string.vroum_endless), endless && !duel, !unlocked, Modifier.weight(1f)) { if (unlocked) { onDuel(false); onEndless(true) } else SoundEngine.playVroumUi() }
-            ModeTab(2, stringResource(R.string.vroum_duel), duel, false, Modifier.weight(1f)) { onDuel(true) }
-        }
         // une phrase qui dit ce qu'on va faire (hauteur fixe : rien ne saute quand on change de mode)
         Box(Modifier.fillMaxWidth().height(40.dp).padding(top = 5.dp), contentAlignment = Alignment.Center) {
             Text(if (duel) stringResource(R.string.vroum_duel_hint) else if (endless) stringResource(R.string.vroum_mode_arcade_hint)
@@ -424,7 +429,7 @@ internal fun RaceSetupScreen(spr: VSprites, vehicle: Int, themeIdx: Int, diff: I
         BoxWithConstraints(Modifier.fillMaxSize()) {
             val landscape = maxWidth > maxHeight
             val header: @Composable () -> Unit = {
-                MenuHeader(stringResource(R.string.vroum_pick_level), 2, onBack) {
+                MenuHeader(stringResource(R.string.vroum_pick_level), 3, onBack) {
                     // rappel du bolide choisi : on tape dessus pour revenir au garage
                     (spr.fronts.getOrNull(vehicle) ?: spr.vehicles.getOrNull(vehicle))?.let {
                         Box(Modifier.size(50.dp).clip(CircleShape).background(M_GLASS).border(2.dp, Color.White.copy(alpha = 0.6f), CircleShape).clickableNoRipple(onBack), contentAlignment = Alignment.Center) {
@@ -452,6 +457,274 @@ internal fun RaceSetupScreen(spr: VSprites, vehicle: Int, themeIdx: Int, diff: I
                 CircuitPager(spr, pager, endless, duel, diff, starsMap, Modifier.fillMaxWidth().weight(1f))
                 RaceOptions(diff, endless, duel, THEMES[cur].key, starsMap, unlocked, onDiff, onEndless, onDuel, Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp))
                 go(Modifier.fillMaxWidth().padding(start = 22.dp, end = 22.dp, top = 12.dp, bottom = 18.dp))
+            }
+        }
+    }
+}
+
+// ===========================================================================
+// MENU façon Mario Kart : 1) MODE de jeu (Championnat, Course, Arcade) puis nombre de joueurs quand le mode le
+// permet · 2) bolide · 3) coupe (Championnat) ou circuit (Course, Arcade).
+// CHAMPIONNAT : 5 coupes de 4 courses enchaînées ; chaque course donne 0 à 3 étoiles, la coupe une NOTE GLOBALE.
+// ===========================================================================
+
+internal enum class VMode { CUP, RACE, ARCADE }
+
+internal class VCup(val key: String, val nameRes: Int, val themes: List<String>, val color: Color)
+
+internal val CUPS = listOf(
+    VCup("acorn", R.string.vroum_cup_acorn, listOf("forest", "night", "farm", "beach"), Color(0xFF58C46A)),
+    VCup("sun", R.string.vroum_cup_sun, listOf("desert", "jungle", "dino", "volcano"), Color(0xFFFF8A3D)),
+    VCup("snow", R.string.vroum_cup_snow, listOf("snow", "ice", "sky", "candy"), Color(0xFF5CC8FF)),
+    VCup("neon", R.string.vroum_cup_neon, listOf("city", "tokyo", "cyber", "works"), Color(0xFFFF5DA2)),
+    VCup("star", R.string.vroum_cup_star, listOf("ocean", "spooky", "space", "circuit"), Color(0xFFFFC83D)),
+)
+
+/** Indice (dans THEMES) du circuit n° [race] (0..3) de la coupe. */
+internal fun cupThemeIdx(cup: VCup, race: Int): Int = THEMES.indexOfFirst { it.key == cup.themes[race] }.coerceAtLeast(0)
+
+/** Note globale d'une coupe : la somme des étoiles des 4 courses (0..12) donne 0 à 3 étoiles. */
+internal fun cupGlobalStars(sum: Int): Int = when { sum >= 11 -> 3; sum >= 8 -> 2; sum >= 4 -> 1; else -> 0 }
+
+/** Grande carte de mode : pictogramme dessiné, nom en gros, une phrase qui dit ce qu'on va faire. */
+@Composable
+private fun ModeCard(kind: Int, title: String, desc: String, selected: Boolean, locked: Boolean, color: Color, modifier: Modifier, onClick: () -> Unit) {
+    val sc by animateFloatAsState(if (selected) 1f else 0.95f, spring(dampingRatio = 0.6f), label = "modeCard")
+    val shape = RoundedCornerShape(26.dp)
+    Row(modifier.scale(sc).alpha(if (locked) 0.6f else 1f).shadow(if (selected) 16.dp else 0.dp, shape, clip = false).clip(shape)
+        .background(if (selected) Brush.horizontalGradient(listOf(color, lerpColor(color, M_NIGHT, 0.45f))) else Brush.horizontalGradient(listOf(M_GLASS, Color(0x1AFFFFFF))))
+        .border(if (selected) 3.dp else 1.dp, if (selected) Color.White else Color.White.copy(alpha = 0.22f), shape)
+        .clickableNoRipple(onClick).padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.size(62.dp).clip(CircleShape).background(if (selected) Color.White.copy(alpha = 0.95f) else Color.White.copy(alpha = 0.14f)), contentAlignment = Alignment.Center) {
+            Canvas(Modifier.size(36.dp)) { modeIcon(if (locked) 3 else kind, if (selected) lerpColor(color, M_NIGHT, 0.35f) else Color.White.copy(alpha = 0.9f)) }
+        }
+        Column(Modifier.weight(1f).padding(start = 14.dp)) {
+            Text(title.uppercase(), color = Color.White, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = 25.sp, letterSpacing = 0.5.sp, maxLines = 1,
+                overflow = TextOverflow.Ellipsis, style = TextStyle(fontFamily = VROUM_FONT, shadow = TITLE_SHADOW))
+            Text(desc, color = Color.White.copy(alpha = 0.9f), fontWeight = FontWeight.Medium, fontSize = 13.sp, lineHeight = 15.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
+
+/** Bouton « 1 joueur » / « 2 joueurs ». */
+@Composable
+private fun PlayersButton(n: Int, label: String, selected: Boolean, enabled: Boolean, modifier: Modifier, onClick: () -> Unit) {
+    val shape = RoundedCornerShape(20.dp)
+    Row(modifier.alpha(if (enabled) 1f else 0.3f).clip(shape)
+        .background(if (selected) Brush.verticalGradient(listOf(V_CYAN, V_BLUE)) else Brush.verticalGradient(listOf(M_GLASS, Color(0x1AFFFFFF))))
+        .border(if (selected) 2.5.dp else 1.dp, if (selected) Color.White else Color.White.copy(alpha = 0.22f), shape)
+        .clickableNoRipple { if (enabled) onClick() }.padding(vertical = 11.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+        Canvas(Modifier.size(width = if (n == 2) 34.dp else 20.dp, height = 24.dp)) {
+            val h = size.height; val u = if (n == 2) size.width / 2f else size.width
+            for (i in 0 until n) { val cx = u * (i + 0.5f)
+                drawCircle(Color.White, h * 0.2f, Offset(cx, h * 0.24f))
+                drawRoundRect(Color.White, Offset(cx - u * 0.36f, h * 0.5f), Size(u * 0.72f, h * 0.5f), CornerRadius(u * 0.3f, u * 0.3f)) }
+        }
+        Text(label, color = Color.White, fontWeight = FontWeight.Black, fontSize = 16.sp, maxLines = 1, modifier = Modifier.padding(start = 9.dp))
+    }
+}
+
+@Composable
+internal fun ModeSelectScreen(spr: VSprites, mode: VMode, players: Int, onMode: (VMode) -> Unit, onPlayers: (Int) -> Unit, onBack: () -> Unit, onNext: () -> Unit) {
+    val unlocked by Settings.vroumEndlessUnlocked
+    val glow = when (mode) { VMode.CUP -> V_GOLD; VMode.RACE -> V_PINK; VMode.ARCADE -> V_CYAN }
+    Box(Modifier.fillMaxSize()) {
+        MenuBackdrop(spr.title, glow)
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+            val landscape = maxWidth > maxHeight
+            val cards: @Composable (Modifier) -> Unit = { m ->
+                Column(m, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    ModeCard(4, stringResource(R.string.vroum_cup), stringResource(R.string.vroum_cup_hint), mode == VMode.CUP, false, Color(0xFFFFB300), Modifier.fillMaxWidth().weight(1f)) { onMode(VMode.CUP) }
+                    ModeCard(0, stringResource(R.string.vroum_race), stringResource(R.string.vroum_mode_race_hint), mode == VMode.RACE, false, V_PINK, Modifier.fillMaxWidth().weight(1f)) { onMode(VMode.RACE) }
+                    ModeCard(1, stringResource(R.string.vroum_endless), if (unlocked) stringResource(R.string.vroum_mode_arcade_hint) else stringResource(R.string.vroum_endless_locked),
+                        mode == VMode.ARCADE, !unlocked, Color(0xFF39A8FF), Modifier.fillMaxWidth().weight(1f)) { if (unlocked) onMode(VMode.ARCADE) else SoundEngine.playVroumUi() }
+                }
+            }
+            val bottom: @Composable (Modifier) -> Unit = { m ->
+                Column(m) {
+                    // deux joueurs : seulement en Course (écran partagé)
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        PlayersButton(1, stringResource(R.string.vroum_players_1), players == 1 || mode != VMode.RACE, true, Modifier.weight(1f)) { onPlayers(1) }
+                        PlayersButton(2, stringResource(R.string.vroum_duel), players == 2 && mode == VMode.RACE, mode == VMode.RACE, Modifier.weight(1f)) { onPlayers(2) }
+                    }
+                    ChunkyButton(stringResource(R.string.vroum_next).uppercase() + "  ▶", V_GREEN, V_TEAL, Modifier.fillMaxWidth().padding(top = 14.dp), onClick = onNext)
+                }
+            }
+            if (landscape) Column(Modifier.fillMaxSize()) {
+                MenuHeader(stringResource(R.string.vroum_pick_mode), 1, onBack)
+                Row(Modifier.fillMaxSize().padding(start = 16.dp, end = 20.dp, bottom = 14.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    cards(Modifier.weight(1.2f).fillMaxHeight())
+                    Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.Center) { bottom(Modifier.fillMaxWidth()) }
+                }
+            } else Column(Modifier.fillMaxSize()) {
+                MenuHeader(stringResource(R.string.vroum_pick_mode), 1, onBack)
+                cards(Modifier.fillMaxWidth().weight(1f).padding(start = 16.dp, end = 16.dp, top = 14.dp))
+                bottom(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 18.dp))
+            }
+        }
+    }
+}
+
+/** Vignette d'un circuit dans une carte de coupe (image + nom, et ses étoiles si on en donne). */
+@Composable
+private fun CupRaceThumb(spr: VSprites, themeIdx: Int, n: Int, stars: Int, modifier: Modifier) {
+    val shape = RoundedCornerShape(14.dp)
+    Box(modifier.clip(shape).background(Color(0xFF3B2F6B)).border(1.5.dp, Color.White.copy(alpha = 0.55f), shape)) {
+        spr.cards.getOrNull(themeIdx)?.let { Image(BitmapPainter(it), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop) }
+        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0.35f to Color.Transparent, 1f to Color(0xE6000000))))
+        Box(Modifier.align(Alignment.TopStart).padding(5.dp).size(22.dp).clip(CircleShape).background(Color(0xCC000000)), contentAlignment = Alignment.Center) {
+            Text("$n", color = Color.White, fontWeight = FontWeight.Black, fontSize = 12.sp)
+        }
+        Column(Modifier.align(Alignment.BottomStart).padding(horizontal = 7.dp, vertical = 5.dp)) {
+            if (stars >= 0) StarRow(stars, 13.sp)
+            Text(stringResource(THEMES[themeIdx].nameRes), color = Color.White, fontWeight = FontWeight.Black, fontSize = 12.sp, lineHeight = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
+
+@Composable
+internal fun CupSelectScreen(spr: VSprites, vehicle: Int, cupIdx: Int, diff: Int, onDiff: (Int) -> Unit, onBack: () -> Unit, onPlay: (Int) -> Unit) {
+    val starsMap by Settings.vroumStars
+    val pager = rememberPagerState(initialPage = cupIdx.coerceIn(0, CUPS.size - 1)) { CUPS.size }
+    val scope = rememberCoroutineScope()
+    val cur = pager.currentPage
+    val pulse = rememberInfiniteTransition(label = "goCup").animateFloat(1f, 1.035f, infiniteRepeatable(tween(700), RepeatMode.Reverse), label = "p").value
+    val bob = rememberInfiniteTransition(label = "cupBob").animateFloat(0f, 6.2832f, infiniteRepeatable(tween(2600, easing = LinearEasing)), label = "b").value
+    Box(Modifier.fillMaxSize()) {
+        MenuBackdrop(spr.cards.getOrNull(cupThemeIdx(CUPS[cur], 0)) ?: spr.title, CUPS[cur].color)
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+            val landscape = maxWidth > maxHeight
+            val header: @Composable () -> Unit = {
+                MenuHeader(stringResource(R.string.vroum_pick_cup), 3, onBack) {
+                    (spr.fronts.getOrNull(vehicle) ?: spr.vehicles.getOrNull(vehicle))?.let {
+                        Box(Modifier.size(50.dp).clip(CircleShape).background(M_GLASS).border(2.dp, Color.White.copy(alpha = 0.6f), CircleShape).clickableNoRipple(onBack), contentAlignment = Alignment.Center) {
+                            Image(BitmapPainter(it), null, Modifier.fillMaxSize().padding(6.dp), contentScale = ContentScale.Fit)
+                        }
+                    }
+                }
+            }
+            val cups: @Composable (Modifier) -> Unit = { m ->
+                Column(m, horizontalAlignment = Alignment.CenterHorizontally) {
+                    HorizontalPager(state = pager, modifier = Modifier.fillMaxWidth().weight(1f), contentPadding = PaddingValues(horizontal = 40.dp), pageSpacing = 14.dp) { page ->
+                        val off = pager.offsetOf(page).coerceIn(0f, 1f)
+                        val cup = CUPS[page]
+                        val shape = RoundedCornerShape(30.dp)
+                        Column(Modifier.fillMaxSize().padding(vertical = 6.dp).scale(1f - 0.08f * off).alpha(1f - 0.45f * off).shadow(18.dp, shape, clip = false).clip(shape)
+                            .background(Brush.verticalGradient(listOf(lerpColor(cup.color, M_NIGHT, 0.25f), lerpColor(cup.color, M_NIGHT, 0.78f))))
+                            .border(3.dp, if (off < 0.5f) Color.White else Color.White.copy(alpha = 0.25f), shape)
+                            .clickableNoRipple { if (page != pager.currentPage) scope.launch { pager.animateScrollToPage(page) } }.padding(14.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally) {
+                            // le trophée, le nom de la coupe, la note globale déjà obtenue à cette difficulté
+                            Row(Modifier.fillMaxWidth().weight(0.9f), verticalAlignment = Alignment.CenterVertically) {
+                                Box(Modifier.weight(0.8f).fillMaxHeight(), contentAlignment = Alignment.Center) {
+                                    spr.cups.getOrNull(page)?.let { Image(BitmapPainter(it), null, Modifier.fillMaxSize().offset(y = if (page == cur) (sin(bob) * 4f).dp else 0.dp), contentScale = ContentScale.Fit) }
+                                }
+                                Column(Modifier.weight(1.2f).padding(start = 8.dp)) {
+                                    Text(stringResource(cup.nameRes).uppercase(), color = Color.White, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = 24.sp, lineHeight = 26.sp,
+                                        maxLines = 2, style = TextStyle(fontFamily = VROUM_FONT, shadow = TITLE_SHADOW))
+                                    StarRow(starsMap["cup_${cup.key}_$diff"] ?: 0, 28.sp)
+                                }
+                            }
+                            // ses quatre courses, dans l'ordre
+                            Column(Modifier.fillMaxWidth().weight(1.5f).padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                for (r in 0..1) Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    for (c in 0..1) { val n = r * 2 + c; CupRaceThumb(spr, cupThemeIdx(cup, n), n + 1, -1, Modifier.weight(1f).fillMaxHeight()) }
+                                }
+                            }
+                        }
+                    }
+                    Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                        for (i in CUPS.indices) Box(Modifier.size(width = if (i == cur) 20.dp else 8.dp, height = 7.dp).clip(CircleShape)
+                            .background(if (i == cur) V_GOLD else Color.White.copy(alpha = 0.35f)).clickableNoRipple { scope.launch { pager.animateScrollToPage(i) } })
+                    }
+                }
+            }
+            val options: @Composable (Modifier) -> Unit = { m ->
+                Column(m) {
+                    val labels = listOf(R.string.vroum_diff_easy, R.string.vroum_diff_medium, R.string.vroum_diff_hard)
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        for (i in 0..2) DiffButton(i, stringResource(labels[i]), i == diff, starsMap["cup_${CUPS[cur].key}_$i"] ?: -1, true, Modifier.weight(1f)) { onDiff(i) }
+                    }
+                    Text(stringResource(R.string.vroum_cup_hint), color = Color.White.copy(alpha = 0.85f), fontWeight = FontWeight.Medium, fontSize = 12.sp, textAlign = TextAlign.Center, maxLines = 1,
+                        overflow = TextOverflow.Ellipsis, modifier = Modifier.fillMaxWidth().padding(top = 5.dp))
+                    ChunkyButton(stringResource(R.string.vroum_go), V_PINK, V_ORANGE, Modifier.fillMaxWidth().padding(top = 10.dp).scale(pulse), height = 72.dp, fontSize = 32.sp) { onPlay(cur) }
+                }
+            }
+            if (landscape) Column(Modifier.fillMaxSize()) {
+                header()
+                Row(Modifier.fillMaxSize().padding(start = 12.dp, end = 20.dp, bottom = 14.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                    cups(Modifier.weight(1.15f).fillMaxHeight())
+                    Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.Center) { options(Modifier.fillMaxWidth()) }
+                }
+            } else Column(Modifier.fillMaxSize()) {
+                header()
+                Spacer(Modifier.height(8.dp))
+                cups(Modifier.fillMaxWidth().weight(1f))
+                options(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 18.dp))
+            }
+        }
+    }
+}
+
+/** Fin de coupe : le trophée, les quatre courses avec leurs étoiles, le total, et la NOTE GLOBALE qui s'affiche en grand. */
+@Composable
+internal fun CupResultScreen(spr: VSprites, cupIdx: Int, stars: IntArray, scores: IntArray, onAgain: () -> Unit, onOther: () -> Unit) {
+    val cup = CUPS[cupIdx]
+    val sum = stars.sum(); val global = cupGlobalStars(sum)
+    var t by remember { mutableStateOf(0f) }
+    LaunchedEffect(Unit) { val t0 = withFrameNanos { it }; while (true) { val now = withFrameNanos { it }; t = (now - t0) / 1e9f } }
+    Box(Modifier.fillMaxSize()) {
+        MenuBackdrop(spr.cards.getOrNull(cupThemeIdx(cup, 3)) ?: spr.title, cup.color)
+        // confettis tant que la note est bonne
+        if (global > 0) Canvas(Modifier.fillMaxSize()) {
+            for (i in 0 until 46) {
+                val h1 = ((i * 7919 + 13) % 1000) / 1000f; val h2 = ((i * 104729 + 7) % 1000) / 1000f
+                val y = ((t * (0.10f + 0.12f * h2) + h1) % 1f) * size.height
+                val x = (h2 + 0.04f * sin(t * 2f + i)) * size.width
+                val c = listOf(V_GOLD, V_PINK, V_CYAN, V_GREEN, V_ORANGE)[i % 5]
+                rotate(t * 120f + i * 37f, Offset(x, y)) { drawRect(c, Offset(x - 7f, y - 4f), Size(14f, 8f)) }
+            }
+        }
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+            val landscape = maxWidth > maxHeight
+            val head: @Composable (Modifier) -> Unit = { m ->
+                Column(m, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                    Text(stringResource(cup.nameRes).uppercase(), color = Color.White, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = 30.sp, textAlign = TextAlign.Center,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis, style = TextStyle(fontFamily = VROUM_FONT, shadow = TITLE_SHADOW))
+                    spr.cups.getOrNull(cupIdx)?.let {
+                        Image(BitmapPainter(it), null, Modifier.weight(1f).aspectRatio(1f, matchHeightConstraintsFirst = true).scale(0.9f + 0.1f * min(1f, t * 2f)).offset(y = (sin(t * 2.4f) * 5f).dp), contentScale = ContentScale.Fit)
+                    }
+                    // la note globale : trois grandes étoiles qui s'allument l'une après l'autre
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        for (k in 0 until 3) { val on = k < global && t > 0.7f + k * 0.45f
+                            val sc = if (on) 1f + 0.5f * (1f - ((t - 0.7f - k * 0.45f) / 0.25f).coerceIn(0f, 1f)) else 0.85f
+                            Text("★", color = if (on) V_GOLD else Color.White.copy(alpha = 0.25f), fontSize = 58.sp, modifier = Modifier.scale(sc),
+                                style = TextStyle(fontFamily = VROUM_FONT, shadow = Shadow(Color(0x99000000), Offset(0f, 4f), 8f))) }
+                    }
+                    Text(stringResource(R.string.vroum_cup_total) + "  ${scores.sum()}", color = Color.White, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = 22.sp,
+                        style = TextStyle(fontFamily = VROUM_FONT, shadow = TITLE_SHADOW))
+                }
+            }
+            val races: @Composable (Modifier) -> Unit = { m ->
+                Column(m, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    for (r in 0..1) Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        for (c in 0..1) { val n = r * 2 + c; CupRaceThumb(spr, cupThemeIdx(cup, n), n + 1, stars.getOrElse(n) { 0 }, Modifier.weight(1f).fillMaxHeight()) }
+                    }
+                }
+            }
+            val buttons: @Composable (Modifier) -> Unit = { m ->
+                Column(m) {
+                    ChunkyButton(stringResource(R.string.vroum_cup_again), V_GREEN, V_TEAL, Modifier.fillMaxWidth(), fontSize = 21.sp, onClick = onAgain)
+                    ChunkyButton(stringResource(R.string.vroum_cup_other), Color(0xFF7B6BD6), Color(0xFF4A3D9A), Modifier.fillMaxWidth().padding(top = 10.dp), height = 54.dp, fontSize = 18.sp, onClick = onOther)
+                }
+            }
+            if (landscape) Row(Modifier.fillMaxSize().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                head(Modifier.weight(1f).fillMaxHeight())
+                Column(Modifier.weight(1f).fillMaxHeight()) { races(Modifier.fillMaxWidth().weight(1f)); buttons(Modifier.fillMaxWidth().padding(top = 12.dp)) }
+            } else Column(Modifier.fillMaxSize().padding(start = 18.dp, end = 18.dp, top = 22.dp, bottom = 18.dp)) {
+                head(Modifier.fillMaxWidth().weight(1.25f))
+                races(Modifier.fillMaxWidth().weight(1f).padding(top = 12.dp))
+                buttons(Modifier.fillMaxWidth().padding(top = 14.dp))
             }
         }
     }

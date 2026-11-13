@@ -17,8 +17,8 @@ android {
         applicationId = "com.goodbrainrot.app"
         minSdk = 29
         targetSdk = 35
-        versionCode = 121
-        versionName = "4.01"
+        versionCode = 122
+        versionName = "4.02"
 
         // Date de build injectee dans l'app (visible dans les Options).
         val buildTime = SimpleDateFormat("dd/MM/yyyy HH:mm").apply {
