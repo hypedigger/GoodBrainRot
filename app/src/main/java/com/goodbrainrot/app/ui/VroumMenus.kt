@@ -190,54 +190,78 @@ internal fun GarageScreen(spr: VSprites, vehicle: Int, colors: List<Color>, onBa
     LaunchedEffect(pager.currentPage) { strip.animateScrollToItem((pager.currentPage - 2).coerceAtLeast(0)) }
     val cur = pager.currentPage
     val bob = rememberInfiniteTransition(label = "bob").animateFloat(0f, 6.2832f, infiniteRepeatable(tween(2600, easing = LinearEasing)), label = "b").value
+
+    // le bolide en grand sur son podium (carrousel) + flèches
+    val hero: @Composable (Modifier) -> Unit = { m ->
+        Box(m) {
+            HorizontalPager(state = pager, modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(horizontal = 56.dp)) { page ->
+                val off = pager.offsetOf(page).coerceIn(0f, 1f)
+                val img = spr.fronts.getOrNull(page) ?: spr.vehicles.getOrNull(page)
+                BoxWithConstraints(Modifier.fillMaxSize().clickableNoRipple { if (page == pager.currentPage) onPick(page) else scope.launch { pager.animateScrollToPage(page) } },
+                    contentAlignment = Alignment.Center) {
+                    // carré le plus grand qui tient : limité par la largeur en portrait, par la hauteur en paysage
+                    val side = if (maxWidth < maxHeight) maxWidth else maxHeight
+                    // podium : disque lumineux à la couleur du bolide + ombre au sol
+                    Canvas(Modifier.size(side).scale(1f - 0.25f * off).alpha(1f - 0.6f * off)) {
+                        val c = Offset(size.width / 2f, size.height * 0.80f)
+                        drawOval(Brush.radialGradient(listOf(colors[page].copy(alpha = 0.55f), Color.Transparent), center = c, radius = size.width * 0.52f),
+                            topLeft = Offset(c.x - size.width * 0.52f, c.y - size.width * 0.13f), size = Size(size.width * 1.04f, size.width * 0.26f))
+                        drawOval(Color.White.copy(alpha = 0.16f), topLeft = Offset(c.x - size.width * 0.40f, c.y - size.width * 0.075f), size = Size(size.width * 0.80f, size.width * 0.15f))
+                        drawOval(Color.Black.copy(alpha = 0.35f), topLeft = Offset(c.x - size.width * 0.26f, c.y - size.width * 0.035f), size = Size(size.width * 0.52f, size.width * 0.07f))
+                    }
+                    if (img != null) Image(BitmapPainter(img), null, contentScale = ContentScale.Fit,
+                        modifier = Modifier.size(side * 0.86f).scale(1f - 0.32f * off).alpha(1f - 0.55f * off)
+                            .offset(y = if (page == cur) (sin(bob) * 5f - 8f).dp else (-8).dp))
+                }
+            }
+            ArrowButton(true, cur > 0, Modifier.align(Alignment.CenterStart).padding(start = 10.dp)) { scope.launch { pager.animateScrollToPage(cur - 1) } }
+            ArrowButton(false, cur < VEHICLES.size - 1, Modifier.align(Alignment.CenterEnd).padding(end = 10.dp)) { scope.launch { pager.animateScrollToPage(cur + 1) } }
+        }
+    }
+    // nom du bolide, en grand, souligné à sa couleur
+    val name: @Composable () -> Unit = {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(stringResource(VEHICLES[cur].nameRes).uppercase(), color = Color.White, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = 32.sp,
+                letterSpacing = 1.sp, textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis, style = TextStyle(shadow = TITLE_SHADOW))
+            Box(Modifier.padding(top = 4.dp).size(width = 86.dp, height = 6.dp).clip(CircleShape).background(Brush.horizontalGradient(listOf(colors[cur], V_GOLD))))
+            Text("${cur + 1} / ${VEHICLES.size}", color = Color.White.copy(alpha = 0.6f), fontWeight = FontWeight.Bold, fontSize = 13.sp, modifier = Modifier.padding(top = 6.dp))
+        }
+    }
+    // tous les bolides d'un coup d'œil : on tape pour y aller directement
+    val thumbs: @Composable () -> Unit = {
+        LazyRow(state = strip, modifier = Modifier.fillMaxWidth().padding(top = 10.dp), contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            items(VEHICLES.size) { i ->
+                val sel = i == cur
+                val sc by animateFloatAsState(if (sel) 1.12f else 1f, spring(dampingRatio = 0.55f), label = "thumb")
+                Box(Modifier.size(62.dp).scale(sc).clip(RoundedCornerShape(18.dp))
+                    .background(if (sel) Brush.verticalGradient(listOf(colors[i], lerpColor(colors[i], Color.Black, 0.35f))) else Brush.verticalGradient(listOf(M_GLASS, M_GLASS)))
+                    .border(if (sel) 3.dp else 1.dp, if (sel) Color.White else Color.White.copy(alpha = 0.25f), RoundedCornerShape(18.dp))
+                    .clickableNoRipple { scope.launch { pager.animateScrollToPage(i) } }, contentAlignment = Alignment.Center) {
+                    (spr.fronts.getOrNull(i) ?: spr.vehicles.getOrNull(i))?.let { Image(BitmapPainter(it), null, Modifier.fillMaxSize().padding(7.dp), contentScale = ContentScale.Fit) }
+                }
+            }
+        }
+    }
     Box(Modifier.fillMaxSize()) {
         MenuBackdrop(spr.title, colors[cur])
-        Column(Modifier.fillMaxSize()) {
-            MenuHeader(stringResource(R.string.vroum_choose), 1, onBack)
-            Box(Modifier.fillMaxWidth().weight(1f)) {
-                HorizontalPager(state = pager, modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(horizontal = 56.dp)) { page ->
-                    val off = pager.offsetOf(page).coerceIn(0f, 1f)
-                    val img = spr.fronts.getOrNull(page) ?: spr.vehicles.getOrNull(page)
-                    Box(Modifier.fillMaxSize().clickableNoRipple { if (page == pager.currentPage) onPick(page) else scope.launch { pager.animateScrollToPage(page) } },
-                        contentAlignment = Alignment.Center) {
-                        // podium : disque lumineux à la couleur du bolide + ombre au sol
-                        Canvas(Modifier.fillMaxWidth().aspectRatio(1f).scale(1f - 0.25f * off).alpha(1f - 0.6f * off)) {
-                            val c = Offset(size.width / 2f, size.height * 0.80f)
-                            drawOval(Brush.radialGradient(listOf(colors[page].copy(alpha = 0.55f), Color.Transparent), center = c, radius = size.width * 0.52f),
-                                topLeft = Offset(c.x - size.width * 0.52f, c.y - size.width * 0.13f), size = Size(size.width * 1.04f, size.width * 0.26f))
-                            drawOval(Color.White.copy(alpha = 0.16f), topLeft = Offset(c.x - size.width * 0.40f, c.y - size.width * 0.075f), size = Size(size.width * 0.80f, size.width * 0.15f))
-                            drawOval(Color.Black.copy(alpha = 0.35f), topLeft = Offset(c.x - size.width * 0.26f, c.y - size.width * 0.035f), size = Size(size.width * 0.52f, size.width * 0.07f))
-                        }
-                        if (img != null) Image(BitmapPainter(img), null, contentScale = ContentScale.Fit,
-                            modifier = Modifier.fillMaxWidth(0.86f).aspectRatio(1f).scale(1f - 0.32f * off).alpha(1f - 0.55f * off)
-                                .offset(y = if (page == cur) (sin(bob) * 5f - 8f).dp else (-8).dp))
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+            if (maxWidth > maxHeight) Column(Modifier.fillMaxSize()) {
+                // paysage : le bolide à gauche, le reste à droite
+                MenuHeader(stringResource(R.string.vroum_choose), 1, onBack)
+                Row(Modifier.fillMaxSize()) {
+                    hero(Modifier.weight(1.1f).fillMaxHeight())
+                    Column(Modifier.weight(1f).fillMaxHeight().padding(end = 8.dp), verticalArrangement = Arrangement.Center) {
+                        name(); thumbs()
+                        ChunkyButton(stringResource(R.string.vroum_next).uppercase() + "  ▶", V_GREEN, V_TEAL, Modifier.fillMaxWidth().padding(start = 22.dp, end = 22.dp, top = 16.dp, bottom = 10.dp), onClick = onNext)
                     }
                 }
-                ArrowButton(true, cur > 0, Modifier.align(Alignment.CenterStart).padding(start = 10.dp)) { scope.launch { pager.animateScrollToPage(cur - 1) } }
-                ArrowButton(false, cur < VEHICLES.size - 1, Modifier.align(Alignment.CenterEnd).padding(end = 10.dp)) { scope.launch { pager.animateScrollToPage(cur + 1) } }
+            } else Column(Modifier.fillMaxSize()) {
+                MenuHeader(stringResource(R.string.vroum_choose), 1, onBack)
+                hero(Modifier.fillMaxWidth().weight(1f))
+                name(); thumbs()
+                ChunkyButton(stringResource(R.string.vroum_next).uppercase() + "  ▶", V_GREEN, V_TEAL, Modifier.fillMaxWidth().padding(start = 22.dp, end = 22.dp, top = 16.dp, bottom = 18.dp), onClick = onNext)
             }
-            // nom du bolide, en grand, souligné à sa couleur
-            Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(stringResource(VEHICLES[cur].nameRes).uppercase(), color = Color.White, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = 32.sp,
-                    letterSpacing = 1.sp, textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis, style = TextStyle(shadow = TITLE_SHADOW))
-                Box(Modifier.padding(top = 4.dp).size(width = 86.dp, height = 6.dp).clip(CircleShape).background(Brush.horizontalGradient(listOf(colors[cur], V_GOLD))))
-                Text("${cur + 1} / ${VEHICLES.size}", color = Color.White.copy(alpha = 0.6f), fontWeight = FontWeight.Bold, fontSize = 13.sp, modifier = Modifier.padding(top = 6.dp))
-            }
-            // tous les bolides d'un coup d'œil : on tape pour y aller directement
-            LazyRow(state = strip, modifier = Modifier.fillMaxWidth().padding(top = 10.dp), contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                items(VEHICLES.size) { i ->
-                    val sel = i == cur
-                    val sc by animateFloatAsState(if (sel) 1.12f else 1f, spring(dampingRatio = 0.55f), label = "thumb")
-                    Box(Modifier.size(62.dp).scale(sc).clip(RoundedCornerShape(18.dp))
-                        .background(if (sel) Brush.verticalGradient(listOf(colors[i], lerpColor(colors[i], Color.Black, 0.35f))) else Brush.verticalGradient(listOf(M_GLASS, M_GLASS)))
-                        .border(if (sel) 3.dp else 1.dp, if (sel) Color.White else Color.White.copy(alpha = 0.25f), RoundedCornerShape(18.dp))
-                        .clickableNoRipple { scope.launch { pager.animateScrollToPage(i) } }, contentAlignment = Alignment.Center) {
-                        (spr.fronts.getOrNull(i) ?: spr.vehicles.getOrNull(i))?.let { Image(BitmapPainter(it), null, Modifier.fillMaxSize().padding(7.dp), contentScale = ContentScale.Fit) }
-                    }
-                }
-            }
-            ChunkyButton(stringResource(R.string.vroum_next).uppercase() + "  ▶", V_GREEN, V_TEAL, Modifier.fillMaxWidth().padding(start = 22.dp, end = 22.dp, top = 16.dp, bottom = 18.dp), onClick = onNext)
         }
     }
 }

@@ -494,6 +494,15 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
             bills.add(Bill(VroumGame.PLAYER_Z + 0.02f, x, gy, 1.5f + 15f * (k * k), ring, 0.6f * (1f - k), 1f, 0.9f, 0.6f, squash = 0.9f, flat = true))
             bills.add(Bill(VroumGame.PLAYER_Z + 0.03f, x, gy, 4f + 10f * k, disc, 0.25f * (1f - k), 0.75f, 0.62f, 0.45f, squash = 0.9f, flat = true))
         }
+        // REPÈRES DE REBOND : pendant un saut, une flèche dorée sautille au-dessus de ce sur quoi on peut retomber
+        if (g.jumping) for (e in g.enemies) {
+            if (!e.alive || e.ghost || e.lane !in g.coveredLanes() || e.z < VroumGame.PLAYER_Z + 1f || e.z > VroumGame.PLAYER_Z + 70f) continue
+            val x = g.xCenter(e.z) + (if (e.rival) g.laneXf(e.fx) else g.laneX(e.lane))
+            val y = ground(e.z) + 3.6f + 0.35f * sin(g.elapsed * 12f)
+            // (chevron pointe en bas, fait de cinq pastilles)
+            for (i in -2..2) bills.add(Bill(e.z - 0.04f, x + i * 0.34f, y + kotlin.math.abs(i) * 0.34f, 0.46f, disc, 0.95f, 1f, 0.85f, 0.2f))
+            bills.add(Bill(e.z + 0.02f, x, ground(e.z), 4.2f, ring, 0.7f, 1f, 0.9f, 0.3f, squash = 0.9f, flat = true))
+        }
         // rayon LASER : segments lumineux posés le long de notre voie, loin devant
         if (g.weapon == VWeapon.LASER) {
             val cover = g.coveredLanes(); val cl = (cover.first + cover.last) / 2f

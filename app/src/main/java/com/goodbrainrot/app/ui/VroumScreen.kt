@@ -380,8 +380,35 @@ fun VroumScreen(onBack: () -> Unit) {
                             }
                     )
                     @Suppress("UNUSED_EXPRESSION") tick
-                    Canvas(Modifier.fillMaxSize()) {
+                    val speedPath = remember { androidx.compose.ui.graphics.Path() }
+                    Canvas(Modifier.fillMaxSize().clip(androidx.compose.ui.graphics.RectangleShape)) {
                         @Suppress("UNUSED_EXPRESSION") tick
+                        // LIGNES DE VITESSE : des pointes claires fuient du point de fuite vers les bords de l'écran. Discrètes à
+                        // pleine vitesse, franches pendant un boost (bleutées), arc-en-ciel pendant le super boost.
+                        run {
+                            val lvl = g.boostLevel
+                            val k = if (g.over || g.inIntro) 0f else if (lvl == 2) 1f else if (lvl == 1) 0.8f else ((g.mps - 25f) / 16f).coerceIn(0f, 0.4f)
+                            if (k > 0.04f) {
+                                val cx = size.width / 2f; val cy = size.height * (if (g.wide) 0.36f else 0.43f)
+                                val rMax = kotlin.math.hypot(size.width / 2f, size.height - cy)
+                                val n = (14 + 30 * k).toInt()
+                                speedPath.rewind()
+                                for (i in 0 until n) {
+                                    val h1 = ((i * 7919 + 13) % 1000) / 1000f; val h2 = ((i * 104729 + 7) % 1000) / 1000f
+                                    val ph = (g.elapsed * (1.6f + 1.8f * h1) * (0.7f + 0.6f * k) + h2) % 1f
+                                    val ang = (i + h2 * 0.8f) / n * 6.2832f
+                                    // rien au-dessus de la route devant nous (un cône vers le bas reste dégagé pour bien lire le trafic)
+                                    val ca = cos(ang); val sa = sin(ang)
+                                    if (sa > 0.80f) continue
+                                    val r0 = rMax * (0.42f + 0.50f * ph); val len = rMax * (0.07f + 0.16f * k) * (0.5f + ph)
+                                    val wd = size.height / 100f * (0.28f + 0.50f * h1) * (0.6f + ph)
+                                    val x0 = cx + ca * r0; val y0 = cy + sa * r0; val x1 = cx + ca * (r0 + len); val y1 = cy + sa * (r0 + len)
+                                    speedPath.moveTo(x0, y0); speedPath.lineTo(x1 - sa * wd, y1 + ca * wd); speedPath.lineTo(x1 + sa * wd, y1 - ca * wd); speedPath.close()
+                                }
+                                val col = if (lvl == 2) { val (r, gg, b) = g.rainbow(g.elapsed * 0.9f); Color(0.6f + 0.4f * r, 0.6f + 0.4f * gg, 0.6f + 0.4f * b) } else if (lvl == 1) Color(0xFFCFEBFF) else Color.White
+                                drawPath(speedPath, col.copy(alpha = 0.20f + 0.45f * k))
+                            }
+                        }
                         val snap = g.textSnap
                         val u = size.height / 100f
                         if (snap.isNotEmpty()) drawIntoCanvas { c ->
@@ -407,15 +434,16 @@ fun VroumScreen(onBack: () -> Unit) {
                     VroumHud(g, tick)
                     LaneHints(Modifier.align(Alignment.BottomCenter))
                     // BOOST (à tenir) à gauche, SAUT à droite ; la jauge de boost juste au-dessus
-                    Column(Modifier.align(Alignment.BottomCenter).padding(bottom = 20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    // (en paysage : dans le coin bas-droit, pour ne pas cacher le bolide au centre)
+                    Column(Modifier.align(if (g.wide) Alignment.BottomEnd else Alignment.BottomCenter).padding(bottom = 20.dp, end = if (g.wide) 100.dp else 0.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         BoostBar(g, tick, Modifier.padding(bottom = 10.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(26.dp), verticalAlignment = Alignment.CenterVertically) {
                             BoostButton(g, tick) { held -> g.boostHeld = held }
                             JumpButton(cooldown = (g.jumpCd / g.JUMP_CD).coerceIn(0f, 1f), frame = tick) { glView.queueEvent { g.jump() } }
                         }
                     }
-                    ItemSlot(g, spr.items, tick, Modifier.align(Alignment.CenterStart).padding(start = 12.dp).offset(y = (-40).dp))
-                    TakedownChip(g, tick, Modifier.align(Alignment.CenterEnd).padding(end = 12.dp).offset(y = (-40).dp))
+                    ItemSlot(g, spr.items, tick, Modifier.align(Alignment.CenterStart).padding(start = 12.dp).offset(y = if (g.wide) 14.dp else (-40).dp))
+                    TakedownChip(g, tick, Modifier.align(Alignment.CenterEnd).padding(end = 12.dp).offset(y = if (g.wide) (-20).dp else (-40).dp))
                     if (countdown >= 0) CountdownOverlay(countdown)
                     // tutoriel de la toute première partie (3 bulles, avance avec les gestes de l'enfant)
                     if (tutoStep >= 0 && countdown < 0) VroumTutoOverlay(tutoStep)
@@ -814,7 +842,7 @@ private fun VroumHud(g: VroumGame, frame: Int) {
         if (!g.endless) {
             val frac = (g.dist / VroumGame.LEVEL_LEN).coerceIn(0f, 1f)
             val left = (VroumGame.LEVEL_LEN - g.dist).toInt().coerceAtLeast(0)
-            Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth(if (g.wide) 0.46f else 1f).padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.weight(1f).height(14.dp)) {
                     Box(Modifier.fillMaxWidth().height(6.dp).align(Alignment.CenterStart).clip(RoundedCornerShape(3.dp)).background(Color(0x66000000)))
                     Box(Modifier.fillMaxWidth(frac).height(6.dp).align(Alignment.CenterStart).clip(RoundedCornerShape(3.dp)).background(Brush.horizontalGradient(listOf(V_GREEN, V_GOLD))))
@@ -833,7 +861,7 @@ private fun VroumHud(g: VroumGame, frame: Int) {
         }
         // ÉLAN : compteur de vitesse (km/h) + jauge qui se remplit quand on roule proprement et se vide sur un choc ;
         // à droite la SÉRIE (multiplicateur de points) quand elle est lancée.
-        Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth(if (g.wide) 0.46f else 1f).padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             val hot = g.flow >= 0.999f
             Row(Modifier.width(150.dp).height(30.dp).clip(RoundedCornerShape(15.dp)).background(Color(0x77000000)).padding(start = 8.dp, end = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text("⚡", fontSize = 14.sp, modifier = Modifier.padding(end = 5.dp))

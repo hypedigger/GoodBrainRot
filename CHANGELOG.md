@@ -1,9 +1,13 @@
 # Nouveautés — GoodBrainRot
 
-## 3.96 — 2026-11-14
+## 3.97 — 2026-11-13
+- **Vroum — sensation de vitesse** : de vraies lignes de vitesse fuient vers les bords de l'écran dès qu'on roule à fond, franches et bleutées pendant le boost, arc-en-ciel pendant le super boost.
+- **Vroum — rebonds plus lisibles** : pendant un saut, un chevron doré sautille au-dessus de chaque véhicule sur lequel on peut retomber, avec un anneau au sol.
+- **Vroum en paysage (tablette)** : le garage passe sur deux colonnes (bolide à gauche, nom, vignettes et bouton à droite) ; en course, la jauge et les boutons BOOST / saut se rangent en bas à droite pour ne plus cacher le bolide, et les jauges du haut n'occupent plus toute la largeur.
+## 3.96 — 2026-11-13
 - **Vroum — finitions** : le bruit de tôle ne se répète plus en rafale (laser, bombe), la grosse explosion est réservée aux camions, bus et rivaux ; la caméra tremble tant qu'on brûle le boost ; les rivaux collent un peu moins ; jauge de boost plus grande ; étoiles plus faciles à gagner en Facile ; l'ombre verte parasite autour de la voiture de course a disparu.
 - **Crimson Sky** : les escadrons ne deviennent vulnérables qu'une fois entrés dans l'écran (on les voit arriver), et une vague dure quelques secondes même si elle est balayée tout de suite.
-## 3.95 — 2026-11-14
+## 3.95 — 2026-11-13
 - **Vroum façon Burnout : le BOOST.** Une jauge à segments qu'on **brûle en tenant le bouton BOOST** (nouveau bouton à côté du saut). Elle se remplit en prenant des risques — frôler, percuter, rebondir — et **s'allonge avec les takedowns** (jusqu'à ×4) ; un accident en retire un segment. Pendant le boost : flammes bleues, traits de vitesse, champ de vision qui s'ouvre, et **le moteur hurle** (vrai enregistrement de voiture de course). En Facile le boost part tout seul quand la jauge est pleine.
 - **Takedowns.** On peut **rentrer dans tout ce qui roule dans notre sens** : les petites voitures toujours (anneau doré = cible), les camions et bus seulement en boost. La voiture percutée s'envole en tournoyant et peut en faucher d'autres (**STRIKE**). Ce qui arrive **en face** (vu de face, phares allumés, halo rouge) ne se percute pas : on l'esquive ou on saute.
 - **Rivaux et REVANCHE.** D'autres bolides se battent avec nous. Ils nous serrent (un « ! » rouge prévient) et nous dégagent d'une voie : ils deviennent alors une cible de **revanche** (points doublés, jauge remplie). On peut leur donner un **coup d'épaule** en se rabattant sur eux : au bord de la route, ils sortent.
@@ -11,7 +15,7 @@
 - **Boîtes à objets** (façon Mario Kart) toutes les ~9 secondes, avec roulette : **bombe** qui balaie l'écran, **laser**, **lance-flammes**, **aimant** à pièces, **bouclier**, canons, étoile géante, super boost. **Tremplins** avec pièces en l'air.
 - **20 circuits** (15 nouveaux), chacun avec son décor, ses objets et **sa spécificité**, affichée sur sa carte : Plage (crabes, dunes-tremplins), Canyon (tempête de sable), Centre-ville (embouteillage), Route des étoiles (faible gravité, route arc-en-ciel), Sous l'océan (bulles-trampolines, rien en face), Pays des bonbons (pièces doublées), La ferme (vaches, moutons, poules), Temple de la jungle (rochers qui dévalent), Vallée des dinosaures (troupeaux), Manoir hanté (voitures fantômes à traverser), Grand Prix (vitesse pure, plus de rivaux), Banquise (ça glisse), Chantier (tremplins partout), Royaume des nuages (rafales de vent), Néon cyber (portiques laser).
 - Impacts qui « claquent » (micro-ralenti), compteur de takedowns, écran de fin enrichi. Difficultés recalibrées par simulation ; les règles sont couvertes par des tests automatiques.
-## 3.94 — 2026-11-14
+## 3.94 — 2026-11-13
 - **Vroum — menus refaits façon jeu de console** : un **Garage** où le bolide est présenté en grand sur son podium (on glisse pour en changer, on entend son klaxon, tous les bolides restent accessibles d'un tap en bas), puis un écran **Course** : circuits en grand carrousel avec étoiles et record, trois onglets de mode à pictogramme (Course / Arcade / 2 joueurs) avec une phrase qui dit ce qu'on va faire, difficulté à 1-2-3 barres, et un gros bouton **GO !**. Boutons épais qui s'enfoncent, fond sombre animé, plus aucun emoji dans l'interface.
 - **Photo finish** : à l'arrivée, un polaroïd claque à l'écran (flash d'appareil photo) avec le bolide **vu de face** sous le damier. 12 nouveaux sprites de face (un par bolide), aussi utilisés dans le Garage.
 - **Crimson Sky — vagues refaites** : les ennemis ne tombent plus seulement en paquets, ils volent en **escadrons sur trajectoire** (plongeon en U, serpent, looping, balayage latéral, tenaille par les deux coins, diagonales croisées, ronde), le nez du vaisseau suivant la courbe. **Formations** qui viennent se poster (V, ligne, deux rangs) et tirent chacun leur tour ; **kamikazes** qui piquent sur le joueur ; **canonnières** qui déroulent un motif de balles (éventail visé, double anneau décalé, tourniquet, rideau).
