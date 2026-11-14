@@ -109,6 +109,7 @@ internal class VRacer(val veh: Int, val rank: Int, val pace: Float, val phase: F
     var finT = -1f                // temps d'arrivée (-1 = en course)
     var e: VEnemy? = null
     var revenge = false
+    var boss = false              // champion de la coupe (dernière course) : plus gros, couronné, il se relève plus vite
 }
 /** Une ligne du classement d'arrivée ([rank] = force du concurrent, -1 pour le joueur). */
 internal class VResult(val veh: Int, val me: Boolean, val time: Float, val rank: Int)
@@ -228,6 +229,11 @@ internal object VPatterns {
     val fuel = listOf(VPat(1, ".F.", "...", "o.o"), VPat(1, "..F", "X..", "..."), VPat(2, "W.W", ".F.", "..."), VPat(3, "X.F", "...", ".WW"))
     // Boîtes à objets : il en passe une rangée toutes les ~9 secondes
     val boxes = listOf(VPat(0, ".?.", "...", ".o."), VPat(0, "?.?", "...", ".o."), VPat(0, ".o.", "?C?", "...", ".O."), VPat(0, "..?", ".o.", "o..", "?.."))
+    // Embranchement : [0] bonus à GAUCHE (grosses pièces, mais des voitures en face à sauter), calme à droite ; [1] l'inverse.
+    // L'arête de barrières du milieu se franchit en rebondissant dessus.
+    val forks = listOf(
+        VPat(2, "...", "BL.", "BL.", "XLo", "BL.", "BL.", "XL.", "BLo", "BL.", "XL.", "BL.", "B.o"),
+        VPat(2, "...", ".LB", ".LB", "oLX", ".LB", ".LB", ".LX", "oLB", ".LB", ".LX", ".LB", "o.B"))
     // Spécificités de circuit
     val ramps = listOf(VPat(1, ".R.", ".o.", ".O.", ".o.", "..."), VPat(1, "R.R", "o.o", "O.O", "...", ".B."), VPat(2, "RXR", "o.o", "O.O", "...", ".?."), VPat(2, ".R.", ".o.", "XOX", ".o.", "..."))
     val gates = listOf(VPat(2, ".o.", "LLL", ".O.", "...", "..."), VPat(2, "o.o", "LLL", ".o.", "...", ".o.", "...", ".o.", "...", "LLL", ".B."),
@@ -239,10 +245,12 @@ internal object VPatterns {
  * [duel] : course à deux, ni chrono ni fantôme. [seed] : graine de la route (la même pour les deux joueurs d'un duel).
  * [cast] : bolides des concurrents de la Course, du plus fort au plus faible (null = tirés au sort, vide = aucun : on
  * retrouve alors l'ancienne Course au chrono, utilisée par les tests de règles). [rivalBoost] : coefficient d'allure du plus
- * fort (le RIVAL d'une coupe se cale sur notre score au classement).
+ * fort (le RIVAL d'une coupe se cale sur notre score au classement). [trial] : contre-la-montre (seul, médailles au temps).
+ * [mirror] : route inversée. [turbo] : tout va 18 % plus vite. [boss] : dernière course d'une coupe, le rival est un champion.
  */
 internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, val theme: VTheme, val trickLabel: String, val cannonLabel: String,
-                         val duel: Boolean = false, seed: Long = Random.nextLong(), val cast: IntArray? = null, val rivalBoost: Float = 1f) {
+                         val duel: Boolean = false, seed: Long = Random.nextLong(), val cast: IntArray? = null, val rivalBoost: Float = 1f,
+                         val trial: Boolean = false, val mirror: Boolean = false, val turbo: Boolean = false, val boss: Boolean = false) {
     companion object {
         const val FLIP_DUR = 0.5f
         const val LANE_M = 3.2f
@@ -274,15 +282,17 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
     private val ramKeep = 0.90f + 0.02f * (vstat.weight - 2)
     val trait = theme.trait
 
+    val turboMul = if (turbo) 1.18f else 1f
     // ---- PELOTON (Course) : 7 concurrents, on part dernier. La place remplace le chrono : on finit toujours, reste à finir DEVANT.
     val racers = ArrayList<VRacer>()
     private val fieldRng = Random(seed xor 0x5DEECE66DL)
     init {
-        if (!endless && !duel && (cast == null || cast.isNotEmpty())) {
+        if (!endless && !duel && !trial && (cast == null || cast.isNotEmpty())) {
             val vs = cast ?: VEHICLES.indices.filter { it != vehicle }.shuffled(fieldRng).take(7).toIntArray()
             val k3 = diff.coerceIn(0, 2)
             val par = PAR_TIME[k3]; val step = PAR_STEP[k3]
-            for (k in vs.indices) racers.add(VRacer(vs[k], k, LEVEL_LEN / (par * (1f + step * k)) * (if (k == 0) rivalBoost else 1f), fieldRng.nextFloat() * 6.28f).also {
+            for (k in vs.indices) racers.add(VRacer(vs[k], k, LEVEL_LEN / (par * (1f + step * k)) * (if (k == 0) rivalBoost * (if (boss) 1.03f else 1f) else 1f) * turboMul, fieldRng.nextFloat() * 6.28f).also {
+                it.boss = boss && k == 0
                 val row = vs.size - 1 - k             // grille de départ : les plus forts devant, nous tout au fond
                 it.d = 7f + 5.5f * row; it.lane = intArrayOf(0, 2, 1)[row % 3]
             })
@@ -294,6 +304,15 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
     @Volatile var placeDir = 0          // +1 on vient de gagner une place, -1 d'en perdre une
     val fieldSize: Int get() = racers.size + 1
     var finishTime = 0f
+    /** Contre-la-montre : temps bronze / argent / or du circuit (calés sur l'allure du meilleur concurrent). */
+    val medalTimes: FloatArray get() { val t = PAR_TIME[diff.coerceIn(0, 2)] / turboMul; return floatArrayOf(t * 1.18f, t * 1.06f, t * 0.97f) }
+    /** 0 = pas de médaille, 1 bronze, 2 argent, 3 or */
+    fun trialMedal(): Int = if (!cleared) 0 else medalTimes.count { finishTime <= it }
+    var bossLabel = "DUEL FINAL !"; var bossBeaten = false
+    // ---- EMBRANCHEMENT : un côté plein de bonus mais risqué, l'autre tranquille, une arête de barrières au milieu
+    private var didFork = false; private var cycleFork = -1; private var forkAt = -1f; private var forkLeft = true
+    var forkBonus = "BONUS"; var forkCalm = "CALME"
+    private fun fork(at: Float): VPat { forkLeft = rng.nextBoolean(); forkAt = at; return VPatterns.forks[if (forkLeft) 0 else 1] }
     /** Classement d'arrivée (les concurrents encore en piste sont classés selon ce qu'il leur reste à parcourir). */
     fun raceResults(): List<VResult> {
         val l = ArrayList<VResult>()
@@ -364,7 +383,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
     /** l'essence compte (Arcade) ; en Course c'est le chrono */
     val fuelOn: Boolean get() = endless
     // Course (défaut) : au CHRONO — arriver au village (2 000 m) avant la fin du temps ; Arcade (endless) : à l'ESSENCE
-    val timeLimit = if (!endless && !duel && racers.isEmpty()) tune.timeLimit else -1f
+    val timeLimit = if (!endless && !duel && racers.isEmpty() && !trial) tune.timeLimit else -1f
     var timeLeft = timeLimit
     var timeUp = false
     var timeBonus = 0               // points du temps restant, ajoutés au score à l'arrivée
@@ -404,7 +423,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
     private var flowMaxSaid = false
     private val ceilNow: Float get() = (tune.ceil + (if (endless) min(tune.ceilGrow, dist / 700f) else 0f)) * trait.ceilMul * speedMul
     /** vitesse de croisière (hors bonus) que donne l'élan actuel */
-    val cruise: Float get() = tune.floor + (ceilNow - tune.floor) * flow
+    val cruise: Float get() = (tune.floor + (ceilNow - tune.floor) * flow) * turboMul
 
     // ---- BOOST (façon Burnout) : jauge en segments. On la remplit en prenant des risques, on la brûle en tenant le bouton.
     //      Deux takedowns ajoutent un segment (jusqu'à 4) ; un accident en retire un.
@@ -548,7 +567,8 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
     /** phase de descente : si un véhicule ou un obstacle passe dessous, on rebondit dessus */
     private val descending: Boolean get() = jumping && jumpT > JUMP_DUR * 0.5f
 
-    fun moveLane(d: Int) {
+    fun moveLane(d0: Int) {
+        val d = if (mirror) -d0 else d0        // route inversée : la gauche de l'écran est la droite du monde
         if (over || sputter >= 0f || inIntro) return
         if (trait.ice && !jumping) { laneQueued = d; if (laneDelay <= 0f) laneDelay = 0.22f; return }   // glace : ça part avec un temps de retard
         doMoveLane(d)
@@ -609,6 +629,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
             if (step < introStep && step >= 1) { introStep = step; ev("count") }
             if (introT <= 0f) {
                 introT = 0f; ev("go")
+                if (boss && racers.isNotEmpty()) texts.add(VText(0f, 5f, 30f, bossLabel, 2.4f, V_RED, big = true).also { it.style = 1 })
                 if (startPress > 0f && startPress <= ROCKET_WINDOW) { grantRocketStart(); burnLeft = 1f } else rocketLateT = ROCKET_LATE
             }
         } else if (rocketLateT > 0f) {
@@ -727,6 +748,11 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
                 }
             } else draft = max(0f, draft - dt * 1.6f)
             if (draftT > 0f) draftT -= dt
+            if (forkAt >= 0f && dist >= forkAt - mps * 2.4f) {
+                forkAt = -1f
+                val left = forkLeft != mirror
+                texts.add(VText(0f, 4.8f, 32f, if (left) "« $forkBonus   ·   $forkCalm »" else "« $forkCalm   ·   $forkBonus »", 2.2f, V_CYAN, big = true)); ev("fork")
+            }
             if (!endless && !finalStretch && dist >= LEVEL_LEN - STRETCH) {
                 finalStretch = true
                 texts.add(VText(0f, 4.6f, 34f, stretchLabel, 2.0f, V_GOLD, big = true).also { it.style = 1 })
@@ -758,6 +784,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
             if (racers.isNotEmpty()) {
                 // la place est figée : ceux qui ont franchi la ligne avant nous sont devant, les autres finissent derrière
                 place = 1 + racers.count { it.finT >= 0f }
+                bossBeaten = boss && racers[0].finT < 0f
                 for (r in racers) if (r.finT < 0f) r.finT = raceT + 0.3f + (LEVEL_LEN - r.d).coerceAtLeast(0f) / (r.pace * 1.05f)
                 timeBonus = VROUM_PLACE_BONUS[(place - 1).coerceIn(0, 7)] * (diff + 1); score += timeBonus
             }
@@ -815,7 +842,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
             }
             // rivaux : il en arrive un par derrière de temps en temps, jusqu'au nombre voulu
             rivalCd -= dt
-            if (rivalCd <= 0f && !duel && racers.isEmpty()) {
+            if (rivalCd <= 0f && !duel && racers.isEmpty() && !trial) {
                 rivalCd = 5f + Random.nextFloat() * 5f
                 if (enemies.count { it.rival && it.alive } < tune.rivals + trait.rivalsExtra && (endless || dist < LEVEL_LEN - 250f)) spawnRival()
             }
@@ -1098,7 +1125,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
         for (r in racers) {
             var e = r.e
             if (e != null && (!e.alive || e !in enemies)) {
-                if (!e.alive) { r.out = 1.2f; r.d = dist + (e.z - PLAYER_Z); r.revenge = false }      // sorti par un takedown : il perd du temps
+                if (!e.alive) { r.out = if (r.boss) 0.5f else 1.2f; r.d = dist + (e.z - PLAYER_Z); r.revenge = false }      // sorti par un takedown : il perd du temps
                 r.e = null; e = null
             }
             if (e != null) {
@@ -1349,6 +1376,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
             val p = at / LEVEL_LEN
             if (!didX2 && p >= 0.20f) { didX2 = true; return VPatterns.x2 }
             if (!didStar && p >= 0.40f) { didStar = true; return VPatterns.star }
+            if (!didFork && p >= 0.53f) { didFork = true; return fork(at) }
             if (!didCannon && p >= 0.64f) { didCannon = true; return VPatterns.cannon }
             if (!didSprint && p >= 0.85f) { didSprint = true; return VPatterns.sprint }
             if (didSprint) return pick(0)                     // ligne droite finale : pièces et voitures à percuter
@@ -1361,6 +1389,7 @@ internal class VroumGame(val endless: Boolean, val vehicle: Int, val diff: Int, 
                 val t = (base + 1 + cycle / 2).coerceIn(1, 3)
                 return VPatterns.fuel.filter { it.tier <= t }.let { it[rng.nextInt(it.size)] }
             }
+            if (q >= 0.30f && q < 0.6f && cycleFork < cycle) { cycleFork = cycle; return fork(at) }
             if (q >= 0.82f && cyclePiece < cycle) {
                 cyclePiece = cycle
                 return when (cycle % 4) { 0 -> VPatterns.x2; 1 -> VPatterns.star; 2 -> VPatterns.cannon; else -> VPatterns.sprint }

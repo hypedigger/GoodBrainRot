@@ -538,4 +538,12 @@
     <string name="vroum_set_worm">VER DES SABLES !</string>
     <string name="vroum_set_lava">PLUIE DE LAVE !</string>
     <string name="vroum_set_avalanche">AVALANCHE !</string>
+    <string name="vroum_mod_trial">Chrono</string>
+    <string name="vroum_mod_mirror">Miroir</string>
+    <string name="vroum_mod_turbo">Turbo</string>
+    <string name="vroum_mod_hint">Miroir : gagne 1 coupe · Turbo : gagne 3 coupes</string>
+    <string name="vroum_mod_trial_hint">Seul contre le chrono : bats les temps bronze, argent et or !</string>
+    <string name="vroum_boss">DUEL FINAL !</string>
+    <string name="vroum_fork_bonus">BONUS</string>
+    <string name="vroum_fork_calm">CALME</string>
 </resources>

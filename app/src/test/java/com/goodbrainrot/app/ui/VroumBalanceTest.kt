@@ -259,6 +259,35 @@ class VroumBalanceTest {
             org.junit.Assert.assertEquals("circuit ${th.key} : grand événement", 1, g.setsSeen)
         }
     }
+    private fun idleRun(trial: Boolean = false, turbo: Boolean = false, mirror: Boolean = false): VroumGame {
+        val g = VroumGame(false, 0, 1, THEMES[0], "T", "C", seed = 3L, trial = trial, turbo = turbo, mirror = mirror)
+        var steps = 0
+        while (!g.cleared && steps < 60 * 200) { steps++; g.update(1f / 60f); g.events.clear(); if (g.parts.size > 40) g.parts.clear() }
+        return g
+    }
+
+    @Test
+    fun time_trial_runs_alone_and_awards_a_medal_from_the_time() {
+        val g = idleRun(trial = true)
+        org.junit.Assert.assertTrue("seul en piste", g.racers.isEmpty())
+        org.junit.Assert.assertTrue("pas de chrono limite", g.timeLimit < 0f)
+        org.junit.Assert.assertTrue("arrivé", g.cleared)
+        org.junit.Assert.assertEquals(g.medalTimes.count { g.finishTime <= it }, g.trialMedal())
+    }
+
+    @Test
+    fun turbo_class_is_clearly_faster() {
+        val normal = idleRun(trial = true).finishTime; val turbo = idleRun(trial = true, turbo = true).finishTime
+        org.junit.Assert.assertTrue("turbo $turbo s contre $normal s", turbo < normal * 0.9f)
+    }
+
+    @Test
+    fun mirror_swaps_the_lane_controls() {
+        val g = VroumGame(false, 0, 1, THEMES[0], "T", "C", seed = 3L, cast = intArrayOf(), mirror = true)
+        repeat(60 * 5) { g.update(1f / 60f) }
+        g.moveLane(-1)
+        org.junit.Assert.assertEquals("tape à gauche = voie de droite du monde", 2, g.lane)
+    }
     @Test
     fun balance() {
         val n = 120

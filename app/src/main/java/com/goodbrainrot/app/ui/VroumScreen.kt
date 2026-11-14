@@ -181,17 +181,19 @@ fun VroumScreen(onBack: () -> Unit) {
         g.shoveLabel = vLabels[5]; g.ghostLabel = vLabels[6]; g.windLabel = vLabels[7]; g.weaponLabels = vLabels.subList(8, 13); g.rocketLabel = vLabels[13]
         g.finishLabel = vLabels[14]; g.draftLabel = vLabels[15]; g.stretchLabel = vLabels[16]; g.flipLabel = vLabels[17]
         g.setDef?.let { d -> g.setLabel = ctx.getString(d.labelRes) }
+        g.bossLabel = ctx.getString(R.string.vroum_boss); g.forkBonus = ctx.getString(R.string.vroum_fork_bonus); g.forkCalm = ctx.getString(R.string.vroum_fork_calm)
     }
     val game = remember(runToken) {
         if (phase != VPhase.PLAYING) null
         else VroumGame(endless, vehicle, diff, THEMES[themeIdx], trickLabel, cannonLabel,
             cast = if (mode == VMode.CUP && cupCast.size == 7) cupCast else null,
             // le RIVAL de la coupe colle à notre score : il pousse si on le distance au classement, il lève le pied s'il s'envole
-            rivalBoost = if (mode == VMode.CUP) 1f + ((cupPts[7] - cupPts[0]) / 8f).coerceIn(-1f, 1f) * 0.025f else 1f).also { g ->
+            rivalBoost = if (mode == VMode.CUP) 1f + ((cupPts[7] - cupPts[0]) / 8f).coerceIn(-1f, 1f) * 0.025f else 1f,
+            trial = mode == VMode.RACE && VroumOpts.trial, mirror = VroumOpts.mirror, turbo = VroumOpts.turbo, boss = mode == VMode.CUP && cupRace == 3).also { g ->
             applyLabels(g)
             g.trail = vroumTrailIdx(Settings.vroumLook.value); g.paintHue = vroumPaintOf(vehicle, Settings.vroumLook.value).hue
             // charge le fantôme pour ce circuit / cette difficulté : meilleur temps en Course, distance max en Arcade
-            Settings.vroumGhost(if (endless) "${THEMES[themeIdx].key}_a$diff" else "${THEMES[themeIdx].key}_$diff")?.let { s ->
+            Settings.vroumGhost((if (endless) "${THEMES[themeIdx].key}_a$diff" else "${THEMES[themeIdx].key}_$diff") + (if (VroumOpts.turbo) "t" else ""))?.let { s ->
                 val p = s.split(";")
                 if (p.size >= 3) {
                     g.ghostVeh = p[0].toIntOrNull() ?: -1
@@ -241,6 +243,9 @@ fun VroumScreen(onBack: () -> Unit) {
     var resCoins by remember { mutableIntStateOf(0) }
     var resRankUp by remember { mutableIntStateOf(-1) }
     var resFresh by remember { mutableStateOf<List<Int>>(emptyList()) }       // missions réussies à l'instant
+    var resMedal by remember { mutableIntStateOf(-1) }       // contre-la-montre : 0 rien, 1 bronze, 2 argent, 3 or (-1 = autre mode)
+    var resTime by remember { mutableStateOf<String?>(null) }
+    var resBoss by remember { mutableStateOf(false) }
     var cupChest by remember { mutableStateOf<VChest?>(null) }
     // retour Android : une étape en arrière, comme le bouton à l'écran (on ne quitte le jeu que depuis l'écran des modes)
     androidx.activity.compose.BackHandler(enabled = phase != VPhase.MODE) {
@@ -264,6 +269,9 @@ fun VroumScreen(onBack: () -> Unit) {
         resPlace = if (raced) g.place else 0; resResults = if (raced) g.raceResults() else emptyList()
         // pièces de la course : ramassées + prime de place ; elles alimentent le garage et le rang de pilote
         resCoins = vroumRaceCoins(g.coins, resPlace, g.endless, g.dist.toInt())
+        resMedal = if (g.trial && cleared) g.trialMedal() else -1; resTime = if (g.trial && cleared) vroumTime(g.finishTime) else null; resBoss = g.bossBeaten
+        if (resMedal > 0) resCoins += 10 * resMedal
+        if (resBoss) resCoins += 80
         // missions du circuit : celles réussies pour la première fois rapportent des pièces ; les trois = la carte postale du circuit
         resFresh = emptyList()
         if (raced) {
@@ -280,16 +288,16 @@ fun VroumScreen(onBack: () -> Unit) {
         resRecord = g.diff >= 1 && g.score > 0 && g.score > best
         if (g.diff >= 1) HighScores.record(gameKey, g.score)
         // étoiles mémorisées par circuit + mode + difficulté (affichées sur les cartes)
-        Settings.setVroumStars("${g.theme.key}_${if (g.endless) "a" else "c"}${g.diff}", vroumStarCount(g.endless, cleared, g.score, g.dist.toInt(), g.diff, resPlace))
+        Settings.setVroumStars("${g.theme.key}_${if (g.endless) "a" else if (g.trial) "t" else "c"}${g.diff}", if (g.trial) g.trialMedal() else vroumStarCount(g.endless, cleared, g.score, g.dist.toInt(), g.diff, resPlace))
         // fantôme : en Course ma trace remplace l'ancienne si je finis plus vite ; en Arcade si je vais plus loin
         if (!g.endless && cleared) {
-            val key = "${g.theme.key}_${g.diff}"
+            val key = "${g.theme.key}_${g.diff}" + (if (g.turbo) "t" else "")
             val (d, l, time) = g.ghostRecording()
             val prevTime = Settings.vroumGhost(key)?.split(";")?.getOrNull(1)?.toFloatOrNull()
             if (d.size > 8 && (prevTime == null || time < prevTime))
                 Settings.setVroumGhost(key, "${g.vehicle};${"%.2f".format(java.util.Locale.US, time)};" + d.indices.joinToString(",") { "${d[it]}:${l[it]}" })
         } else if (g.endless) {
-            val key = "${g.theme.key}_a${g.diff}"
+            val key = "${g.theme.key}_a${g.diff}" + (if (g.turbo) "t" else "")
             val (d, l, _) = g.ghostRecording()
             val prevDist = Settings.vroumGhost(key)?.split(";")?.getOrNull(1)?.toFloatOrNull()
             if (d.size > 8 && (prevDist == null || g.dist > prevDist))
@@ -376,6 +384,7 @@ fun VroumScreen(onBack: () -> Unit) {
                         // ---- Positions : on double / on est doublé, aspiration, dernière ligne droite
                         "posUp" -> { SoundEngine.playVvTick(1.7f); SoundEngine.playVvCoin(); Haptics.tap(ctx) }
                         "posDown" -> SoundEngine.playVvTick(0.45f)
+                        "fork" -> SoundEngine.playVvTick(1.2f)
                         "draft" -> { SoundEngine.playTurbo(); Haptics.tap(ctx) }
                         "finalStretch" -> { GameMusic.setSpeed(1.13f); Sfx.play("vv_applause", 0.75f, 1.05f); SoundEngine.playVvFanfare() }
                         // ---- Grand événement du circuit
@@ -564,7 +573,7 @@ fun VroumScreen(onBack: () -> Unit) {
             }
             VPhase.CLEAR, VPhase.END -> {
                 ResultScreen(spr, cleared = resCleared, score = resScore, dist = resDist, record = resRecord, endless = endless, diff = diff, timeUp = resTimeUp, takedowns = resTakedowns,
-                    place = resPlace, results = resResults, coins = resCoins, wallet = Settings.vroumCoins.intValue, rankUp = resRankUp, themeIdx = themeIdx, fresh = resFresh, standings = if (mode == VMode.CUP && cupRows.isNotEmpty()) cupRows else null,
+                    place = resPlace, results = resResults, coins = resCoins, wallet = Settings.vroumCoins.intValue, rankUp = resRankUp, themeIdx = themeIdx, fresh = resFresh, starsOverride = resMedal, timeText = resTime, bossBeaten = resBoss, standings = if (mode == VMode.CUP && cupRows.isNotEmpty()) cupRows else null,
                     vehicleImg = spr.vehicles.getOrNull(vehicle), frontImg = spr.fronts.getOrNull(vehicle), best = HighScores.best(gameKey), bg = if (themeIdx == 0) spr.village else spr.cards.getOrNull(themeIdx),
                     onReplay = {
                         SoundEngine.playVroumUi()
@@ -754,8 +763,9 @@ private fun CountdownOverlay(count: Int, hint: Boolean = false, rocket: Boolean 
 private fun ResultScreen(spr: VSprites, cleared: Boolean, score: Int, dist: Int, record: Boolean, endless: Boolean, diff: Int, timeUp: Boolean, takedowns: Int, vehicleImg: ImageBitmap?, frontImg: ImageBitmap?, best: Int, bg: ImageBitmap?,
                          onReplay: () -> Unit, onOther: () -> Unit, onVehicle: () -> Unit, cupLine: String? = null, nextLabel: String? = null,
                          place: Int = 0, results: List<VResult> = emptyList(), standings: List<VStandRow>? = null,
-                         coins: Int = 0, wallet: Int = 0, rankUp: Int = -1, themeIdx: Int = 0, fresh: List<Int> = emptyList()) {
-    val stars = vroumStarCount(endless, cleared, score, dist, diff, place)
+                         coins: Int = 0, wallet: Int = 0, rankUp: Int = -1, themeIdx: Int = 0, fresh: List<Int> = emptyList(),
+                         starsOverride: Int = -1, timeText: String? = null, bossBeaten: Boolean = false) {
+    val stars = if (starsOverride >= 0) starsOverride else vroumStarCount(endless, cleared, score, dist, diff, place)
     var t by remember { mutableStateOf(0f) }
     LaunchedEffect(Unit) { var last = 0L; while (t < 30f) { val now = withFrameNanos { it }; if (last != 0L) t += (now - last) / 1e9f; last = now } }
     val shownScore = (score * (t / 1.4f).coerceIn(0f, 1f)).toInt()
@@ -775,7 +785,11 @@ private fun ResultScreen(spr: VSprites, cleared: Boolean, score: Int, dist: Int,
         Column(Modifier.fillMaxSize().padding(horizontal = 28.dp, vertical = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Spacer(Modifier.weight(0.5f))
             // Course à positions : la PLACE en très gros (or, argent, bronze) ; sinon le titre habituel
-            if (place > 0) {
+            if (timeText != null) {
+                // contre-la-montre : le TEMPS en très gros, à la couleur de la médaille
+                Text(timeText, color = if (stars > 0) MEDAL_COLORS[stars - 1] else Color.White, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic, fontSize = 60.sp, lineHeight = 64.sp,
+                    modifier = Modifier.scale(1f + 0.6f * (1f - (t / 0.3f).coerceIn(0f, 1f))), style = androidx.compose.ui.text.TextStyle(fontFamily = VROUM_FONT, shadow = androidx.compose.ui.graphics.Shadow(Color(0xAA000000), Offset(0f, 5f), 12f)))
+            } else if (place > 0) {
                 val (num, suf) = vroumOrdinal(place, vroumLang())
                 val pop = 1f + 0.6f * (1f - (t / 0.3f).coerceIn(0f, 1f))
                 val sh = androidx.compose.ui.graphics.Shadow(Color(0xAA000000), Offset(0f, 5f), 12f)
@@ -865,6 +879,12 @@ private fun ResultScreen(spr: VSprites, cleared: Boolean, score: Int, dist: Int,
             .clip(RoundedCornerShape(14.dp)).background(Color(0xCC120C2E)).padding(horizontal = 9.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
             VIcon(VIc.CHECK, 18.dp)
             Text(" ×${fresh.size}", color = Color.White, fontWeight = FontWeight.Black, fontSize = 15.sp, style = androidx.compose.ui.text.TextStyle(fontFamily = VROUM_FONT))
+        }
+        // champion de la coupe battu : trophée et prime
+        if (bossBeaten && t > 1.5f) Row(Modifier.align(Alignment.TopStart).padding(top = 50.dp, start = 12.dp).scale(1f + 0.4f * (1f - ((t - 1.5f) / 0.3f).coerceIn(0f, 1f)))
+            .clip(RoundedCornerShape(14.dp)).background(Brush.horizontalGradient(listOf(V_PINK, V_ORANGE))).padding(horizontal = 9.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
+            VIcon(VIc.TROPHY, 18.dp, Color.White)
+            Text(" +80", color = Color.White, fontWeight = FontWeight.Black, fontSize = 15.sp, style = androidx.compose.ui.text.TextStyle(fontFamily = VROUM_FONT))
         }
         // porte-monnaie : les pièces de la course roulent dans le total ; un nouveau rang de pilote s'annonce dessous
         if (coins > 0) Column(Modifier.align(Alignment.TopEnd).padding(top = 12.dp, end = 12.dp), horizontalAlignment = Alignment.End) {
@@ -1046,6 +1066,7 @@ private fun VroumHud(g: VroumGame, frame: Int, fx: VroumFx? = null) {
     Column(Modifier.fillMaxWidth().padding(start = 64.dp, end = 12.dp, top = 10.dp)) {
         Row(Modifier.fillMaxWidth().height(56.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             if (g.racers.isNotEmpty()) PlaceBadge(g, frame, Modifier.height(48.dp))
+            else if (g.trial) TrialClock(g, frame, Modifier.height(48.dp))
             else if (g.timeLimit > 0f) {
                 val s = g.timeLeft.toInt().coerceAtLeast(0)
                 Gauge(g.timeLeft / g.timeLimit, VIc.CLOCK, "%d:%02d".format(s / 60, s % 60), V_CYAN, blink = s <= 10 && (g.elapsed * 4f).toInt() % 2 == 0, modifier = Modifier.width(150.dp).height(44.dp))

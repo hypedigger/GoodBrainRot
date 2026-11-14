@@ -1,5 +1,10 @@
 # Nouveautés — GoodBrainRot
 
+## 4.09 — 2026-11-14
+- **Vroum — contre-la-montre.** Sur l'écran du circuit, la pastille **Chrono** lance la course seul en piste : le temps tourne en haut de l'écran avec la médaille encore à portée, et trois repères bronze, argent et or avancent sur la frise. À l'arrivée, le temps s'affiche en très gros à la couleur de la médaille (mémorisée par circuit et par difficulté).
+- **Vroum — miroir et Turbo.** Deux variantes à cocher avant le départ, en Course, en Arcade et en Championnat : **Miroir** (la route et les commandes sont inversées, débloqué par une coupe gagnée) et **Turbo** (tout va 18 % plus vite, concurrents compris, débloqué par trois coupes gagnées).
+- **Vroum — boss de coupe.** La 4e course d'une coupe est un **DUEL FINAL** : ton rival y est plus gros, auréolé d'or, un peu plus rapide et se relève plus vite d'un takedown. Finir devant lui rapporte 80 pièces.
+- **Vroum — embranchements.** Une fois par course, la route propose un choix annoncé à l'écran (« BONUS · CALME ») : un côté plein de grosses pièces mais avec des voitures en face à sauter, l'autre tranquille, et une arête de barrières au milieu sur laquelle on peut rebondir.
 ## 4.08 — 2026-11-14
 - **Vroum — un grand événement par circuit.** Vers le milieu de chaque course (et tous les 2 200 m en Arcade), le circuit a son moment « waouh », annoncé en grand : un **T-Rex géant**, un **gorille** ou un **yéti** traversent la route en faisant trembler l'écran à chaque pas ; une **baleine** ou un **ver des sables** la franchissent d'un bond ; une **montgolfière**, un **dirigeable**, une **soucoupe volante**, un **hibou géant**, un **dragon de fête**, une **sorcière**, un **avion** ou une **patrouille** la survolent. En passant, ils sèment une traînée de gros bonus sur les voies.
 - **Vroum — pluie de lave et avalanche.** Sur le volcan et la banquise, des projectiles tombent du ciel : un disque rouge et un anneau qui se resserre annoncent la voie visée une seconde et demie avant l'impact ; esquiver de près rapporte un bonus.

@@ -547,4 +547,12 @@
     <string name="vroum_set_worm">SAND WORM!</string>
     <string name="vroum_set_lava">LAVA RAIN!</string>
     <string name="vroum_set_avalanche">AVALANCHE!</string>
+    <string name="vroum_mod_trial">Time trial</string>
+    <string name="vroum_mod_mirror">Mirror</string>
+    <string name="vroum_mod_turbo">Turbo</string>
+    <string name="vroum_mod_hint">Mirror: win 1 cup · Turbo: win 3 cups</string>
+    <string name="vroum_mod_trial_hint">Alone against the clock: beat the bronze, silver and gold times!</string>
+    <string name="vroum_boss">FINAL DUEL!</string>
+    <string name="vroum_fork_bonus">BONUS</string>
+    <string name="vroum_fork_calm">CALM</string>
 </resources>

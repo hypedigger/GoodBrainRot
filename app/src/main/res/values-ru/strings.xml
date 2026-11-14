@@ -538,4 +538,12 @@
     <string name="vroum_set_worm">ПЕСЧАНЫЙ ЧЕРВЬ!</string>
     <string name="vroum_set_lava">ЛАВОВЫЙ ДОЖДЬ!</string>
     <string name="vroum_set_avalanche">ЛАВИНА!</string>
+    <string name="vroum_mod_trial">На время</string>
+    <string name="vroum_mod_mirror">Зеркало</string>
+    <string name="vroum_mod_turbo">Турбо</string>
+    <string name="vroum_mod_hint">Зеркало: выиграй 1 кубок · Турбо: 3 кубка</string>
+    <string name="vroum_mod_trial_hint">Один против времени: побей бронзу, серебро и золото!</string>
+    <string name="vroum_boss">ФИНАЛЬНАЯ ДУЭЛЬ!</string>
+    <string name="vroum_fork_bonus">БОНУС</string>
+    <string name="vroum_fork_calm">СПОКОЙНО</string>
 </resources>

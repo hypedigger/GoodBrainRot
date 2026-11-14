@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 // Tous tiennent dans un carré ; [tint] colore le trait principal, les détails ont leurs couleurs propres.
 // ---------------------------------------------------------------------------------------------------------------------
 
-internal enum class VIc { FLAG, TROPHY, REPLAY, MAP, WHEEL, GHOST, BOLT, FUEL, CLOCK, LEFT, RIGHT, DOWN, CHECK, CROSS, COIN, LOCK, STAR }
+internal enum class VIc { FLAG, TROPHY, REPLAY, MAP, WHEEL, GHOST, BOLT, FUEL, CLOCK, LEFT, RIGHT, DOWN, CHECK, CROSS, COIN, LOCK, STAR, MIRROR }
 
 private val IC_INK = Color(0xFF2A2440)
 
@@ -125,6 +125,11 @@ internal fun DrawScope.drawVIcon(kind: VIc, tint: Color) {
             drawArc(tint, 180f, 180f, false, o(0.28f, 0.10f), Size(0.44f * s, 0.52f * s), style = Stroke(w * 1.1f))
             drawRoundRect(tint, o(0.18f, 0.42f), Size(0.64f * s, 0.50f * s), CornerRadius(s * 0.10f))
             drawCircle(IC_INK.copy(alpha = 0.8f), 0.07f * s, o(0.5f, 0.62f)); drawLine(IC_INK.copy(alpha = 0.8f), o(0.5f, 0.64f), o(0.5f, 0.78f), w * 0.6f, StrokeCap.Round)
+        }
+        VIc.MIRROR -> {
+            // deux flèches dos à dos de part et d'autre d'un axe
+            drawLine(tint, o(0.5f, 0.08f), o(0.5f, 0.92f), w * 0.7f, StrokeCap.Round)
+            poly(tint, 0.40f, 0.26f, 0.40f, 0.74f, 0.06f, 0.5f); poly(tint, 0.60f, 0.26f, 0.60f, 0.74f, 0.94f, 0.5f)
         }
         VIc.STAR -> {
             val gold = if (tint == Color.White) V_GOLD else tint

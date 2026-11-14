@@ -538,4 +538,12 @@
     <string name="vroum_set_worm">¡GUSANO DE ARENA!</string>
     <string name="vroum_set_lava">¡LLUVIA DE LAVA!</string>
     <string name="vroum_set_avalanche">¡AVALANCHA!</string>
+    <string name="vroum_mod_trial">Contrarreloj</string>
+    <string name="vroum_mod_mirror">Espejo</string>
+    <string name="vroum_mod_turbo">Turbo</string>
+    <string name="vroum_mod_hint">Espejo: gana 1 copa · Turbo: gana 3 copas</string>
+    <string name="vroum_mod_trial_hint">Solo contra el reloj: ¡bate los tiempos de bronce, plata y oro!</string>
+    <string name="vroum_boss">¡DUELO FINAL!</string>
+    <string name="vroum_fork_bonus">BONUS</string>
+    <string name="vroum_fork_calm">CALMA</string>
 </resources>

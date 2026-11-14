@@ -111,7 +111,7 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
         Matrix.perspectiveM(proj, 0, if (game.wide) 40f else 64f, aspectRatio, 1.0f, 600f)   // (recalculée à chaque image avec le zoom de boost)
         // La caméra regarde vers +z : en repère main droite, +x pointe alors vers la GAUCHE de
         // l'écran. On miroir l'axe x de la projection pour que voie 0 = gauche, voie 2 = droite.
-        Matrix.scaleM(proj, 0, -1f, 1f, 1f)
+        Matrix.scaleM(proj, 0, if (game.mirror) 1f else -1f, 1f, 1f)
     }
 
     override fun onDrawFrame(gl: GL10?) {
@@ -134,7 +134,7 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
         val wantExtra = game.boostLevel * 6f + game.flow * 6f + (if (game.boosting) 8f else 0f)      // le champ s'ouvre avec l'élan : sensation de vitesse
         fovExtra += (wantExtra - fovExtra) * min(1f, dt * 6f)
         Matrix.perspectiveM(proj, 0, (if (game.wide) 40f else 64f) + fovExtra, aspectRatio, 1.0f, 600f)
-        Matrix.scaleM(proj, 0, -1f, 1f, 1f)
+        Matrix.scaleM(proj, 0, if (game.mirror) 1f else -1f, 1f, 1f)
 
         // ---------- caméra : suit le sol (collines), regarde loin pour que le bolide reste bas ;
         //            pendant le décompte elle DESCEND en douceur depuis le ciel ----------
@@ -490,7 +490,7 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
                 e.oncoming -> tex["vr_" + ONCOMING_KEYS[e.kind]] ?: tex["vr_" + ENEMY_KEYS[e.kind]]
                 else -> tex["vr_" + ENEMY_KEYS[e.kind]]
             }
-            val w = if (e.boulder) 3.0f else if (e.heavy) 3.1f else if (e.rival) 2.15f else 2.7f
+            val w = if (e.boulder) 3.0f else if (e.heavy) 3.1f else if (e.rival) (if (e.racer?.boss == true) 2.9f else 2.15f) else 2.7f
             if (e.crushed >= 0f) {
                 // écrasée en sautant dessus : elle s'aplatit
                 val k = (e.crushed / 0.55f).coerceIn(0f, 1f)
@@ -525,6 +525,8 @@ internal class VroumRenderer(private val ctx: Context, private val game: VroumGa
                     if (e.warn > 0f) bills.add(Bill(e.z - 0.02f, x, my, 1.5f, disc, if ((g.elapsed * 12f).toInt() % 2 == 0) 1f else 0.3f, 1f, 0.12f, 0.08f))
                     else if (e.revenge) { bills.add(Bill(e.z - 0.02f, x, my, 1.3f, ring, 0.95f, 1f, 0.2f, 0.15f)); bills.add(Bill(e.z - 0.03f, x, my + 0.42f, 0.42f, disc, 1f, 1f, 0.2f, 0.15f)) }
                     else bills.add(Bill(e.z - 0.02f, x, my, 0.5f, disc, 0.9f, 1f, 0.6f, 0.1f))
+                    // champion de la coupe : auréole dorée
+                    if (e.racer?.boss == true) { bills.add(Bill(e.z - 0.04f, x, my + 0.5f, 1.9f, ring, 1f, 1f, 0.85f, 0.2f)); bills.add(Bill(e.z - 0.05f, x, my + 1.05f, 0.7f, disc, 1f, 1f, 0.85f, 0.2f)) }
                 }
             }
         }

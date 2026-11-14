@@ -420,7 +420,11 @@ private fun RaceOptions(diff: Int, endless: Boolean, duel: Boolean, themeKey: St
     Column(modifier) {
         // une phrase qui dit ce qu'on va faire (hauteur fixe : rien ne saute quand on change de mode)
         // Course : les trois MISSIONS du circuit (cochées quand elles sont réussies) ; sinon la phrase du mode
-        if (!duel && !endless) Box(Modifier.fillMaxWidth().height(66.dp).padding(top = 5.dp), contentAlignment = Alignment.Center) { MissionList(themeIdx) }
+        if (!duel && !endless) Box(Modifier.fillMaxWidth().height(66.dp).padding(top = 5.dp), contentAlignment = Alignment.Center) {
+            if (VroumOpts.trial) Text(stringResource(R.string.vroum_mod_trial_hint), color = Color.White.copy(alpha = 0.9f), fontWeight = FontWeight.Medium, fontSize = 13.sp, lineHeight = 16.sp,
+                textAlign = TextAlign.Center, maxLines = 3, modifier = Modifier.padding(horizontal = 12.dp))
+            else MissionList(themeIdx)
+        }
         else Box(Modifier.fillMaxWidth().height(40.dp).padding(top = 5.dp), contentAlignment = Alignment.Center) {
             Text(if (duel) stringResource(R.string.vroum_duel_hint) else if (endless) stringResource(R.string.vroum_mode_arcade_hint)
                  else if (!unlocked) stringResource(R.string.vroum_mode_race_hint) + "  " + stringResource(R.string.vroum_endless_locked) else stringResource(R.string.vroum_mode_race_hint),
@@ -430,8 +434,9 @@ private fun RaceOptions(diff: Int, endless: Boolean, duel: Boolean, themeKey: St
         val labels = listOf(R.string.vroum_diff_easy, R.string.vroum_diff_medium, R.string.vroum_diff_hard)
         val descs = listOf(R.string.vroum_diff_easy_desc, R.string.vroum_diff_medium_desc, R.string.vroum_diff_hard_desc)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            for (i in 0..2) DiffButton(i, stringResource(labels[i]), i == diff && !duel, if (duel) -1 else (starsMap["${themeKey}_${if (endless) "a" else "c"}$i"] ?: -1), !duel, Modifier.weight(1f)) { onDiff(i) }
+            for (i in 0..2) DiffButton(i, stringResource(labels[i]), i == diff && !duel, if (duel) -1 else (starsMap["${themeKey}_${if (endless) "a" else if (VroumOpts.trial) "t" else "c"}$i"] ?: -1), !duel, Modifier.weight(1f)) { onDiff(i) }
         }
+        if (!duel) RaceMods(showTrial = !endless, modifier = Modifier.fillMaxWidth().padding(top = 8.dp))
         Text(if (duel) " " else stringResource(descs[diff]), color = Color.White.copy(alpha = 0.85f), fontWeight = FontWeight.Medium, fontSize = 12.sp, textAlign = TextAlign.Center, maxLines = 1,
             modifier = Modifier.fillMaxWidth().padding(top = 5.dp))
     }
@@ -666,6 +671,7 @@ internal fun CupSelectScreen(spr: VSprites, vehicle: Int, cupIdx: Int, diff: Int
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         for (i in 0..2) DiffButton(i, stringResource(labels[i]), i == diff, starsMap["cup_${CUPS[cur].key}_$i"] ?: -1, true, Modifier.weight(1f)) { onDiff(i) }
                     }
+                    RaceMods(showTrial = false, modifier = Modifier.fillMaxWidth().padding(top = 8.dp))
                     Text(stringResource(R.string.vroum_cup_hint), color = Color.White.copy(alpha = 0.85f), fontWeight = FontWeight.Medium, fontSize = 12.sp, textAlign = TextAlign.Center, maxLines = 1,
                         overflow = TextOverflow.Ellipsis, modifier = Modifier.fillMaxWidth().padding(top = 5.dp))
                     ChunkyButton(stringResource(R.string.vroum_go), V_PINK, V_ORANGE, Modifier.fillMaxWidth().padding(top = 10.dp).scale(pulse), height = 72.dp, fontSize = 32.sp) { onPlay(cur) }

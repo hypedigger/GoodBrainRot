@@ -538,4 +538,12 @@
     <string name="vroum_set_worm">VERME DELLE SABBIE!</string>
     <string name="vroum_set_lava">PIOGGIA DI LAVA!</string>
     <string name="vroum_set_avalanche">VALANGA!</string>
+    <string name="vroum_mod_trial">Cronometro</string>
+    <string name="vroum_mod_mirror">Specchio</string>
+    <string name="vroum_mod_turbo">Turbo</string>
+    <string name="vroum_mod_hint">Specchio: vinci 1 coppa · Turbo: vinci 3 coppe</string>
+    <string name="vroum_mod_trial_hint">Da solo contro il tempo: batti i tempi bronzo, argento e oro!</string>
+    <string name="vroum_boss">DUELLO FINALE!</string>
+    <string name="vroum_fork_bonus">BONUS</string>
+    <string name="vroum_fork_calm">CALMA</string>
 </resources>

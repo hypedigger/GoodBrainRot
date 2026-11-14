@@ -10,7 +10,7 @@ function A { & $adb -s $Serial @args }
 # (le dump d'interface se fige parfois sur l'émulateur : il est borné à 20 s côté appareil et retenté une fois)
 function UiText {
     foreach ($try in 1..2) {
-        $r = (A shell "timeout 20 uiautomator dump /sdcard/ui.xml; echo rc=`$?" 2>$null) -join " "
+        $r = (A shell "rm -f /sdcard/ui.xml; timeout 20 uiautomator dump /sdcard/ui.xml; echo rc=`$?" 2>$null) -join " "
         if ($r -match "rc=0") { break }
     }
     (A shell cat /sdcard/ui.xml 2>$null) -join ""

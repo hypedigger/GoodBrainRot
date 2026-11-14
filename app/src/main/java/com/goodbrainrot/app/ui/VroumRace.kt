@@ -172,6 +172,10 @@ internal fun StandingsCard(spr: VSprites, rows: List<VStandRow>, t: Float, modif
 @Composable
 internal fun RacerDots(g: VroumGame, frame: Int) {
     @Suppress("UNUSED_EXPRESSION") frame
+    // contre-la-montre : les trois allures bronze / argent / or avancent sur la frise
+    if (g.trial) { val mt = g.medalTimes
+        for (i in 0..2) Box(Modifier.fillMaxWidth((g.raceT / mt[i]).coerceIn(0.02f, 1f)).fillMaxHeight()) {
+            Box(Modifier.align(Alignment.CenterEnd).size(9.dp).clip(RoundedCornerShape(5.dp)).background(MEDAL_COLORS[i])) } }
     for (r in g.racers) {
         val f = (r.d / VroumGame.LEVEL_LEN).coerceIn(0.02f, 1f)
         Box(Modifier.fillMaxWidth(f).fillMaxHeight()) {
