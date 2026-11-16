@@ -94,6 +94,9 @@ object Settings {
     val guitarStrings = mutableIntStateOf(6)
     val guitarFrets = mutableIntStateOf(12)
 
+    // Rappel de soutien (Ko-fi) à afficher sur l'accueil : décidé à chaque lancement par countLaunch()
+    val supportPromptDue = mutableStateOf(false)
+
     fun init(context: Context) {
         if (initialized) return
         initialized = true
@@ -156,6 +159,19 @@ object Settings {
     fun setBabyMode(value: Boolean) {
         babyMode.value = value
         sp.edit().putBoolean("baby_mode", value).apply()
+    }
+
+    /** Compte un lancement de l'app (pas une rotation ni un changement de langue) et arme le rappel de soutien s'il est dû. */
+    fun countLaunch() {
+        val count = sp.getInt("usage_count", 0) + 1
+        sp.edit().putInt("usage_count", count).apply()
+        supportPromptDue.value = shouldShowSupportPrompt(count, sp.getBoolean("support_optout", false))
+    }
+
+    /** Ferme le rappel de soutien ; [optOut] = case « Ne plus me le demander » cochée. */
+    fun dismissSupportPrompt(optOut: Boolean) {
+        supportPromptDue.value = false
+        if (optOut) sp.edit().putBoolean("support_optout", true).apply()
     }
 
     /**

@@ -46,3 +46,5 @@ Code: [MIT](LICENSE). Asset licensing is documented in [`CREDITS.md`](CREDITS.md
 If GoodBrainRot bought you a quiet car ride:
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/hypedigger)
+
+The same link lives in the app (Options → General → **☕ Support on Ko-fi**; it just opens your browser). A small reminder pops up on the home screen at the 10th launch, then every 100 launches — one tap to close, a "Don't ask me again" box to silence it for good, and it never shows while Baby mode is on.

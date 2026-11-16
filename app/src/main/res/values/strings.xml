@@ -555,4 +555,10 @@
     <string name="vroum_boss">FINAL DUEL!</string>
     <string name="vroum_fork_bonus">BONUS</string>
     <string name="vroum_fork_calm">CALM</string>
+    <string name="support_title">☕ Enjoying GoodBrainRot?</string>
+    <string name="support_body">This app is free and open source, built in its creator\'s spare time.\n\nIf you like it, a small coffee on Ko-fi helps keep it going — thank you!</string>
+    <string name="support_kofi">☕ Support on Ko-fi</string>
+    <string name="support_later">Later</string>
+    <string name="support_dont_ask">Don\'t ask me again</string>
+    <string name="support_no_browser">No browser found. The page is: ko-fi.com/hypedigger</string>
 </resources>

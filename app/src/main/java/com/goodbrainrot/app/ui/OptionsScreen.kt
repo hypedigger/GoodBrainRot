@@ -170,6 +170,13 @@ private fun GeneralTab() {
         modifier = Modifier.padding(top = 4.dp)
     )
 
+    Spacer(modifier = Modifier.height(24.dp))
+    HorizontalDivider()
+    Spacer(modifier = Modifier.height(24.dp))
+
+    // Soutenir le créateur : ouvre la page Ko-fi dans le navigateur
+    SupportButton()
+
     // Numéro de version en bas de l'onglet Général
     val ctx = LocalContext.current
     val versionName = remember {

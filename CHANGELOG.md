@@ -1,5 +1,8 @@
 # Nouveautés — GoodBrainRot
 
+## 4.10 — 2026-11-16
+- **Soutenir le créateur.** Un bouton **☕ Soutenir sur Ko-fi** en bas de l'onglet Général des Options ouvre la page de don dans le navigateur (l'appli reste gratuite, sans pub et sans connexion).
+- Un petit rappel s'affiche sur l'accueil au 10e lancement, puis tous les 100 lancements : il se ferme d'un tap (« Plus tard »), la case « Ne plus me le demander » le supprime pour de bon, et il n'apparaît jamais en baby mode. Dans les 5 langues.
 ## 4.09 — 2026-11-14
 - **Vroum — contre-la-montre.** Sur l'écran du circuit, la pastille **Chrono** lance la course seul en piste : le temps tourne en haut de l'écran avec la médaille encore à portée, et trois repères bronze, argent et or avancent sur la frise. À l'arrivée, le temps s'affiche en très gros à la couleur de la médaille (mémorisée par circuit et par difficulté).
 - **Vroum — miroir et Turbo.** Deux variantes à cocher avant le départ, en Course, en Arcade et en Championnat : **Miroir** (la route et les commandes sont inversées, débloqué par une coupe gagnée) et **Turbo** (tout va 18 % plus vite, concurrents compris, débloqué par trois coupes gagnées).

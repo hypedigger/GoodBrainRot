@@ -546,4 +546,10 @@
     <string name="vroum_boss">DUELLO FINALE!</string>
     <string name="vroum_fork_bonus">BONUS</string>
     <string name="vroum_fork_calm">CALMA</string>
+    <string name="support_title">☕ Ti piace GoodBrainRot?</string>
+    <string name="support_body">Questa app è gratuita e open source, sviluppata nel tempo libero del suo creatore.\n\nSe ti piace, un piccolo caffè su Ko-fi la aiuta ad andare avanti — grazie!</string>
+    <string name="support_kofi">☕ Sostieni su Ko-fi</string>
+    <string name="support_later">Più tardi</string>
+    <string name="support_dont_ask">Non chiedermelo più</string>
+    <string name="support_no_browser">Nessun browser trovato. La pagina è: ko-fi.com/hypedigger</string>
 </resources>

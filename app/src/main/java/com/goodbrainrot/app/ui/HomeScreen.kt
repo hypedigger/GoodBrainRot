@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -46,6 +47,7 @@ import com.goodbrainrot.app.ui.theme.CreepsterFamily
 import com.goodbrainrot.app.ui.theme.DeepRainbow
 import com.goodbrainrot.app.ui.theme.PastelRainbow
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
 
 @Composable
@@ -55,6 +57,14 @@ fun HomeScreen(onOpenActivity: (String) -> Unit, onOpenOptions: () -> Unit) {
     var showProfile by remember { mutableStateOf(false) }
 
     if (showProfile) ProfileDialog(onDismiss = { showProfile = false })
+
+    // Rappel de soutien (Ko-fi) : peu après l'affichage de l'accueil, jamais en baby mode (c'est l'enfant qui a l'écran).
+    val supportDue by Settings.supportPromptDue
+    var showSupport by remember { mutableStateOf(false) }
+    LaunchedEffect(supportDue, babyMode, showProfile) {
+        if (supportDue && !babyMode && !showProfile) { delay(900); showSupport = true }
+    }
+    if (showSupport) SupportDialog(onClose = { optOut -> showSupport = false; Settings.dismissSupportPrompt(optOut) })
 
     Column(
         modifier = Modifier

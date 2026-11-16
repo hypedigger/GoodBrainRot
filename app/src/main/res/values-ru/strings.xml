@@ -546,4 +546,10 @@
     <string name="vroum_boss">ФИНАЛЬНАЯ ДУЭЛЬ!</string>
     <string name="vroum_fork_bonus">БОНУС</string>
     <string name="vroum_fork_calm">СПОКОЙНО</string>
+    <string name="support_title">☕ Нравится GoodBrainRot?</string>
+    <string name="support_body">Это бесплатное приложение с открытым исходным кодом, автор делает его в свободное время.\n\nЕсли оно вам нравится, чашечка кофе на Ko-fi поможет проекту жить дальше — спасибо!</string>
+    <string name="support_kofi">☕ Поддержать на Ko-fi</string>
+    <string name="support_later">Позже</string>
+    <string name="support_dont_ask">Больше не спрашивать</string>
+    <string name="support_no_browser">Браузер не найден. Страница: ko-fi.com/hypedigger</string>
 </resources>

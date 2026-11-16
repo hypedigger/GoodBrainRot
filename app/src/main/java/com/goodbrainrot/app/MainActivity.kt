@@ -26,6 +26,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         CrashLog.install(this)
         Settings.init(this)
+        // Un lancement = une création « à neuf » de l'activité (pas une recréation : changement de langue, retour après arrêt du process).
+        if (savedInstanceState == null) Settings.countLaunch()
         HighScores.init(this)
         Profiles.init(this)
         Stats.init(this)
